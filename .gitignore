@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.env
+*.venv
+env/
+venv/
+ENV/
+.env
+.venv/
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media
+
+# Spotify
+spotify/credentials.py
+
+#Pycharm
+/.idea
