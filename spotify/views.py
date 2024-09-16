@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from rest_framework import status
 from rest_framework.response import Response
+from django.http import HttpResponseRedirect
 
 import music
 from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
@@ -48,7 +49,7 @@ class AuthURL(APIView):
             .url
         )
 
-        return Response({"url": url}, status=status.HTTP_200_OK)
+        return HttpResponseRedirect(url)
 
 
 def spotify_callback(request, format=None):
