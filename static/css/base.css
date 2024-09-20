@@ -1,0 +1,203 @@
+/* General Styling */
+body {
+    background-color: #000; /* Black background */
+    color: #fff; /* White text */
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #1DB954; /* Spotify green for links */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #1ED760; /* Slightly lighter green on hover */
+}
+
+/* Navbar */
+.navbar {
+    background-color: #1DB954; /* Spotify green */
+    padding: 15px;
+    border-radius: 10px; /* Add rounded corners */
+}
+
+.navbar-brand {
+    color: #fff; /* White for brand name */
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    color: #fff; /* White links */
+}
+
+.navbar-nav .nav-link:hover {
+    color: #1ED760; /* Lighter green on hover */
+}
+
+/* Buttons */
+.btn-green {
+    background-color: #1DB954; /* Spotify green button */
+    color: #fff;
+    border-radius: 50px;
+    padding: 10px 20px;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-green:hover {
+    background-color: #1ED760; /* Slightly lighter green */
+}
+
+.btn-dark {
+    background-color: #333; /* Dark grey button */
+    color: #fff;
+    border-radius: 50px;
+    padding: 10px 20px;
+    border: none;
+}
+
+.btn-dark:hover {
+    background-color: #444;
+}
+
+/* Cards */
+.card {
+    background-color: #333; /* Dark grey for cards */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #1DB954; /* Green header */
+    color: #fff;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-title, .card-text {
+    color: #fff; /* White text in cards */
+}
+
+/* Footer */
+.footer {
+    background-color: #1DB954; /* Green footer */
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Forms */
+input[type="text"], input[type="email"], input[type="password"], textarea {
+    background-color: #222;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, textarea:focus {
+    border-color: #1DB954;
+    outline: none;
+}
+
+/* Lists */
+ul.list-group li {
+    background-color: #222; /* Darker grey for list items */
+    border-color: #1DB954;
+}
+
+ul.list-group li:hover {
+    background-color: #1DB954; /* Spotify green hover for list items */
+    color: #fff;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table thead {
+    background-color: #1DB954;
+    color: #fff;
+}
+
+table tbody tr {
+    background-color: #333;
+    border-bottom: 1px solid #444;
+}
+
+table tbody tr:hover {
+    background-color: #444;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+}
+
+/* Modals */
+.modal-content {
+    background-color: #333;
+    color: #fff;
+}
+
+.modal-header, .modal-footer {
+    background-color: #1DB954;
+    color: #fff;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #1DB954;
+    border-radius: 10px;
+}
+
+/* Utility Classes */
+.text-green {
+    color: #1DB954; /* Green text utility class */
+}
+
+.bg-black {
+    background-color: #000; /* Black background utility class */
+}
+
+.bg-dark {
+    background-color: #333; /* Dark background utility class */
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mt-5 {
+    margin-top: 3rem;
+}
+
+.mb-5 {
+    margin-bottom: 3rem;
+}

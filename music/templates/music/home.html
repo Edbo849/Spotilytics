@@ -1,0 +1,53 @@
+<!-- music/templates/music/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Home - Spotify User Dashboard{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- Example Card 1: Top Tracks -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Top Tracks</div>
+                <div class="card-body">
+                    <h5 class="card-title">Your Top 3 Tracks</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-dark text-white">1. Track Name 1</li>
+                        <li class="list-group-item bg-dark text-white">2. Track Name 2</li>
+                        <li class="list-group-item bg-dark text-white">3. Track Name 3</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 2: Top Artists -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Top Artists</div>
+                <div class="card-body">
+                    <h5 class="card-title">Your Top 3 Artists</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-dark text-white">1. Artist Name 1</li>
+                        <li class="list-group-item bg-dark text-white">2. Artist Name 2</li>
+                        <li class="list-group-item bg-dark text-white">3. Artist Name 3</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 3: Recently Played -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Recently Played</div>
+                <div class="card-body">
+                    <h5 class="card-title">Your Recently Played Tracks</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-dark text-white">1. Recently Played Track 1</li>
+                        <li class="list-group-item bg-dark text-white">2. Recently Played Track 2</li>
+                        <li class="list-group-item bg-dark text-white">3. Recently Played Track 3</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
