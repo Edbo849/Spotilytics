@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect
 from rest_framework import status
 from rest_framework.response import Response
-from django.http import HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 
 import music
-from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
+from .util import *
+from .credentials import *
 from rest_framework.views import APIView
-from requests import Request, post
-from .util import update_or_create_user_tokens, is_spotify_authenticated
+from requests import Request, post, get
 
 
 class AuthURL(APIView):
@@ -52,7 +52,7 @@ class AuthURL(APIView):
         return HttpResponseRedirect(url)
 
 
-def spotify_callback(request, format=None):
+def spotify_callback(request: HttpRequest) -> HttpResponse:
     code = request.GET.get("code")
     error = request.GET.get("error")
 

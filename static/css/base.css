@@ -1,4 +1,3 @@
-/* General Styling */
 body {
     background-color: #000; /* Black background */
     color: #fff; /* White text */
@@ -92,7 +91,7 @@ a:hover {
 .footer {
     background-color: #1DB954; /* Green footer */
     color: #fff;
-    padding: 15px;
+    padding: 10px;
     text-align: center;
     position: fixed;
     bottom: 0;

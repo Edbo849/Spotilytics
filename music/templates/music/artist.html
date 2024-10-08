@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ artist.name }} - Artist Details
+{% endblock %}
+
+{% block content %}
+  <div class="artist-detail">
+    <h1>{{ artist.name }}</h1>
+    <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" style="width: 200px; height: 200px;" />
+    <p>{{ artist.genres|join:', ' }}</p>
+    <p>Followers: {{ artist.followers.total }}</p>
+    <a href="{{ artist.external_urls.spotify }}" target="_blank">View on Spotify</a>
+  </div>
+{% endblock %}
