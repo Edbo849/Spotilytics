@@ -1,0 +1,37 @@
+/* static/css/base.css */
+.scroll-container {
+    overflow-x: auto;
+    padding: 1rem 0;
+    margin-bottom: 1.2rem;
+}
+
+.search-card {
+    flex: 0 0 auto;
+    background-color: #333;
+    border-radius: 8px;
+    margin-right: 1rem;
+    padding: 1rem;
+    text-align: center;
+    width: 200px;
+}
+
+.search-card .card-img-top {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.search-card .card-body {
+    padding: 0.5rem;
+}
+
+.search-card .card-title {
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.search-card .card-text {
+    color: #ccc;
+    font-size: 0.875rem;
+}

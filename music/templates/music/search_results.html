@@ -1,29 +1,58 @@
 {% extends 'base.html' %}
 {% block title %}
-  Search Results
+  {% load static %}Discover
 {% endblock %}
 {% block content %}
-  <h2>Search Results</h2>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/search_results.css' %}" />
   {% if results %}
-    <h3>Artists</h3>
-    <ul>
-      {% for artist in results.artists.items %}
-        <li>{{ artist.name }}</li>
-      {% endfor %}
-    </ul>
-    <h3>Albums</h3>
-    <ul>
-      {% for album in results.albums.items %}
-        <li>{{ album.name }} by {{ album.artists.0.name }}</li>
-      {% endfor %}
-    </ul>
-    <h3>Tracks</h3>
-    <ul>
-      {% for track in results.tracks.items %}
-        <li>{{ track.name }} by {{ track.artists.0.name }}</li>
-      {% endfor %}
-    </ul>
+    <div class="search-section">
+      <h3 class="text-white">Songs</h3>
+      <div class="scroll-container">
+        <div class="d-flex flex-row flex-nowrap">
+          {% for track in results.tracks.items %}
+            <div class="card search-card">
+              <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
+              <div class="card-body">
+                <h5 class="card-title">{{ track.name }}</h5>
+                <p class="card-text">{{ track.artists.0.name }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="search-section">
+      <h3 class="text-white">Artists</h3>
+      <div class="scroll-container">
+        <div class="d-flex flex-row flex-nowrap">
+          {% for artist in results.artists.items %}
+            <div class="card search-card">
+              <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
+              <div class="card-body">
+                <h5 class="card-title">{{ artist.name }}</h5>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="search-section">
+      <h3 class="text-white">Albums</h3>
+      <div class="scroll-container">
+        <div class="d-flex flex-row flex-nowrap">
+          {% for album in results.albums.items %}
+            <div class="card search-card">
+              <img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" />
+              <div class="card-body">
+                <h5 class="card-title">{{ album.name }}</h5>
+                <p class="card-text">{{ album.artists.0.name }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
   {% else %}
-    <p>No results found.</p>
+    <p class="text-white">No results found.</p>
   {% endif %}
 {% endblock %}
