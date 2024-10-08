@@ -95,7 +95,7 @@ def fetch_artist_albums(artist_id: str, access_token: str) -> list:
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}/albums",
         headers={"Authorization": f"Bearer {access_token}"},
-        params={"include_groups": "album", "limit": 50},
+        params={"include_groups": "album", "limit": 25},
     )
     if response.status_code != 200:
         response.raise_for_status()
