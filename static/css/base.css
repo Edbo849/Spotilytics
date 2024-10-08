@@ -1,4 +1,5 @@
 body {
+    padding-top: 56px; /* Adjust padding to account for the fixed navbar */
     background-color: #000; /* Black background */
     color: #fff; /* White text */
     font-family: 'Arial', sans-serif;
@@ -21,15 +22,17 @@ a:hover {
     background-color: #1DB954; /* Spotify green */
     padding: 15px;
     border-radius: 10px; /* Add rounded corners */
+    height: 50px;
 }
 
 .navbar-brand {
     color: #fff; /* White for brand name */
-    font-size: 1.5rem;
+    font-size: 1rem;
 }
 
 .navbar-nav .nav-link {
     color: #fff; /* White links */
+    font-size: 0.875rem;
 }
 
 .navbar-nav .nav-link:hover {
@@ -89,13 +92,14 @@ a:hover {
 
 /* Footer */
 .footer {
-    background-color: #1DB954; /* Green footer */
+    background-color: #1DB954;
     color: #fff;
-    padding: 10px;
+    padding: 0.5rem;
     text-align: center;
     position: fixed;
     bottom: 0;
     width: 100%;
+    font-size: 0.5rem;
 }
 
 /* Forms */
@@ -199,4 +203,21 @@ table th, table td {
 
 .mb-5 {
     margin-bottom: 3rem;
+}
+
+/* static/css/base.css */
+.input-group .form-control {
+    border-radius: 0.25rem 0 0 0.25rem;
+}
+
+.input-group .input-group-text {
+    border-radius: 0 0.25rem 0.25rem 0;
+    background-color: #1DB954;
+    color: #fff;
+    border: none;
+}
+
+.input-group .form-control:focus {
+    box-shadow: none;
+    border-color: #1DB954;
 }

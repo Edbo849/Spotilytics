@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}
+  Search Results
+{% endblock %}
+{% block content %}
+  <h2>Search Results</h2>
+  {% if results %}
+    <h3>Artists</h3>
+    <ul>
+      {% for artist in results.artists.items %}
+        <li>{{ artist.name }}</li>
+      {% endfor %}
+    </ul>
+    <h3>Albums</h3>
+    <ul>
+      {% for album in results.albums.items %}
+        <li>{{ album.name }} by {{ album.artists.0.name }}</li>
+      {% endfor %}
+    </ul>
+    <h3>Tracks</h3>
+    <ul>
+      {% for track in results.tracks.items %}
+        <li>{{ track.name }} by {{ track.artists.0.name }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No results found.</p>
+  {% endif %}
+{% endblock %}

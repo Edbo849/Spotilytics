@@ -1,10 +1,5 @@
 from django.shortcuts import redirect, render
-from .spotify_api import (
-    get_top_tracks,
-    get_top_artists,
-    get_recently_played,
-    get_artist,
-)
+from .spotify_api import *
 from spotify.util import is_spotify_authenticated
 import logging
 
@@ -13,6 +8,20 @@ logger = logging.getLogger(__name__)
 
 def index(request):
     return render(request, "music/index.html")
+
+
+def search(request):
+    query = request.GET.get("q")
+    if not query:
+        return render(request, "music/search_results.html", {"results": None})
+
+    try:
+        results = search_spotify(query, session_id=request.session.session_key)
+    except Exception as e:
+        logger.critical(f"Error searching Spotify: {e}")
+        results = None
+
+    return render(request, "music/search_results.html", {"results": results})
 
 
 def home(request):
@@ -24,7 +33,7 @@ def home(request):
         top_artists = get_top_artists(3, session_id=request.session.session_key)
         recently_played = get_recently_played(3, session_id=request.session.session_key)
     except Exception as e:
-        logger.error(f"Error fetching data from Spotify: {e}")
+        logger.critical(f"Error fetching data from Spotify: {e}")
         top_tracks, top_artists, recently_played = [], [], []
 
     context = {
@@ -42,11 +51,8 @@ def artist(request, artist_id):
     try:
         artist = get_artist(artist_id, session_id=request.session.session_key)
     except Exception as e:
-        logger.error(f"Error fetching artist data from Spotify: {e}")
+        logger.critical(f"Error fetching artist data from Spotify: {e}")
         artist = None
-
-    logger.info(artist)
-    logger.info("This is a test")
 
     context = {
         "artist": artist,

@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import artist, home, index
+from . import views
 
 app_name = "music"
 
 urlpatterns = [
-    path("", index, name=""),
-    path("home/", home, name="home"),
-    path("artist/<str:artist_id>", artist, name="artist"),
+    path("", views.index, name=""),
+    path("home/", views.home, name="home"),
+    path("artist/<str:artist_id>", views.artist, name="artist"),
+    path("search/", views.search, name="search"),
 ]

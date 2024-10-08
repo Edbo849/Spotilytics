@@ -1,15 +1,67 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
+{% load static %}
 {% block title %}
   {{ artist.name }} - Artist Details
 {% endblock %}
-
 {% block content %}
-  <div class="artist-detail">
-    <h1>{{ artist.name }}</h1>
-    <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" style="width: 200px; height: 200px;" />
-    <p>{{ artist.genres|join:', ' }}</p>
-    <p>Followers: {{ artist.followers.total }}</p>
-    <a href="{{ artist.external_urls.spotify }}" target="_blank">View on Spotify</a>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/artist.css' %}" />
+  <div class="artist-detail card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" class="img-fluid rounded" />
+        </div>
+        <div class="col-md-8">
+          <h1 class="card-title text-white">{{ artist.name }}</h1>
+          <h5 class="mt-3 text-white">Top Genres</h5>
+          <div class="card-text genres-section">
+            {% for genre in artist.genres %}
+              <span class="badge badge-secondary genre-badge">{{ genre }}</span>
+            {% endfor %}
+          </div>
+          <p class="card-text text-white">Followers: {{ artist.followers.total|intcomma }}</p>
+          <p class="card-text text-white">Popularity: {{ artist.popularity }}/100</p>
+          <h5 class="mt-3 text-white">Top 5 Songs</h5>
+          <ul class="list-group mb-3">
+            {% for track in artist.top_tracks %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" />
+                <div class="flex-grow-1">
+                  <span>{{ track.name }}</span>
+                  <br />
+                  <small>{{ track.album.name }}</small>
+                </div>
+                <span class="badge badge-primary badge-pill">Popularity: {{ track.popularity }} / 100</span>
+              </li>
+            {% endfor %}
+          </ul>
+          <a href="{{ artist.external_urls.spotify }}" class="btn btn-primary" target="_blank">View on Spotify</a>
+        </div>
+      </div>
+      <!-- Albums Section -->
+      <h5 class="mt-3 text-white">Albums</h5>
+      <div class="container-fluid py-2">
+        <div class="d-flex flex-row flex-nowrap album-scroll-container">
+          {% for album in artist.albums %}
+            <div class="card album-card">
+              <img src="{{ album.images.0.url }}" alt="{{ album.name }}" class="album-img" />
+              <div class="album-info">
+                <span class="text-white">{{ album.name }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Your Stats Section -->
+  <div class="your-stats card mb-4">
+    <div class="card-body">
+      <h5 class="card-title text-white">Your Stats</h5>
+      <!-- Add your stats content here -->
+      <p class="card-text text-white">This section will display user-specific statistics.</p>
+    </div>
   </div>
 {% endblock %}

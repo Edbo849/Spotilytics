@@ -1,0 +1,72 @@
+/* music/static/css/artist.css */
+.artist-detail {
+    background-color: #282828;
+    border: none;
+}
+.artist-detail .card-title,
+.artist-detail .card-text,
+.artist-detail h5 {
+    color: #ffffff;
+}
+.artist-detail .badge-secondary {
+    background-color: #1DB954;
+    color: #ffffff;
+    margin-right: 0.5rem;
+}
+.artist-detail .genre-badge {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+}
+.artist-detail .btn-primary {
+    background-color: #1DB954;
+    border: none;
+}
+.artist-detail .genres-section {
+    margin-bottom: 1.2rem;
+}
+.album-scroll-container {
+    overflow-x: auto;
+    padding: 1rem 0;
+    margin-bottom: 1.2rem;
+}
+.album-card {
+    flex: 0 0 auto;
+    background-color: #333;
+    border-radius: 8px;
+    margin-right: 1rem;
+    padding: 1rem;
+    text-align: center;
+    width: 150px;
+}
+.album-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+.album-info {
+    margin-top: 0.5rem;
+}
+.list-group-item {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444; /* Add border between songs */
+    display: flex;
+    align-items: center;
+}
+.list-group-item img {
+    width: 50px; /* Adjust the size of the song image */
+    height: 50px;
+    border-radius: 4px;
+    margin-right: 1rem;
+}
+.badge-primary {
+    background-color: #1DB954;
+}
+.your-stats {
+    background-color: #282828;
+    border: none;
+}
+.your-stats .card-title,
+.your-stats .card-text {
+    color: #ffffff;
+}
