@@ -18,7 +18,7 @@ def search_spotify(query: str, session_id: str) -> dict:
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/search",
         headers={"Authorization": f"Bearer {access_token}"},
-        params={"q": query, "type": "track,artist,album", "limit": 50},
+        params={"q": query, "type": "track,artist,album,playlist", "limit": 25},
     )
     if response.status_code != 200:
         response.raise_for_status()
