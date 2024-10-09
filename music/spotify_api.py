@@ -113,6 +113,44 @@ def fetch_artist_top_tracks(artist_id: str, access_token: str) -> list:
     return response.json()["tracks"]
 
 
+def fetch_album_details(album_id: str, access_token: str) -> dict:
+    response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/albums/{album_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if response.status_code != 200:
+        response.raise_for_status()
+    return response.json()
+
+
+def fetch_album_songs(album_id: str, session_id: str) -> list:
+    access_token = get_access_token(session_id)
+    if not access_token:
+        raise ValueError("No access token available")
+
+    response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/albums/{album_id}/tracks",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if response.status_code != 200:
+        response.raise_for_status()
+    return response.json()["items"]
+
+
+def get_track_details(track_id: str, session_id: str) -> dict:
+    access_token = get_access_token(session_id)
+    if not access_token:
+        raise ValueError("No access token available")
+
+    response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/tracks/{track_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if response.status_code != 200:
+        response.raise_for_status()
+    return response.json()
+
+
 def get_artist(artist_id: str, session_id: str) -> dict:
     access_token = get_access_token(session_id)
     if not access_token:
@@ -123,3 +161,30 @@ def get_artist(artist_id: str, session_id: str) -> dict:
     artist_data["top_tracks"] = fetch_artist_top_tracks(artist_id, access_token)[:5]
 
     return artist_data
+
+
+def get_album(album_id: str, session_id: str) -> dict:
+    access_token = get_access_token(session_id)
+    if not access_token:
+        raise ValueError("No access token available")
+
+    response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/albums/{album_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if response.status_code != 200:
+        response.raise_for_status()
+    return response.json()
+
+
+def get_similar_artists(artist_id: str, session_id: str) -> list:
+    access_token = get_access_token(session_id)
+    if not access_token:
+        raise ValueError("No access token available")
+    response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}/related-artists",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if response.status_code != 200:
+        response.raise_for_status()
+    return response.json()["artists"]

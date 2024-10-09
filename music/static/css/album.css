@@ -1,0 +1,60 @@
+/* music/static/css/album.css */
+.table-dark {
+    background-color: #333;
+    color: #fff;
+    margin-bottom: 50px;
+}
+.table-dark th, .table-dark td {
+    padding: 10px;
+    cursor: pointer; /* Add cursor pointer for sortable columns */
+}
+img.img-fluid {
+    border-radius: 10px;
+    margin-bottom: 20px;
+    max-width: 300px; /* Set a maximum width for the album image */
+}
+h1 {
+    color: #1DB954; /* Spotify green */
+}
+.genres-section {
+    margin-top: 1rem;
+}
+.genre-badge {
+    background-color: #1DB954;
+    color: #fff;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+.similar-albums-scroll-container {
+    overflow-x: auto;
+    padding: 1rem 0;
+    margin-bottom: 1.2rem;
+}
+.album-card {
+    flex: 0 0 auto;
+    background-color: #333;
+    border-radius: 8px;
+    margin-right: 1rem;
+    padding: 1rem;
+    text-align: center;
+    width: 200px;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.album-card:hover {
+    background-color: #444;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+.album-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+.album-info {
+    margin-top: 0.5rem;
+}
+.album-info h5 {
+    color: #fff;
+}

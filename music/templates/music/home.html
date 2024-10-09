@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
   Home - Spotify User Dashboard
 {% endblock %}
 
 {% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
   <div class="row">
     <!-- Top Tracks -->
     <div class="col-md-4 mb-4">
@@ -15,17 +17,13 @@
           <ul class="list-group list-group-flush">
             {% for track in top_tracks %}
               <li class="list-group-item bg-dark text-white">
-                {% if forloop.counter == 1 %}
-                  🥇
-                {% elif forloop.counter == 2 %}
-                  🥈
-                {% elif forloop.counter == 3 %}
-                  🥉
-                {% endif %}
-                <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" style="width: 50px; height: 50px;" />
-                <strong>{{ track.name }}</strong>
-                <br />
-                <a href="{% url 'music:artist' track.artists.0.id %}" class="text-white">{{ track.artists.0.name }}</a>
+                <div class="track-info d-flex align-items-center">
+                  <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" style="width: 50px; height: 50px;" />
+                  <div class="track-details">
+                    <strong>{{ track.name }}</strong>
+                    <a href="{% url 'music:artist' track.artists.0.id %}" class="text-white">{{ track.artists.0.name }}</a>
+                  </div>
+                </div>
               </li>
             {% endfor %}
           </ul>
@@ -38,17 +36,10 @@
       <div class="card h-100">
         <div class="card-header">Top Artists</div>
         <div class="card-body">
-          <h5 class="card-title">Your Current Top 3 Artists</h5>
+          <h5 class="card-title">Your Current Top 5 Artists</h5>
           <ul class="list-group list-group-flush">
             {% for artist in top_artists %}
               <li class="list-group-item bg-dark text-white">
-                {% if forloop.counter == 1 %}
-                  🥇
-                {% elif forloop.counter == 2 %}
-                  🥈
-                {% elif forloop.counter == 3 %}
-                  🥉
-                {% endif %}
                 <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" style="width: 50px; height: 50px;" />
                 <a href="{% url 'music:artist' artist.id %}" class="text-white"><strong>{{ artist.name }}</strong></a>
               </li>
@@ -64,23 +55,21 @@
         <div class="card-header">Recently Played</div>
         <div class="card-body">
           <h5 class="card-title">Your Recently Played Tracks</h5>
-          <ul class="list-group list-group-flush">
-            {% for item in recently_played %}
-              <li class="list-group-item bg-dark text-white">
-                {% if forloop.counter == 1 %}
-                  🥇
-                {% elif forloop.counter == 2 %}
-                  🥈
-                {% elif forloop.counter == 3 %}
-                  🥉
-                {% endif %}
-                <img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" style="width: 50px; height: 50px;" />
-                <strong>{{ item.track.name }}</strong>
-                <br />
-                <a href="{% url 'music:artist' item.track.artists.0.id %}" class="text-white">{{ item.track.artists.0.name }}</a>
-              </li>
-            {% endfor %}
-          </ul>
+          <div class="recently-played-scroll">
+            <ul class="list-group list-group-flush">
+              {% for item in recently_played %}
+                <li class="list-group-item bg-dark text-white">
+                  <div class="track-info d-flex align-items-center">
+                    <img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" style="width: 50px; height: 50px;" />
+                    <div class="track-details">
+                      <strong>{{ item.track.name }}</strong>
+                      <a href="{% url 'music:artist' item.track.artists.0.id %}" class="text-white">{{ item.track.artists.0.name }}</a>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

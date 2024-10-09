@@ -6,31 +6,17 @@
   <link rel="stylesheet" type="text/css" href="{% static 'css/search_results.css' %}" />
   {% if results %}
     <div class="search-section">
-      <h3 class="text-white">Songs</h3>
-      <div class="scroll-container">
-        <div class="d-flex flex-row flex-nowrap">
-          {% for track in results.tracks.items %}
-            <div class="card search-card">
-              <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
-              <div class="card-body">
-                <h5 class="card-title">{{ track.name }}</h5>
-                <p class="card-text">{{ track.artists.0.name }}</p>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <div class="search-section">
       <h3 class="text-white">Artists</h3>
       <div class="scroll-container">
         <div class="d-flex flex-row flex-nowrap">
           {% for artist in results.artists.items %}
             <div class="card search-card">
-              <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
-              <div class="card-body">
-                <h5 class="card-title">{{ artist.name }}</h5>
-              </div>
+              <a href="{% url 'music:artist' artist.id %}" class="text-decoration-none">
+                <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
+                <div class="card-body">
+                  <h5 class="card-title">{{ artist.name }}</h5>
+                </div>
+              </a>
             </div>
           {% endfor %}
         </div>
@@ -42,10 +28,28 @@
         <div class="d-flex flex-row flex-nowrap">
           {% for album in results.albums.items %}
             <div class="card search-card">
-              <img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" />
+              <a href="{% url 'music:album' album.id %}">
+                <img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" />
+                <div class="card-body">
+                  <h5 class="card-title">{{ album.name }}</h5>
+                  <p class="card-text">{{ album.artists.0.name }}</p>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="search-section">
+      <h3 class="text-white">Songs</h3>
+      <div class="scroll-container">
+        <div class="d-flex flex-row flex-nowrap">
+          {% for track in results.tracks.items %}
+            <div class="card search-card">
+              <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
               <div class="card-body">
-                <h5 class="card-title">{{ album.name }}</h5>
-                <p class="card-text">{{ album.artists.0.name }}</p>
+                <h5 class="card-title">{{ track.name }}</h5>
+                <p class="card-text">{{ track.artists.0.name }}</p>
               </div>
             </div>
           {% endfor %}

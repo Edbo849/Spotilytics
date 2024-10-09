@@ -25,7 +25,7 @@
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
           <form class="d-flex search-form" action="{% url 'music:search' %}" method="get">
             <div class="input-group">
-              <input type="text" class="form-control search-input" name="q" placeholder="Search for songs, artists, albums..." aria-label="Search" aria-describedby="search-icon" />
+              <input type="text" class="form-control search-input" name="q" placeholder="Search for songs, artists, albums..." value="{{ request.GET.q }}" aria-label="Search" aria-describedby="search-icon" />
               <button type="submit" class="input-group-text search-icon" id="search-icon"><i class="bi bi-search"></i></button>
             </div>
           </form>

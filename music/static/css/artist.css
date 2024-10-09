@@ -24,26 +24,37 @@
 .artist-detail .genres-section {
     margin-bottom: 1.2rem;
 }
-.album-scroll-container {
+.album-scroll-container,
+.similar-artists-scroll-container {
     overflow-x: auto;
     padding: 1rem 0;
     margin-bottom: 1.2rem;
 }
-.album-card {
+.album-card,
+.artist-card {
     flex: 0 0 auto;
     background-color: #333;
     border-radius: 8px;
     margin-right: 1rem;
     padding: 1rem;
     text-align: center;
-    width: 150px;
+    width: 200px;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
-.album-img {
+.album-card:hover,
+.artist-card:hover {
+    background-color: #444;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+.album-img,
+.artist-img {
     width: 100%;
     height: auto;
     border-radius: 8px;
 }
-.album-info {
+.album-info,
+.artist-info {
     margin-top: 0.5rem;
 }
 .list-group-item {
@@ -58,6 +69,10 @@
     height: 50px;
     border-radius: 4px;
     margin-right: 1rem;
+}
+.list-group-item audio {
+    margin-right: 1rem;
+    width: 150px; /* Adjust the width of the audio player */
 }
 .badge-primary {
     background-color: #1DB954;
