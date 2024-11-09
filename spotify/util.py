@@ -1,14 +1,16 @@
-from typing import Optional, Union, Dict, Any
-from .models import SpotifyToken
-from django.utils import timezone
 from datetime import timedelta
+from typing import Any
+
+from django.utils import timezone
+from requests import get, post, put
+
 from .credentials import CLIENT_ID, CLIENT_SECRET
-from requests import post, put, get
+from .models import SpotifyToken
 
 BASE_URL = "https://api.spotify.com/v1/me/"
 
 
-def get_user_tokens(session_id: str) -> Optional[SpotifyToken]:
+def get_user_tokens(session_id: str) -> SpotifyToken | None:
     return SpotifyToken.objects.filter(user=session_id).first()
 
 
@@ -79,7 +81,7 @@ def refresh_spotify_token(session_id: str) -> None:
 
 def execute_spotify_api_request(
     session_id: str, endpoint: str, post_: bool = False, put_: bool = False
-) -> Union[Dict[str, Any], str]:
+) -> dict[str, Any] | str:
     tokens = get_user_tokens(session_id)
     if not tokens or not tokens.access_token:
         return {"Error": "Authentication Required"}

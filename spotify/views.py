@@ -1,13 +1,12 @@
-from django.shortcuts import render, redirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect
+from requests import Request, post
 from rest_framework import status
 from rest_framework.response import Response
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-
-import music
-from .util import *
-from .credentials import *
 from rest_framework.views import APIView
-from requests import Request, post, get
+
+from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
+from .util import is_spotify_authenticated, update_or_create_user_tokens
 
 
 class AuthURL(APIView):
@@ -56,6 +55,9 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     code = request.GET.get("code")
     error = request.GET.get("error")
 
+    if error:
+        return HttpResponse(f"Error: {error}")
+
     response = post(
         "https://accounts.spotify.com/api/token",
         data={
@@ -72,6 +74,9 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     refresh_token = response.get("refresh_token")
     expires_in = response.get("expires_in")
     error = response.get("error")
+
+    if not all([access_token, token_type, refresh_token, expires_in]):
+        return HttpResponse("Error: Missing tokens in the response")
 
     if not request.session.exists(request.session.session_key):
         request.session.create()

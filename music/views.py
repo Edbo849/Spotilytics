@@ -1,9 +1,20 @@
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
-from .spotify_api import *
-from spotify.util import is_spotify_authenticated
 import logging
 
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect, render
+
+from spotify.util import is_spotify_authenticated
+
+from .spotify_api import (
+    get_album,
+    get_artist,
+    get_recently_played,
+    get_similar_artists,
+    get_top_artists,
+    get_top_tracks,
+    get_track_details,
+    search_spotify,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +64,13 @@ def artist(request: HttpRequest, artist_id: int) -> HttpResponse:
         return redirect("spotify-auth")
 
     try:
-        artist = get_artist(artist_id, session_id=request.session.session_key)
-        similar_artists = get_similar_artists(artist_id, request.session.session_key)
+        artist = get_artist(str(artist_id), session_id=request.session.session_key)
+        similar_artists = get_similar_artists(
+            str(artist_id), request.session.session_key
+        )
     except Exception as e:
         logger.critical(f"Error fetching artist data from Spotify: {e}")
-        artist, similar_artists = None, [], []
+        artist, similar_artists = None, []
 
     context = {
         "artist": artist,
