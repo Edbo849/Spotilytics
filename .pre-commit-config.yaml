@@ -9,28 +9,24 @@ repos:
     rev: v0.971
     hooks:
       - id: mypy
-        additional_dependencies: [poetry]
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.4
     hooks:
       - id: bandit
         args: ['-c', 'pyproject.toml', '-r', '.']
-        additional_dependencies: [poetry]
 
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.10.1
     hooks:
       - id: isort
         args: ['--check']
-        additional_dependencies: [poetry]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.241
     hooks:
       - id: ruff
         args: ['check']
-        additional_dependencies: [poetry]
 
   - repo: local
     hooks:
@@ -39,12 +35,12 @@ repos:
         entry: poetry audit
         language: python
         types: [python]
-        additional_dependencies: [poetry, poetry-audit-plugin]
+        additional_dependencies: [poetry-audit-plugin]
 
       - id: xenon
         name: xenon
         entry: |
-          poetry run xenon -a $(poetry run python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['average'])") -b $(poetry run python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['block'])") -m $(poetry run python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['module'])") .
+          xenon -a $(python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['average'])") -b $(python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['block'])") -m $(python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['module'])") .
         language: python
         types: [python]
-        additional_dependencies: [poetry, xenon]
+        additional_dependencies: [xenon]
