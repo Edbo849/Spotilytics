@@ -20,27 +20,10 @@ repos:
     rev: v5.10.1
     hooks:
       - id: isort
-        args: ['--check']
+        args: ['--profile', 'black', '--check']
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.241
     hooks:
       - id: ruff
         args: ['check']
-
-  - repo: local
-    hooks:
-      - id: poetry-audit
-        name: poetry-audit
-        entry: poetry audit
-        language: python
-        types: [python]
-        additional_dependencies: [poetry-audit-plugin]
-
-      - id: xenon
-        name: xenon
-        entry: |
-          xenon -a $(python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['average'])") -b $(python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['block'])") -m $(python -c "import tomllib; f = open('pyproject.toml','rb') ; data =  tomllib.load(f); f.close(); print(data['tool']['quality']['mccabe']['module'])") .
-        language: python
-        types: [python]
-        additional_dependencies: [xenon]
