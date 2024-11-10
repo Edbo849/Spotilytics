@@ -66,25 +66,6 @@
         </table>
       </div>
     </div>
-    <!-- Similar Albums Section -->
-    <div class="row mb-4">
-      <div class="col">
-        <h4 class="text-white">Other albums by {{ album.artists.0.name }}</h4>
-        <div class="similar-albums-scroll-container d-flex">
-          {% for similar_album in similar_albums %}
-            <div class="album-card">
-              <a href="{% url 'music:album' similar_album.id %}">
-                <img src="{{ similar_album.images.0.url }}" class="album-img" alt="{{ similar_album.name }}" />
-                <div class="album-info">
-                  <h5>{{ similar_album.name }}</h5>
-                  <p>{{ similar_album.release_date|slice:':4' }}</p>
-                </div>
-              </a>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
   </div>
   <script src="{% static 'js/album.js' %}"></script>
 {% endblock %}

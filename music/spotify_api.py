@@ -41,8 +41,7 @@ def search_spotify(query: str, session_id: str) -> dict:
         headers={"Authorization": f"Bearer {access_token}"},
         params=params,
     )
-    if response.status_code != 200:
-        response.raise_for_status()
+    response.raise_for_status()
     return response.json()
 
 
@@ -85,14 +84,13 @@ def get_recently_played(num: int, session_id: str) -> list[dict]:
     return response.json().get("items", [])
 
 
-def fetch_artist_details(artist_id: str, access_token: str) -> dict:
-    response = requests.get(
-        f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-    if response.status_code != 200:
-        response.raise_for_status()
-    return response.json()
+# def fetch_artist_details(artist_id: str, access_token: str) -> dict:
+#     response = requests.get(
+#         f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}",
+#         headers={"Authorization": f"Bearer {access_token}"},
+#     )
+#     response.raise_for_status()
+#     return response.json()
 
 
 def fetch_artist_albums(artist_id: str, access_token: str) -> list:
@@ -103,20 +101,24 @@ def fetch_artist_albums(artist_id: str, access_token: str) -> list:
         headers={"Authorization": f"Bearer {access_token}"},
         params=params,
     )
-    if response.status_code != 200:
-        response.raise_for_status()
+    response.raise_for_status()
+
     return response.json()["items"]
 
 
-def fetch_artist_top_tracks(artist_id: str, access_token: str) -> list:
+def fetch_artist_top_tracks(num: int, artist_id: str, access_token: str) -> list:
+    params: dict[str, str | int] = {
+        "market": "UK",
+    }
+
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}/top-tracks",
         headers={"Authorization": f"Bearer {access_token}"},
-        params={"market": "UK"},
+        params=params,
     )
-    if response.status_code != 200:
-        response.raise_for_status()
-    return response.json()["tracks"]
+    response.raise_for_status()
+    tracks = response.json()["tracks"]
+    return tracks[:num]
 
 
 def fetch_album_details(album_id: str, access_token: str) -> dict:
@@ -124,8 +126,7 @@ def fetch_album_details(album_id: str, access_token: str) -> dict:
         f"{SPOTIFY_API_BASE_URL}/albums/{album_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
-    if response.status_code != 200:
-        response.raise_for_status()
+    response.raise_for_status()
     return response.json()
 
 
@@ -138,8 +139,7 @@ def fetch_album_songs(album_id: str, session_id: str) -> list:
         f"{SPOTIFY_API_BASE_URL}/albums/{album_id}/tracks",
         headers={"Authorization": f"Bearer {access_token}"},
     )
-    if response.status_code != 200:
-        response.raise_for_status()
+    response.raise_for_status()
     return response.json()["items"]
 
 
@@ -152,8 +152,7 @@ def get_track_details(track_id: str, session_id: str) -> dict:
         f"{SPOTIFY_API_BASE_URL}/tracks/{track_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
-    if response.status_code != 200:
-        response.raise_for_status()
+    response.raise_for_status()
     return response.json()
 
 
@@ -177,8 +176,7 @@ def get_album(album_id: str, session_id: str) -> dict:
         f"{SPOTIFY_API_BASE_URL}/albums/{album_id}",
         headers={"Authorization": f"Bearer {access_token}"},
     )
-    if response.status_code != 200:
-        response.raise_for_status()
+    response.raise_for_status()
     return response.json()
 
 

@@ -6,6 +6,9 @@ from django.shortcuts import redirect, render
 from spotify.util import is_spotify_authenticated
 
 from .spotify_api import (
+    fetch_artist_albums,
+    fetch_artist_top_tracks,
+    get_access_token,
     get_album,
     get_artist,
     get_recently_played,
@@ -59,15 +62,18 @@ def home(request: HttpRequest) -> HttpResponse:
     return render(request, "music/home.html", context)
 
 
-def artist(request: HttpRequest, artist_id: int) -> HttpResponse:
+def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     if not is_spotify_authenticated(request.session.session_key):
         return redirect("spotify-auth")
 
     try:
-        artist = get_artist(str(artist_id), session_id=request.session.session_key)
-        similar_artists = get_similar_artists(
-            str(artist_id), request.session.session_key
-        )
+        session_id = request.session.session_key
+        access_token = get_access_token(session_id)
+        artist = get_artist(artist_id, session_id)
+        similar_artists = get_similar_artists(artist_id, session_id)
+        albums = fetch_artist_albums(artist_id, access_token)
+        top_tracks = fetch_artist_top_tracks(5, artist_id, access_token)
+
     except Exception as e:
         logger.critical(f"Error fetching artist data from Spotify: {e}")
         artist, similar_artists = None, []
@@ -75,6 +81,8 @@ def artist(request: HttpRequest, artist_id: int) -> HttpResponse:
     context = {
         "artist": artist,
         "similar_artists": similar_artists,
+        "albums": albums,
+        "top_tracks": top_tracks,
     }
     return render(request, "music/artist.html", context)
 
@@ -87,13 +95,10 @@ def album(request: HttpRequest, album_id: str) -> HttpResponse:
         album = get_album(album_id, request.session.session_key)
         tracks = album["tracks"]["items"]
 
-        # Fetch genres from the album's artist
         artist_id = album["artists"][0]["id"]
         artist_details = get_artist(artist_id, request.session.session_key)
         genres = artist_details.get("genres", [])
-        similar_albums = artist_details.get("albums", [])
 
-        # Preprocess track data
         for track in tracks:
             track_details = get_track_details(track["id"], request.session.session_key)
             duration_ms = track["duration_ms"]
@@ -104,12 +109,13 @@ def album(request: HttpRequest, album_id: str) -> HttpResponse:
             track["popularity"] = track_details.get("popularity", "N/A")
     except Exception as e:
         logger.critical(f"Error fetching album data from Spotify: {e}")
-        album, tracks, genres, similar_albums = None, [], [], []
+        album, tracks, genres = None, [], []
+        artist_id = None
 
     context = {
+        "artist_id": artist_id,
         "album": album,
         "tracks": tracks,
         "genres": genres,
-        "similar_albums": similar_albums,
     }
     return render(request, "music/album.html", context)
