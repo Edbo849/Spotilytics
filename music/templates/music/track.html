@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  {{ track.name }} - {{ artist.name }}
+{% endblock %}
+{% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/track.css' %}" />
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-md-4">
+        {% if track.album.images %}
+          <img src="{{ track.album.images.0.url }}" class="img-fluid" alt="{{ track.name }}" />
+        {% else %}
+          <img src="{% static 'images/default_cover.jpg' %}" class="img-fluid" alt="Default Cover" />
+        {% endif %}
+      </div>
+      <div class="col-md-8">
+        <h1>{{ track.name }}</h1>
+        <p>
+          Artist: <a href="{% url 'music:artist' artist.id %}">{{ artist.name }}</a>
+        </p>
+        <p>
+          Album: <a href="{% url 'music:album' album.id %}">{{ album.name }}</a>
+        </p>
+        <p>Duration: {{ track.duration_ms|divisibleby:'60000' }}:{{ track.duration }}</p>
+        <p>Popularity: {{ track.popularity }} / 100</p>
+        {% if track.preview_url %}
+          <audio controls>
+            <source src="{{ track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+          </audio>
+        {% else %}
+          <p>No preview available</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

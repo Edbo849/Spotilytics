@@ -29,7 +29,11 @@
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" />
                 <div class="flex-grow-1">
-                  <span>{{ track.name }}</span>
+                  <span>
+                    <td>
+                      <a href="{% url 'music:track' track.id %}" class="text-white">{{ track.name }}</a>
+                    </td>
+                  </span>
                   <br />
                   <small>{{ track.album.name }}</small>
                 </div>

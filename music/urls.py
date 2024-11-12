@@ -10,4 +10,5 @@ urlpatterns = [
     path("artist/<str:artist_id>", views.artist, name="artist"),
     path("search/", views.search, name="search"),
     path("album/<str:album_id>", views.album, name="album"),
+    path("track/<str:track_id>", views.track, name="track"),
 ]

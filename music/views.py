@@ -119,3 +119,25 @@ def album(request: HttpRequest, album_id: str) -> HttpResponse:
         "genres": genres,
     }
     return render(request, "music/album.html", context)
+
+
+def track(request: HttpRequest, track_id: str) -> HttpResponse:
+    if not is_spotify_authenticated(request.session.session_key):
+        return redirect("spotify-auth")
+
+    try:
+        track = get_track_details(track_id, request.session.session_key)
+        duration_ms = track["duration_ms"]
+        minutes = duration_ms // 60000
+        seconds = (duration_ms // 1000) % 60
+        track["duration"] = f"{minutes}:{seconds:02d}"
+        album_id = track["album"]["id"]
+        album = get_album(album_id, request.session.session_key)
+        artist_id = track["artists"][0]["id"]
+        artist = get_artist(artist_id, request.session.session_key)
+    except Exception as e:
+        logger.critical(f"Error fetching track data from Spotify: {e}")
+        track, album, artist = None, None, None
+
+    context = {"track": track, "album": album, "artist": artist}
+    return render(request, "music/track.html", context)

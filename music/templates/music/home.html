@@ -20,7 +20,9 @@
                 <div class="track-info d-flex align-items-center">
                   <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" style="width: 50px; height: 50px;" />
                   <div class="track-details">
-                    <strong>{{ track.name }}</strong>
+                    <td>
+                      <a href="{% url 'music:track' track.id %}" class="text-white">{{ track.name }}</a>
+                    </td>
                     <a href="{% url 'music:artist' track.artists.0.id %}" class="text-white">{{ track.artists.0.name }}</a>
                   </div>
                 </div>
@@ -62,7 +64,11 @@
                   <div class="track-info d-flex align-items-center">
                     <img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" style="width: 50px; height: 50px;" />
                     <div class="track-details">
-                      <strong>{{ item.track.name }}</strong>
+                      <strong>
+                        <td>
+                          <a href="{% url 'music:track' item.track.id %}" class="text-white">{{ item.track.name }}</a>
+                        </td>
+                      </strong>
                       <a href="{% url 'music:artist' item.track.artists.0.id %}" class="text-white">{{ item.track.artists.0.name }}</a>
                     </div>
                   </div>
