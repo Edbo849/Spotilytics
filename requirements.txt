@@ -2,3 +2,4 @@ Django==5.1
 djangorestframework
 requests
 python-decouple
+pre-commit
