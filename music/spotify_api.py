@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
 
 
+def get_duration_ms(duration_ms: int) -> str:
+    minutes, seconds = divmod(duration_ms / 1000, 60)
+    return f"{int(minutes)}:{int(seconds):02d}"
+
+
 def get_access_token(session_id: str) -> str:
     """Retrieve a valid access token for the given session."""
     tokens = SpotifyToken.objects.filter(user=session_id)
@@ -189,3 +194,14 @@ def get_similar_artists(artist_id: str, session_id: str) -> list[dict]:
     )
     response.raise_for_status()
     return response.json().get("artists", [])
+
+
+def get_similar_tracks(track_id: str, session_id: str) -> list:
+    access_token = get_access_token(session_id)
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"seed_tracks": track_id, "limit": 20}
+    response = requests.get(
+        "https://api.spotify.com/v1/recommendations", headers=headers, params=params
+    )
+    response.raise_for_status()
+    return response.json().get("tracks", [])

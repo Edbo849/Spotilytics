@@ -1,0 +1,50 @@
+/* music/static/css/track.css */
+.similar-tracks-scroll-container {
+    overflow-x: auto;
+    padding: 1rem 0;
+    margin-bottom: 1.2rem;
+}
+.track-card {
+    flex: 0 0 auto;
+    background-color: #333;
+    border-radius: 8px;
+    margin-right: 1rem;
+    padding: 1rem;
+    text-align: center;
+    width: 200px;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.track-card:hover {
+    background-color: #444;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+.track-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+.track-info {
+    margin-top: 0.5rem;
+}
+.container {
+    background-color: #282828;
+    padding: 2rem;
+    border-radius: 8px;
+}
+h1, h2, p {
+    color: #ffffff;
+}
+a {
+    color: #1DB954;
+}
+a:hover {
+    color: #1ed760;
+}
+audio {
+    width: 35%;
+    margin-top: 1rem;
+}
+.img-fluid {
+    border-radius: 8px;
+}

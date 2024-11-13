@@ -16,7 +16,9 @@ from .spotify_api import (
     get_top_artists,
     get_top_tracks,
     get_track_details,
+    get_similar_tracks,
     search_spotify,
+    get_duration_ms,
 )
 
 logger = logging.getLogger(__name__)
@@ -102,9 +104,7 @@ def album(request: HttpRequest, album_id: str) -> HttpResponse:
         for track in tracks:
             track_details = get_track_details(track["id"], request.session.session_key)
             duration_ms = track["duration_ms"]
-            minutes = duration_ms // 60000
-            seconds = (duration_ms // 1000) % 60
-            track["duration"] = f"{minutes}:{seconds:02d}"
+            track["duration"] = get_duration_ms(duration_ms)
             track["preview_url"] = track.get("preview_url", None)
             track["popularity"] = track_details.get("popularity", "N/A")
     except Exception as e:
@@ -128,16 +128,21 @@ def track(request: HttpRequest, track_id: str) -> HttpResponse:
     try:
         track = get_track_details(track_id, request.session.session_key)
         duration_ms = track["duration_ms"]
-        minutes = duration_ms // 60000
-        seconds = (duration_ms // 1000) % 60
-        track["duration"] = f"{minutes}:{seconds:02d}"
+        track["duration"] = get_duration_ms(duration_ms)
         album_id = track["album"]["id"]
         album = get_album(album_id, request.session.session_key)
         artist_id = track["artists"][0]["id"]
         artist = get_artist(artist_id, request.session.session_key)
+        similar_tracks = get_similar_tracks(track_id, request.session.session_key)
+
     except Exception as e:
         logger.critical(f"Error fetching track data from Spotify: {e}")
         track, album, artist = None, None, None
 
-    context = {"track": track, "album": album, "artist": artist}
+    context = {
+        "track": track,
+        "album": album,
+        "artist": artist,
+        "similar_tracks": similar_tracks,
+    }
     return render(request, "music/track.html", context)
