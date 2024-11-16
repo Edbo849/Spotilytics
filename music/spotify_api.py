@@ -236,3 +236,30 @@ def get_similar_tracks(track_id: str, session_id: str) -> list:
     )
     response.raise_for_status()
     return response.json().get("tracks", [])
+
+
+def get_recently_played_full(session_id: str) -> list[dict]:
+    """Fetch the user's recently played tracks."""
+    access_token = get_access_token(session_id)
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"limit": 50}
+    url = "https://api.spotify.com/v1/me/player/recently-played"
+
+    recently_played = []
+
+    while url:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+        items = data.get("items", [])
+        recently_played.extend(items)
+
+        # Check if we've retrieved enough data (e.g., last 50 tracks)
+        if len(recently_played) >= 350:
+            break
+
+        url = data.get("next")
+        if not url:
+            break
+
+    return recently_played

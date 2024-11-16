@@ -59,20 +59,20 @@
       </div>
     </div>
 
+    <!-- Listening Activity Over Time -->
     <div class="row">
-      <!-- Listening Activity Over Time -->
       <div class="col-md-12 mb-4">
         <div class="card">
           <div class="card-header">Listening Activity Over Time</div>
           <div class="card-body text-center">
-            <p>Listening actviity over time line graph</p>
+            <img src="{% url 'music:line_graph' %}" alt="Listening Activity Over Time" class="img-fluid" />
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Recently Played Tracks -->
     <div class="row">
-      <!-- Recently Played Tracks -->
       <div class="col-md-6 mb-4">
         <div class="card h-100">
           <div class="card-header">Recently Played Tracks</div>
@@ -118,7 +118,7 @@
         <div class="card h-100">
           <div class="card-header">Your Top Genres</div>
           <div class="card-body text-center">
-            <p>Top Genres Pie Chart</p>
+            <img src="{% url 'music:pie_chart' %}?time_range={{ time_range }}" alt="Top Genres" class="img-fluid" />
           </div>
         </div>
       </div>
