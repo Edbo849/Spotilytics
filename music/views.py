@@ -16,6 +16,7 @@ from .spotify_api import (
     get_similar_artists,
     get_similar_tracks,
     get_top_artists,
+    get_top_genres,
     get_top_tracks,
     get_track_details,
     search_spotify,
@@ -52,15 +53,17 @@ def home(request: HttpRequest) -> HttpResponse:
         top_tracks = get_top_tracks(10, request.session.session_key, time_range)
         top_artists = get_top_artists(10, request.session.session_key, time_range)
         recently_played = get_recently_played(10, request.session.session_key)
+        top_genres = get_top_genres(50, request.session.session_key, time_range)
 
     except Exception as e:
         logger.error(f"Error fetching data from Spotify: {e}")
-        top_tracks, top_artists, recently_played = [], [], []
+        top_tracks, top_artists, recently_played, top_genres = [], [], [], []
 
     context = {
         "top_tracks": top_tracks,
         "top_artists": top_artists,
         "recently_played": recently_played,
+        "top_genres": top_genres,
         "time_range": time_range,
     }
     return render(request, "music/home.html", context)
