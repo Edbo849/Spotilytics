@@ -35,7 +35,7 @@
                     </td>
                   </span>
                   <br />
-                  <small>{{ track.album.name }}</small>
+                  <small><a href="{% url 'music:album' track.album.id %}">{{ track.album.name }}</a></small>
                 </div>
                 {% if track.preview_url %}
                   <audio controls>

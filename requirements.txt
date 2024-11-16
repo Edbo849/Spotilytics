@@ -3,3 +3,4 @@ djangorestframework
 requests
 python-decouple
 pre-commit
+matplotlib

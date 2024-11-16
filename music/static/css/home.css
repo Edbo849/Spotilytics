@@ -1,149 +1,50 @@
-/* General Styles */
-body {
-    background-color: #181818;
-    color: #ffffff;
-    font-family: 'Poppins', sans-serif;
-    line-height: 1.6;
-    padding: 20px;
+/* static/css/home.css */
+.time-range-selector .btn {
+  margin: 0 5px;
+  border-color: #1DB954;
+  color: #1DB954;
 }
 
-/* Container */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
+.time-range-selector .btn:hover {
+  background-color: #1DB954;
+  color: #ffffff;
 }
 
-/* Cards */
-.card {
-    background-color: #1f1f1f;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+.time-range-selector .btn.active {
+  background-color: #1DB954;
+  color: #ffffff;
+  border-color: #1DB954;
 }
 
-.card:hover {
-    transform: translateY(-12px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
-    background-color: #2a2a2a; /* Background changes on hover */
+.scrollable {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-.card-header {
-    background-color: #1DB954;
-    color: #ffffff;
-    font-weight: 600;
-    font-size: 1.25rem;
-    padding: 15px;
-    border-radius: 12px 12px 0 0;
-    text-align: center;
-}
-
-.card-body {
-    padding: 20px;
-}
-
-.card-title {
-    color: #ffffff;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-/* List Group Items */
-.list-group-item {
-    background-color: #2a2a2a;
-    border: none;
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    border-radius: 25px; /* Make the items oval */
-    transition: background-color 0.3s ease;
-    margin-bottom: 1rem; /* Increase the gap between items */
-}
-
-.list-group-item img {
-    border-radius: 50%; /* Makes the album and artist images round */
-    margin-right: 15px;
-    transition: transform 0.3s ease;
-}
-
-.list-group-item:hover img {
-    transform: scale(1.1); /* Zoom in on hover */
-}
-
-.list-group-item:hover {
-    background-color: #1DB954;
-    color: #fff;
-    transform: translateX(5px);
-}
-
-.list-group-item strong {
-    font-size: 1.1rem;
+.album-cover {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  margin-right: 10px;
 }
 
 .list-group-item a {
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: 500;
+  text-decoration: none;
 }
 
 .list-group-item a:hover {
-    text-decoration: underline; /* Underlined when hovered over */
-    color: #1DB954;
+  color: #666666;
 }
 
-/* Track Info */
-.track-info {
-    display: flex;
-    align-items: center;
+.list-group-item small a {
+  font-size: 0.8rem;
+  color: #c5c5c5;
 }
 
-.track-details {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+.list-group-item small a:hover {
+  color: #666666;
 }
 
-/* Ranking Badges */
-.list-group-item::before {
-    display: inline-block;
-    font-size: 1.5rem; /* Adjust font size for medal emojis */
-    margin-right: 10px;
-}
-
-.list-group-item:nth-child(1)::before {
-    content: "🥇"; /* First place medal */
-}
-
-.list-group-item:nth-child(2)::before {
-    content: "🥈"; /* Second place medal */
-}
-
-.list-group-item:nth-child(3)::before {
-    content: "🥉"; /* Third place medal */
-}
-
-/* Hover effect for icons */
-.card .bi {
-    font-size: 1.5rem;
-    transition: color 0.3s ease;
-}
-
-.card .bi:hover {
-    color: #1DB954;
-}
-
-.list-group-item:first-child {
-    border-top-left-radius: 25px;
-    border-top-right-radius: 25px;
-}
-
-.list-group-item:last-child {
-    border-bottom-left-radius: 25px;
-    border-bottom-right-radius: 25px;
-}
-
-.recently-played-scroll {
-    max-height: 480px;
-    overflow-y: auto;
-    overflow-x: hidden;
+.list-group-item:hover a {
+  color: #ffffff;
 }

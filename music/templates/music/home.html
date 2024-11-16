@@ -1,80 +1,124 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}
-  Home - Spotify User Dashboard
+  Dashboard - Spotify Analytics
 {% endblock %}
-
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
-  <div class="row">
-    <!-- Top Tracks -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header">Top Tracks</div>
-        <div class="card-body">
-          <h5 class="card-title">Your Current Top 3 Tracks</h5>
-          <ul class="list-group list-group-flush">
-            {% for track in top_tracks %}
-              <li class="list-group-item bg-dark text-white">
-                <div class="track-info d-flex align-items-center">
-                  <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" style="width: 50px; height: 50px;" />
-                  <div class="track-details">
-                    <td>
-                      <a href="{% url 'music:track' track.id %}" class="text-white">{{ track.name }}</a>
-                    </td>
-                    <a href="{% url 'music:artist' track.artists.0.id %}" class="text-white">{{ track.artists.0.name }}</a>
-                  </div>
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    </div>
 
-    <!-- Top Artists -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header">Top Artists</div>
-        <div class="card-body">
-          <h5 class="card-title">Your Current Top 5 Artists</h5>
-          <ul class="list-group list-group-flush">
-            {% for artist in top_artists %}
-              <li class="list-group-item bg-dark text-white">
-                <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" style="width: 50px; height: 50px;" />
-                <a href="{% url 'music:artist' artist.id %}" class="text-white"><strong>{{ artist.name }}</strong></a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    </div>
+  <!-- Time Range Selection -->
+  <div class="time-range-selector text-center my-4">
+    <form method="get" action="" class="btn-group" role="group">
+      <button type="submit" name="time_range" value="short_term" class="btn btn-outline-primary {% if time_range == 'short_term' %}active{% endif %}">Last 4 Weeks</button>
+      <button type="submit" name="time_range" value="medium_term" class="btn btn-outline-primary {% if time_range == 'medium_term' %}active{% endif %}">Last 6 Months</button>
+      <button type="submit" name="time_range" value="long_term" class="btn btn-outline-primary {% if time_range == 'long_term' %}active{% endif %}">All Time</button>
+    </form>
+  </div>
 
-    <!-- Recently Played -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header">Recently Played</div>
-        <div class="card-body">
-          <h5 class="card-title">Your Recently Played Tracks</h5>
-          <div class="recently-played-scroll">
+  <!-- Dashboard Content -->
+  <div class="container">
+    <div class="row">
+      <!-- Top Tracks -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">Your Top Tracks</div>
+          <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
-              {% for item in recently_played %}
-                <li class="list-group-item bg-dark text-white">
-                  <div class="track-info d-flex align-items-center">
-                    <img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" style="width: 50px; height: 50px;" />
-                    <div class="track-details">
-                      <strong>
-                        <td>
-                          <a href="{% url 'music:track' item.track.id %}" class="text-white">{{ item.track.name }}</a>
-                        </td>
-                      </strong>
-                      <a href="{% url 'music:artist' item.track.artists.0.id %}" class="text-white">{{ item.track.artists.0.name }}</a>
-                    </div>
+              {% for track in top_tracks %}
+                <li class="list-group-item d-flex align-items-center">
+                  <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="album-cover" />
+                  <div class="ms-3">
+                    <a href="{% url 'music:track' track.id %}">{{ track.name }}</a>
+                    <br />
+                    <small><a href="{% url 'music:artist' track.artists.0.id %}">{{ track.artists.0.name }}</a></small>
                   </div>
                 </li>
               {% endfor %}
             </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Artists -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">Your Top Artists</div>
+          <div class="card-body scrollable">
+            <ul class="list-group list-group-flush">
+              {% for artist in top_artists %}
+                <li class="list-group-item d-flex align-items-center">
+                  <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" class="album-cover" />
+                  <div class="ms-3">
+                    <a href="{% url 'music:artist' artist.id %}">{{ artist.name }}</a>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Listening Activity Over Time -->
+      <div class="col-md-12 mb-4">
+        <div class="card">
+          <div class="card-header">Listening Activity Over Time</div>
+          <div class="card-body text-center">
+            <p>Listening actviity over time line graph</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Recently Played Tracks -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">Recently Played Tracks</div>
+          <div class="card-body scrollable">
+            <ul class="list-group list-group-flush">
+              {% for item in recently_played %}
+                <li class="list-group-item d-flex align-items-center">
+                  <img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" class="album-cover" />
+                  <div class="ms-3">
+                    <a href="{% url 'music:track' item.track.id %}">{{ item.track.name }}</a>
+                    <br />
+                    <small><a href="{% url 'music:artist' item.track.artists.0.id %}">{{ item.track.artists.0.name }}</a></small>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Undecided -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">Undecided</div>
+          <ul class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Listening Time Distribution -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">Listening Time Distribution by Day of Week</div>
+          <div class="card-body text-center">
+            <p>Listening time dstribution Bar Chart</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Genres -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header">Your Top Genres</div>
+          <div class="card-body text-center">
+            <p>Top Genres Pie Chart</p>
           </div>
         </div>
       </div>

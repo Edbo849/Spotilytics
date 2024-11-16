@@ -50,9 +50,9 @@ def search_spotify(query: str, session_id: str) -> dict:
     return response.json()
 
 
-def get_top_tracks(num: int, session_id: str) -> list[dict]:
+def get_top_tracks(num: int, session_id: str, time_range: str) -> list[dict]:
     access_token = get_access_token(session_id)
-    params: dict[str, str | int] = {"limit": num, "time_range": "medium_term"}
+    params: dict[str, str | int] = {"limit": num, "time_range": time_range}
 
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/me/top/tracks",
@@ -63,9 +63,9 @@ def get_top_tracks(num: int, session_id: str) -> list[dict]:
     return response.json().get("items", [])
 
 
-def get_top_artists(num: int, session_id: str) -> list[dict]:
+def get_top_artists(num: int, session_id: str, time_range: str) -> list[dict]:
     access_token = get_access_token(session_id)
-    params: dict[str, str | int] = {"limit": num, "time_range": "medium_term"}
+    params: dict[str, str | int] = {"limit": num, "time_range": time_range}
 
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/me/top/artists",
@@ -87,15 +87,6 @@ def get_recently_played(num: int, session_id: str) -> list[dict]:
     )
     response.raise_for_status()
     return response.json().get("items", [])
-
-
-# def fetch_artist_details(artist_id: str, access_token: str) -> dict:
-#     response = requests.get(
-#         f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}",
-#         headers={"Authorization": f"Bearer {access_token}"},
-#     )
-#     response.raise_for_status()
-#     return response.json()
 
 
 def fetch_artist_albums(artist_id: str, access_token: str) -> list:
@@ -199,9 +190,46 @@ def get_similar_artists(artist_id: str, session_id: str) -> list[dict]:
 def get_similar_tracks(track_id: str, session_id: str) -> list:
     access_token = get_access_token(session_id)
     headers = {"Authorization": f"Bearer {access_token}"}
-    params = {"seed_tracks": track_id, "limit": 20}
+    params: dict[str, str | int] = {"seed_tracks": track_id, "limit": 20}
     response = requests.get(
         "https://api.spotify.com/v1/recommendations", headers=headers, params=params
     )
     response.raise_for_status()
     return response.json().get("tracks", [])
+
+
+def get_top_genres(session_id: str) -> dict[str, int]:
+    """Fetch the user's top genres from their top artists."""
+    access_token = get_access_token(session_id)
+    headers = {"Authorization": f"Bearer {access_token}"}
+    url = "https://api.spotify.com/v1/me/top/artists?limit=50"
+
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    artists = data.get("items", [])
+
+    genre_counts: dict[str, int] = {}
+    for artist in artists:
+        for genre in artist.get("genres", []):
+            genre_counts[genre] = genre_counts.get(genre, 0) + 1
+
+    sorted_genres = dict(
+        sorted(genre_counts.items(), key=lambda item: item[1], reverse=True)[:10]
+    )
+    return sorted_genres
+
+
+def get_recently_played_full(session_id: str) -> list[dict]:
+    """Fetch the user's recently played tracks."""
+    access_token = get_access_token(session_id)
+    headers = {"Authorization": f"Bearer {access_token}"}
+    url = "https://api.spotify.com/v1/me/player/recently-played?limit=50"
+
+    recently_played = []
+    while url:
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        recently_played.extend(data.get("items", []))
+        url = data.get("next")
+
+    return recently_played

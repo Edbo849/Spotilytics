@@ -11,14 +11,14 @@ from .spotify_api import (
     get_access_token,
     get_album,
     get_artist,
+    get_duration_ms,
     get_recently_played,
     get_similar_artists,
+    get_similar_tracks,
     get_top_artists,
     get_top_tracks,
     get_track_details,
-    get_similar_tracks,
     search_spotify,
-    get_duration_ms,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,20 +46,22 @@ def home(request: HttpRequest) -> HttpResponse:
     if not is_spotify_authenticated(request.session.session_key):
         return redirect("spotify-auth")
 
+    time_range = request.GET.get("time_range", "medium_term")
+
     try:
-        top_tracks = get_top_tracks(3, session_id=request.session.session_key)
-        top_artists = get_top_artists(5, session_id=request.session.session_key)
-        recently_played = get_recently_played(
-            25, session_id=request.session.session_key
-        )
+        top_tracks = get_top_tracks(10, request.session.session_key, time_range)
+        top_artists = get_top_artists(10, request.session.session_key, time_range)
+        recently_played = get_recently_played(10, request.session.session_key)
+
     except Exception as e:
-        logger.critical(f"Error fetching data from Spotify: {e}")
+        logger.error(f"Error fetching data from Spotify: {e}")
         top_tracks, top_artists, recently_played = [], [], []
 
     context = {
         "top_tracks": top_tracks,
         "top_artists": top_artists,
         "recently_played": recently_played,
+        "time_range": time_range,
     }
     return render(request, "music/home.html", context)
 
