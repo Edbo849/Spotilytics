@@ -39,7 +39,7 @@ def line_graph(request):
     counts = [date_counts.get(date, 0) for date in date_list]
     date_labels = [date.strftime("%b %d") for date in date_list]
 
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(8, 3))
     fig.patch.set_facecolor("#333333")
     ax.set_facecolor("#333333")
 

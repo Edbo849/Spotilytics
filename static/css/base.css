@@ -125,7 +125,7 @@ ul.list-group li {
 }
 
 ul.list-group li:hover {
-    background-color: #1DB954; /* Spotify green hover for list items */
+    background-color: #3f3f3f; /* Slightly lighter than default #222 */
     color: #fff;
 }
 
@@ -176,7 +176,7 @@ table th, table td {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #1DB954;
+    background-color: #5d8259;
     border-radius: 10px;
 }
 
@@ -233,8 +233,8 @@ table th, table td {
 
 /* Center the search form in the navbar */
 .search-form {
-    width: 50%; /* Adjust width as necessary */
-    max-width: 400px; /* Restrict max size */
+    width: 60%; /* Adjust width as necessary */
+    max-width: 500px; /* Restrict max size */
     margin: auto; /* Ensure form is centered */
     text-align: center;
 }

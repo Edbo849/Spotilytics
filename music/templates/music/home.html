@@ -26,7 +26,7 @@
             <ul class="list-group list-group-flush">
               {% for track in top_tracks %}
                 <li class="list-group-item d-flex align-items-center">
-                  <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="album-cover" />
+                  <a href="{% url 'music:album' track.album.id %}"><img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="album-cover" /></a>
                   <div class="ms-3">
                     <a href="{% url 'music:track' track.id %}">{{ track.name }}</a>
                     <br />
@@ -80,7 +80,7 @@
             <ul class="list-group list-group-flush">
               {% for item in recently_played %}
                 <li class="list-group-item d-flex align-items-center">
-                  <img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" class="album-cover" />
+                  <a href="{% url 'music:album' item.track.album.id %}"><img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" class="album-cover" /></a>
                   <div class="ms-3">
                     <a href="{% url 'music:track' item.track.id %}">{{ item.track.name }}</a>
                     <br />
@@ -103,12 +103,12 @@
     </div>
 
     <div class="row">
-      <!-- Listening Time Distribution -->
+      <!-- Undecided -->
       <div class="col-md-6 mb-4">
         <div class="card h-100">
-          <div class="card-header">Listening Time Distribution by Day of Week</div>
+          <div class="card-header">Undecided</div>
           <div class="card-body text-center">
-            <p>Listening time dstribution Bar Chart</p>
+            <p>Undecided</p>
           </div>
         </div>
       </div>

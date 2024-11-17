@@ -1,19 +1,48 @@
 /* static/css/home.css */
+
+/* Color Palette and Typography */
+body {
+  font-family: 'Poppins', sans-serif;
+
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-bottom: none;
+  text-align: center;
+}
+
+.card-body {
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.time-range-selector {
+  margin-bottom: 20px;
+}
+
+/* Buttons for Time Range Selector */
 .time-range-selector .btn {
   margin: 0 5px;
-  border-color: #1DB954;
-  color: #1DB954;
+
+  transition: all 0.3s ease;
 }
 
-.time-range-selector .btn:hover {
-  background-color: #1DB954;
-  color: #ffffff;
-}
 
-.time-range-selector .btn.active {
-  background-color: #1DB954;
-  color: #ffffff;
-  border-color: #1DB954;
+
+/* Card and List Styles */
+.card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
 }
 
 .scrollable {
@@ -21,30 +50,85 @@
   overflow-y: auto;
 }
 
+.list-group-item {
+  background-color: transparent;
+  border: none;
+  transition: background-color 0.3s ease;
+  padding: 15px 10px;
+}
+
+
 .album-cover {
   width: 50px;
   height: 50px;
-  border-radius: 4px;
-  margin-right: 10px;
+  border-radius: 6px;
+  margin-right: 15px;
 }
 
 .list-group-item a {
   text-decoration: none;
-}
-
-.list-group-item a:hover {
-  color: #666666;
+  transition: color 0.3s ease;
 }
 
 .list-group-item small a {
   font-size: 0.8rem;
-  color: #c5c5c5;
+  color: #b3b3b3;
 }
 
 .list-group-item small a:hover {
-  color: #666666;
+  color: #1DB954;
 }
 
-.list-group-item:hover a {
+/* Buttons for Time Range Selector */
+.time-range-selector .btn {
+  margin: 0 5px;
+  border-color: #1DB954;
+  color: #1DB954;
+  transition: all 0.3s ease;
+}
+
+.time-range-selector .btn:hover, 
+.time-range-selector .btn.active {
+  background-color: #1DB954;
   color: #ffffff;
+}
+
+
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.text-center p {
+  color: #b3b3b3;
+}
+
+/* Transition effects */
+.btn, .list-group-item a, .album-cover {
+  transition: all 0.3s ease-in-out;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+
+.album-cover:hover {
+  transform: scale(1.1);
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .list-group-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .list-group-item .album-cover {
+    margin-bottom: 10px;
+  }
 }
