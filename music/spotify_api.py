@@ -224,18 +224,37 @@ def get_similar_artists(artist_id: str, session_id: str) -> list[dict]:
     return response.json().get("artists", [])
 
 
-def get_similar_tracks(track_id: str, session_id: str) -> list:
+def get_similar_tracks(track_id: str, session_id: str) -> list[dict]:
     """
-    Retrieve similar tracks to a given track.
+    Get similar tracks based on seed track.
     """
     access_token = get_access_token(session_id)
     headers = {"Authorization": f"Bearer {access_token}"}
-    params: dict[str, str | int] = {"seed_tracks": track_id, "limit": 20}
+    params: dict[str, str | int | float | bool | None] = {
+        "seed_tracks": track_id,
+        "limit": 10,
+    }
+
     response = requests.get(
-        "https://api.spotify.com/v1/recommendations", headers=headers, params=params
+        f"{SPOTIFY_API_BASE_URL}/recommendations",
+        headers=headers,
+        params=params,
     )
     response.raise_for_status()
-    return response.json().get("tracks", [])
+    data = response.json()
+
+    track_ids = [track["id"] for track in data["tracks"]]
+    params_tracks: dict[str, str] = {"ids": ",".join(track_ids)}
+
+    tracks_response = requests.get(
+        f"{SPOTIFY_API_BASE_URL}/tracks",
+        headers=headers,
+        params=params_tracks,
+    )
+    tracks_response.raise_for_status()
+    full_tracks_data = tracks_response.json()
+
+    return full_tracks_data["tracks"]
 
 
 def get_recently_played_full(session_id: str) -> list[dict]:

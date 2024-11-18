@@ -9,9 +9,9 @@
     <div class="row mb-4">
       <div class="col-md-4">
         {% if track.album.images %}
-          <img src="{{ track.album.images.0.url }}" class="img-fluid" alt="{{ track.name }}" />
+          <a href="{% url 'music:album' track.album.id %}"><img src="{{ track.album.images.0.url }}" class="img-fluid album-cover" alt="{{ track.name }}" /></a>
         {% else %}
-          <img src="{% static 'images/default_cover.jpg' %}" class="img-fluid" alt="Default Cover" />
+          <img src="{% static 'images/default_cover.jpg' %}" class="img-fluid album-cover" alt="Default Cover" />
         {% endif %}
       </div>
       <div class="col-md-8">
@@ -46,6 +46,13 @@
                   <p>{{ similar_track.artists.0.name }}</p>
                 </div>
               </a>
+              {% if similar_track.preview_url %}
+                <audio controls>
+                  <source src="{{ similar_track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                </audio>
+              {% else %}
+                <p class="text-muted">No preview available</p>
+              {% endif %}
             </div>
           {% endfor %}
         </div>

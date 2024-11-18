@@ -4,6 +4,14 @@
     padding: 1rem 0;
     margin-bottom: 1.2rem;
 }
+.album-cover {
+  transition: transform 0.3s ease;
+}
+
+.album-cover:hover {
+  transform: scale(1.01);
+  cursor: pointer;
+}
 .track-card {
     flex: 0 0 auto;
     background-color: #333;
@@ -26,6 +34,10 @@
 }
 .track-info {
     margin-top: 0.5rem;
+}
+.track-card audio {
+    margin-top: 0.5rem;
+    width: 100%;
 }
 .container {
     background-color: #282828;
