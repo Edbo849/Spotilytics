@@ -1,0 +1,51 @@
+<!-- music/templates/music/artist_all_songs.html -->
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  All Songs by {{ artist.name }}
+{% endblock %}
+{% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/artist_tracks.css' %}" />
+  <div class="container">
+    <a href="{% url 'music:artist' artist.id %}"><h1 class="my-4">All Songs by {{ artist.name }}</h1></a>
+    <table class="table table-dark table-hover sortable">
+      <thead>
+        <tr>
+          <th scope="col" data-sort="number">#</th>
+          <th scope="col" data-sort="string">Title</th>
+          <th scope="col" data-sort="string">Album</th>
+          <th scope="col">Preview</th>
+          <th scope="col" data-sort="number">Length</th>
+          <th scope="col" data-sort="number">Popularity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for track in tracks %}
+          <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td class="d-flex align-items-center">
+              <a href="{% url 'music:album' track.album.id %}"><img src="{{ track.album.images.0.url }}" alt="{{ track.album.name }}" class="album-cover me-2" /></a>
+              <a href="{% url 'music:track' track.id %}" class="text-white">{{ track.name }}</a>
+            </td>
+            <td>
+              <a href="{% url 'music:album' track.album.id %}" class="text-white">{{ track.album.name }}</a>
+            </td>
+            <td>
+              {% if track.preview_url %}
+                <audio controls>
+                  <source src="{{ track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                </audio>
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+            <td>{{ track.duration }}</td>
+            <td>{{ track.popularity }}/100</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <script src="{% static 'js/artist_tracks.js' %}"></script>
+{% endblock %}

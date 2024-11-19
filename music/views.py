@@ -1,5 +1,6 @@
 import logging
 
+from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 
@@ -8,7 +9,6 @@ from spotify.util import is_spotify_authenticated
 from .spotify_api import (
     fetch_artist_albums,
     fetch_artist_top_tracks,
-    get_access_token,
     get_album,
     get_artist,
     get_duration_ms,
@@ -75,11 +75,10 @@ def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
 
     try:
         session_id = request.session.session_key
-        access_token = get_access_token(session_id)
         artist = get_artist(artist_id, session_id)
         similar_artists = get_similar_artists(artist_id, session_id)
-        albums = fetch_artist_albums(artist_id, access_token)
-        top_tracks = fetch_artist_top_tracks(5, artist_id, access_token)
+        albums = fetch_artist_albums(artist_id, session_id, False)
+        top_tracks = fetch_artist_top_tracks(5, artist_id, session_id)
 
     except Exception as e:
         logger.critical(f"Error fetching artist data from Spotify: {e}")
@@ -151,3 +150,55 @@ def track(request: HttpRequest, track_id: str) -> HttpResponse:
         "similar_tracks": similar_tracks,
     }
     return render(request, "music/track.html", context)
+
+
+def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse:
+    if not is_spotify_authenticated(request.session.session_key):
+        return redirect("spotify-auth")
+
+    session_id = request.session.session_key
+
+    artist_cache_key = f"artist_{artist_id}"
+    tracks_cache_key = f"artist_tracks_{artist_id}"
+    cache_timeout = 3600
+
+    artist = cache.get(artist_cache_key)
+    tracks = cache.get(tracks_cache_key)
+
+    if artist is None or tracks is None:
+        try:
+            artist = get_artist(artist_id, session_id)
+            cache.set(artist_cache_key, artist, cache_timeout)
+
+            albums = fetch_artist_albums(artist_id, session_id, True)
+            tracks = []
+            track_ids = set()
+
+            for album in albums:
+                album_data = get_album(album["id"], session_id)
+                album_tracks = album_data["tracks"]["items"]
+
+                for track in album_tracks:
+                    if track["id"] not in track_ids:
+                        track_ids.add(track["id"])
+                        track_details = get_track_details(track["id"], session_id)
+                        track["album"] = {
+                            "id": album["id"],
+                            "name": album["name"],
+                            "images": album["images"],
+                        }
+                        track["duration"] = get_duration_ms(track["duration_ms"])
+                        track["popularity"] = track_details.get("popularity", "N/A")
+                        tracks.append(track)
+
+            cache.set(tracks_cache_key, tracks, cache_timeout)
+
+        except Exception as e:
+            logger.error(f"Error fetching artist data from Spotify: {e}")
+            artist, tracks = None, []
+
+    context = {
+        "artist": artist,
+        "tracks": tracks,
+    }
+    return render(request, "music/artist_tracks.html", context)

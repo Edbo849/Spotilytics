@@ -132,11 +132,16 @@ def get_recently_played(num: int, session_id: str) -> list[dict]:
     return response.json().get("items", [])
 
 
-def fetch_artist_albums(artist_id: str, access_token: str) -> list:
+def fetch_artist_albums(artist_id: str, session_id: str, single: bool) -> list:
     """
     Fetch the albums of a given artist.
     """
-    params: dict[str, str | int] = {"include_groups": "album", "limit": 25}
+    access_token = get_access_token(session_id)
+    params: dict[str, str | int]
+    if single:
+        params = {"include_groups": "album, single"}
+    else:
+        params = {"include_groups": "album"}
 
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}/albums",
@@ -144,16 +149,18 @@ def fetch_artist_albums(artist_id: str, access_token: str) -> list:
         params=params,
     )
     response.raise_for_status()
+    albums = response.json()["items"]
+    unique_albums = {album["name"]: album for album in albums}
 
-    return response.json()["items"]
+    return list(unique_albums.values())
 
 
-def fetch_artist_top_tracks(num: int, artist_id: str, access_token: str) -> list:
+def fetch_artist_top_tracks(num: int, artist_id: str, session_id: str) -> list:
     """
     Fetch the top tracks of a given artist.
     """
     params: dict[str, str | int] = {"market": "UK"}
-
+    access_token = get_access_token(session_id)
     response = requests.get(
         f"{SPOTIFY_API_BASE_URL}/artists/{artist_id}/top-tracks",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -273,7 +280,6 @@ def get_recently_played_full(session_id: str) -> list[dict]:
         items = data.get("items", [])
         recently_played.extend(items)
 
-        # Check if we've retrieved enough data (e.g., last 50 tracks)
         if len(recently_played) >= 350:
             break
 

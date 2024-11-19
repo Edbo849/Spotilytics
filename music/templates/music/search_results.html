@@ -32,7 +32,7 @@
                 <img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" />
                 <div class="card-body">
                   <h5 class="card-title">{{ album.name }}</h5>
-                  <p class="card-text">{{ album.artists.0.name }}</p>
+                  <a href="{% url 'music:artist' album.artists.0.id %}"><p class="card-text">{{ album.artists.0.name }}</p></a>
                   <p>{{ album.release_date|slice:':4' }}</p>
                 </div>
               </a>

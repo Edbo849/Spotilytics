@@ -11,6 +11,9 @@ urlpatterns = [
     path("search/", views.search, name="search"),
     path("album/<str:album_id>", views.album, name="album"),
     path("track/<str:track_id>", views.track, name="track"),
+    path(
+        "artist/<str:artist_id>/songs/", views.artist_all_songs, name="artist_all_songs"
+    ),
     path("line-graph/", graphs.line_graph, name="line_graph"),
     path("pie-chart/", graphs.pie_chart, name="pie_chart"),
 ]

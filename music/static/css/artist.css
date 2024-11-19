@@ -24,6 +24,9 @@
 .artist-detail .genres-section {
     margin-bottom: 1.2rem;
 }
+.all-songs {
+    margin-top: 1.2rem;
+}
 .album-scroll-container,
 .similar-artists-scroll-container {
     overflow-x: auto;

@@ -5,3 +5,5 @@ python-decouple
 pre-commit
 matplotlib
 pytz
+redis
+django-redis

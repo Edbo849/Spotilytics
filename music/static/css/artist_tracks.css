@@ -1,0 +1,18 @@
+.container {
+  margin-top: 20px;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.album-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.audio {
+  width: 150px;
+}
