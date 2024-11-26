@@ -7,3 +7,4 @@ matplotlib
 pytz
 redis
 django-redis
+pandas

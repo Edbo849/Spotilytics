@@ -47,11 +47,13 @@
         <div class="d-flex flex-row flex-nowrap">
           {% for track in results.tracks.items %}
             <div class="card search-card">
-              <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
-              <div class="card-body">
-                <h5 class="card-title">{{ track.name }}</h5>
-                <p class="card-text">{{ track.artists.0.name }}</p>
-              </div>
+              <a href="{% url 'music:track' track.id %}">
+                <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
+                <div class="card-body">
+                  <h5 class="card-title">{{ track.name }}</h5>
+                  <p class="card-text">{{ track.artists.0.name }}</p>
+                </div>
+              </a>
             </div>
           {% endfor %}
         </div>

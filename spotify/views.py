@@ -1,9 +1,11 @@
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
-from requests import Request, post
+from requests import Request, get, post
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from music.models import SpotifyUser
 
 from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 from .util import is_spotify_authenticated, update_or_create_user_tokens
@@ -73,6 +75,7 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     token_type = response.get("token_type")
     refresh_token = response.get("refresh_token")
     expires_in = response.get("expires_in")
+    scope = response.get("scope")
     error = response.get("error")
 
     if not all([access_token, token_type, refresh_token, expires_in]):
@@ -81,8 +84,29 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     if not request.session.exists(request.session.session_key):
         request.session.create()
 
+    user_profile = get(
+        "https://api.spotify.com/v1/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    ).json()
+    spotify_user_id = user_profile.get("id")
+    display_name = user_profile.get("display_name")
+
     update_or_create_user_tokens(
-        request.session.session_key, access_token, token_type, expires_in, refresh_token
+        request.session.session_key,
+        access_token,
+        token_type,
+        expires_in,
+        refresh_token,
+        spotify_user_id,
+        scope,
+    )
+
+    request.session["spotify_user_id"] = spotify_user_id
+    request.session["display_name"] = display_name
+
+    SpotifyUser.objects.update_or_create(
+        spotify_user_id=spotify_user_id,
+        defaults={"display_name": display_name},
     )
 
     return redirect("music:home")
