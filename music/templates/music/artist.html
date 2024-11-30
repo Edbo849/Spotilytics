@@ -70,23 +70,25 @@
           {% endfor %}
         </div>
       </div>
-      <div class="row mb-4">
-        <div class="col">
-          <h4 class="mt-3 text-white">Other Artists you might like</h4>
-          <div class="similar-artists-scroll-container d-flex">
-            {% for similar_artist in similar_artists %}
-              <div class="artist-card">
-                <a href="{% url 'music:artist' similar_artist.id %}">
-                  <img src="{{ similar_artist.images.0.url }}" class="artist-img" alt="{{ similar_artist.name }}" />
-                  <div class="artist-info">
-                    <h5>{{ similar_artist.name }}</h5>
-                  </div>
-                </a>
-              </div>
-            {% endfor %}
+      {% if similar_artists %}
+        <div class="row mb-4">
+          <div class="col">
+            <h4 class="mt-3 text-white">Other Artists you might like</h4>
+            <div class="similar-artists-scroll-container d-flex">
+              {% for similar_artist in similar_artists %}
+                <div class="artist-card">
+                  <a href="{% url 'music:artist' similar_artist.id %}">
+                    <img src="{{ similar_artist.images.0.url }}" class="artist-img" alt="{{ similar_artist.name }}" />
+                    <div class="artist-info">
+                      <h5>{{ similar_artist.name }}</h5>
+                    </div>
+                  </a>
+                </div>
+              {% endfor %}
+            </div>
           </div>
         </div>
-      </div>
+      {% endif %}
     </div>
   </div>
 {% endblock %}

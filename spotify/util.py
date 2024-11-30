@@ -1,17 +1,23 @@
+import logging
 from datetime import timedelta
-from typing import Any
 
 from django.utils import timezone
-from requests import get, post, put
+from requests import post
+
+from music.models import SpotifyUser
 
 from .credentials import CLIENT_ID, CLIENT_SECRET
 from .models import SpotifyToken
 
 BASE_URL = "https://api.spotify.com/v1/"
 
+logger = logging.getLogger(__name__)
+
 
 def get_user_tokens(spotify_user_id: str) -> SpotifyToken | None:
-    return SpotifyToken.objects.filter(spotify_user_id=spotify_user_id).first()
+    return SpotifyToken.objects.filter(
+        spotify_user__spotify_user_id=spotify_user_id
+    ).first()
 
 
 def update_or_create_user_tokens(
@@ -22,8 +28,10 @@ def update_or_create_user_tokens(
     refresh_token,
     scope,
 ):
-    tokens = SpotifyToken.objects.filter(spotify_user_id=spotify_user_id).first()
+    spotify_user = SpotifyUser.objects.get(spotify_user_id=spotify_user_id)
     expires_in = timezone.now() + timedelta(seconds=expires_in)
+
+    tokens = SpotifyToken.objects.filter(spotify_user=spotify_user).first()
 
     if tokens:
         tokens.access_token = access_token
@@ -31,18 +39,10 @@ def update_or_create_user_tokens(
         tokens.expires_in = expires_in
         tokens.token_type = token_type
         tokens.scope = scope
-        tokens.save(
-            update_fields=[
-                "access_token",
-                "refresh_token",
-                "expires_in",
-                "token_type",
-                "scope",
-            ]
-        )
+        tokens.save()
     else:
         tokens = SpotifyToken(
-            spotify_user_id=spotify_user_id,
+            spotify_user=spotify_user,
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=expires_in,
@@ -56,16 +56,21 @@ def is_spotify_authenticated(spotify_user_id: str) -> bool:
     tokens = get_user_tokens(spotify_user_id)
     if tokens:
         if tokens.expires_in <= timezone.now():
-            refresh_spotify_token(spotify_user_id, tokens.scope)
+            refresh_spotify_token(spotify_user_id)
         return True
     return False
 
 
-def refresh_spotify_token(spotify_user_id: str, scope: str) -> None:
-    tokens = get_user_tokens(spotify_user_id)
+def refresh_spotify_token(spotify_user_id: str) -> None:
+    tokens = (
+        SpotifyToken.objects.select_related("spotify_user")
+        .filter(spotify_user__spotify_user_id=spotify_user_id)
+        .first()
+    )
     refresh_token = tokens.refresh_token if tokens else None
 
     if not refresh_token:
+        logger.error(f"No refresh token available for user {spotify_user_id}.")
         return
 
     response = post(
@@ -76,43 +81,40 @@ def refresh_spotify_token(spotify_user_id: str, scope: str) -> None:
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
         },
-    ).json()
+    )
 
-    access_token = response.get("access_token")
-    token_type = response.get("token_type")
-    expires_in = response.get("expires_in")
-
-    if access_token and token_type and expires_in:
-        update_or_create_user_tokens(
-            spotify_user_id,
-            access_token,
-            token_type,
-            expires_in,
-            refresh_token,
-            scope,
+    if response.status_code != 200:
+        logger.error(
+            f"Failed to refresh token for user {spotify_user_id}: {response.text}"
         )
+        return
+
+    tokens_data = response.json()
+    access_token = tokens_data.get("access_token")
+    token_type = tokens_data.get("token_type")
+    expires_in_seconds = tokens_data.get("expires_in")
+    new_refresh_token = tokens_data.get("refresh_token", refresh_token)
+
+    if not all([access_token, token_type, expires_in_seconds]):
+        logger.error(f"Missing tokens in refresh response for user {spotify_user_id}")
+        return
+
+    expires_in = timezone.now() + timedelta(seconds=expires_in_seconds)
+
+    tokens.access_token = access_token
+    tokens.token_type = token_type
+    tokens.expires_in = expires_in
+    tokens.refresh_token = new_refresh_token
+    tokens.scope = tokens.scope
+    tokens.save()
 
 
-def execute_spotify_api_request(
-    session_id: str, endpoint: str, post_: bool = False, put_: bool = False
-) -> dict[str, Any] | str:
-    tokens = get_user_tokens(session_id)
-    if not tokens or not tokens.access_token:
-        return {"Error": "Authentication Required"}
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {tokens.access_token}",
-    }
-
-    if post_:
-        response = post(BASE_URL + endpoint, headers=headers)
-    elif put_:
-        response = put(BASE_URL + endpoint, headers=headers)
-    else:
-        response = get(BASE_URL + endpoint, headers=headers)
-
-    try:
-        return response.json()
-    except Exception:
-        return {"Error": "Issue with request"}
+def delete_expired_tokens() -> None:
+    """
+    Delete expired Spotify tokens from the database.
+    """
+    now = timezone.now()
+    expired_tokens = SpotifyToken.objects.filter(expires_in__lte=now)
+    count = expired_tokens.count()
+    expired_tokens.delete()
+    logger.info(f"Deleted {count} expired Spotify tokens.")

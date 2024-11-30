@@ -1,12 +1,26 @@
 from django.db import models
+from django.utils import timezone
+
+from spotify.models import SpotifyToken
 
 
 class SpotifyUser(models.Model):
-    spotify_user_id = models.CharField(max_length=50, unique=True)
-    display_name = models.CharField(max_length=200, null=True, blank=True)
+    spotify_user_id = models.CharField(max_length=255, primary_key=True)
+    display_name = models.CharField(max_length=255, blank=True, null=True)
+
+    @property
+    def is_token_expired(self) -> bool:
+        """
+        Check if the user's access token has expired.
+        """
+        try:
+            token = self.spotifytoken
+            return token.expires_in <= timezone.now()
+        except SpotifyToken.DoesNotExist:
+            return True
 
     def __str__(self):
-        return self.display_name or self.spotify_user_id
+        return f"{self.display_name}"
 
 
 class PlayedTrack(models.Model):

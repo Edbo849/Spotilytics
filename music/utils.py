@@ -14,7 +14,6 @@ def read_full_history(self, *args, **options):
         self.stdout.write(self.style.ERROR("User not authenticated."))
         return
 
-    # Get the latest timestamp from the existing data
     latest_track = (
         PlayedTrack.objects.filter(user=session_id).order_by("-played_at").first()
     )
