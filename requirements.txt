@@ -8,3 +8,5 @@ pytz
 redis
 django-redis
 pandas
+psycopg2-binary
+django-environ

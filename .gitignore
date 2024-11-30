@@ -47,3 +47,5 @@ spotify/credentials.py
 .AppleDouble
 .LSOverride
 
+// Local Files
+listening_history

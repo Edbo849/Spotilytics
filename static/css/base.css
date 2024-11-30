@@ -268,3 +268,11 @@ table th, table td {
     color: #fff; /* White icon on hover */
     border-color: #1DB954;
 }
+
+input[type="file"]:focus {
+    outline: 2px solid #1DB954; /* Spotify green outline */
+}
+
+.bg-spotify-green {
+    background-color: #1DB954; /* Spotify green */
+}

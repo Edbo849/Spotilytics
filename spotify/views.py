@@ -60,46 +60,49 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     if error:
         return HttpResponse(f"Error: {error}")
 
-    response = post(
-        "https://accounts.spotify.com/api/token",
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": REDIRECT_URI,
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
-    ).json()
+    if not code:
+        return HttpResponse("Error: Missing authorization code")
 
-    access_token = response.get("access_token")
-    token_type = response.get("token_type")
-    refresh_token = response.get("refresh_token")
-    expires_in = response.get("expires_in")
-    scope = response.get("scope")
-    error = response.get("error")
+    try:
+        response = post(
+            "https://accounts.spotify.com/api/token",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": REDIRECT_URI,
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+            },
+        )
+        response.raise_for_status()
+    except Exception as e:
+        return HttpResponse(f"Error fetching tokens from Spotify: {e}")
+
+    tokens = response.json()
+    access_token = tokens.get("access_token")
+    token_type = tokens.get("token_type")
+    refresh_token = tokens.get("refresh_token")
+    expires_in = tokens.get("expires_in")
+    scope = tokens.get("scope")
 
     if not all([access_token, token_type, refresh_token, expires_in]):
         return HttpResponse("Error: Missing tokens in the response")
 
-    if not request.session.exists(request.session.session_key):
-        request.session.create()
+    try:
+        user_profile = get(
+            "https://api.spotify.com/v1/me",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        user_profile.raise_for_status()
+    except Exception as e:
+        return HttpResponse(f"Error fetching user profile from Spotify: {e}")
 
-    user_profile = get(
-        "https://api.spotify.com/v1/me",
-        headers={"Authorization": f"Bearer {access_token}"},
-    ).json()
-    spotify_user_id = user_profile.get("id")
-    display_name = user_profile.get("display_name")
+    user_profile_data = user_profile.json()
+    spotify_user_id = user_profile_data.get("id")
+    display_name = user_profile_data.get("display_name")
 
-    update_or_create_user_tokens(
-        request.session.session_key,
-        access_token,
-        token_type,
-        expires_in,
-        refresh_token,
-        spotify_user_id,
-        scope,
-    )
+    if not spotify_user_id:
+        return HttpResponse("Error: Missing Spotify user ID in the response")
 
     request.session["spotify_user_id"] = spotify_user_id
     request.session["display_name"] = display_name
@@ -107,6 +110,15 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     SpotifyUser.objects.update_or_create(
         spotify_user_id=spotify_user_id,
         defaults={"display_name": display_name},
+    )
+
+    update_or_create_user_tokens(
+        spotify_user_id,
+        access_token,
+        token_type,
+        expires_in,
+        refresh_token,
+        scope,
     )
 
     return redirect("music:home")

@@ -16,4 +16,6 @@ urlpatterns = [
     ),
     path("line-graph/", graphs.line_graph, name="line_graph"),
     path("pie-chart/", graphs.pie_chart, name="pie_chart"),
+    path("import-history/", views.import_history, name="import_history"),
+    path("delete-history/", views.delete_history, name="delete_history"),
 ]
