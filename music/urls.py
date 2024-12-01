@@ -18,4 +18,5 @@ urlpatterns = [
     path("pie-chart/", graphs.pie_chart, name="pie_chart"),
     path("import-history/", views.import_history, name="import_history"),
     path("delete-history/", views.delete_history, name="delete_history"),
+    path("genre/<str:genre_name>/", views.genre, name="genre"),
 ]

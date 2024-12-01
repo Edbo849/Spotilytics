@@ -24,6 +24,7 @@ from .spotify_api import (
     get_album,
     get_artist,
     get_duration_ms,
+    get_items_by_genre,
     get_recently_played,
     get_similar_artists,
     get_similar_tracks,
@@ -210,6 +211,27 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
     }
 
     return await sync_to_async(render)(request, "music/track.html", context)
+
+
+async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
+        spotify_user_id
+    ):
+        return await sync_to_async(redirect)("spotify-auth")
+
+    try:
+        artists, tracks = await get_items_by_genre(genre_name, spotify_user_id)
+    except Exception as e:
+        logger.error(f"Error fetching items for genre {genre_name}: {e}")
+        artists, tracks = [], []
+
+    context = {
+        "genre_name": genre_name,
+        "artists": artists,
+        "tracks": tracks,
+    }
+    return await sync_to_async(render)(request, "music/genre.html", context)
 
 
 @csrf_exempt

@@ -17,13 +17,11 @@
   </head>
   <body>
     <!-- Navbar -->
-    <!-- templates/base.html -->
     <nav class="navbar navbar-expand-lg sticky-top">
       <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'music:home' %}">Spotilytics</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
 
-        <!-- Centered Search Bar -->
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
           <form class="d-flex search-form" action="{% url 'music:search' %}" method="get">
             <div class="input-group">
@@ -33,7 +31,6 @@
           </form>
         </div>
 
-        <!-- Right Side Links -->
         <div class="collapse navbar-collapse justify-content-end">
           <ul class="navbar-nav">
             <li class="nav-item">

@@ -41,7 +41,7 @@ a:hover {
 
 /* Buttons */
 .btn-green {
-    background-color: #1DB954; /* Spotify green button */
+    background-color: #1DB954;
     color: #fff;
     border-radius: 50px;
     padding: 10px 20px;
@@ -50,11 +50,11 @@ a:hover {
 }
 
 .btn-green:hover {
-    background-color: #1ED760; /* Slightly lighter green */
+    background-color: #1ED760;
 }
 
 .btn-dark {
-    background-color: #333; /* Dark grey button */
+    background-color: #333;
     color: #fff;
     border-radius: 50px;
     padding: 10px 20px;
@@ -67,14 +67,23 @@ a:hover {
 
 /* Cards */
 .card {
-    background-color: #333; /* Dark grey for cards */
+    background: linear-gradient(100deg, #2e2e2e, #393939);
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow:  2px 2px 5px #1a1a1a,
+                 -2px -2px 5px #505050;
     margin-bottom: 20px;
+    margin-left: 5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow:  4px 4px 8px #1a1a1a,
+                 -4px -4px 8px #505050;
 }
 
 .card-header {
-    background-color: #1DB954; /* Green header */
+    background-color: #1DB954;
     color: #fff;
     font-weight: bold;
     padding: 10px 15px;

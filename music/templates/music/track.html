@@ -6,6 +6,7 @@
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/track.css' %}" />
   <div class="container">
+    <!-- Track Details -->
     <div class="row mb-4">
       <div class="col-md-4">
         {% if track.album.images %}
@@ -34,6 +35,7 @@
       </div>
     </div>
     <div class="row">
+      <!-- Other Tracks -->
       <div class="col-md-12">
         <h2>Other tracks you might like</h2>
         <div class="similar-tracks-scroll-container d-flex">

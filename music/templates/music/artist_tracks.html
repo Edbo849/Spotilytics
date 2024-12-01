@@ -1,5 +1,3 @@
-<!-- music/templates/music/artist_all_songs.html -->
-
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}
@@ -8,6 +6,7 @@
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/artist_tracks.css' %}" />
   <div class="container">
+    <!-- Artist `songs` -->
     <a href="{% url 'music:artist' artist.id %}"><h1 class="my-4">All Songs by {{ artist.name }}</h1></a>
     <table class="table table-dark table-hover sortable">
       <thead>

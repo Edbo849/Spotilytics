@@ -9,6 +9,7 @@
   <div class="artist-detail card mb-4">
     <div class="card-body">
       <div class="row">
+        <!-- Artist Details -->
         <div class="col-md-4">
           <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" class="img-fluid rounded" />
           <p class="card-text text-white mt-3">Followers: {{ artist.followers.total|intcomma }}</p>
@@ -18,12 +19,13 @@
             <a href="{% url 'music:artist_all_songs' artist.id %}" class="btn btn-primary all-songs">All Songs</a>
           </div>
         </div>
+        <!-- Top Genres -->
         <div class="col-md-8">
           <h1 class="card-title text-white">{{ artist.name }}</h1>
           <h5 class="mt-3 text-white">Top Genres</h5>
           <div class="card-text genres-section">
             {% for genre in artist.genres %}
-              <span class="badge badge-secondary genre-badge">{{ genre }}</span>
+              <span class="badge badge-secondary genre-badge"><a href="{% url 'music:genre' genre %}" class="text-white">{{ genre }}</a></span>
             {% endfor %}
           </div>
           <h5 class="mt-3 text-white">Top 5 Songs</h5>
@@ -70,6 +72,7 @@
           {% endfor %}
         </div>
       </div>
+      <!-- Similar Artists -->
       {% if similar_artists %}
         <div class="row mb-4">
           <div class="col">

@@ -9,7 +9,6 @@
     <!-- Album Details -->
     <div class="row mb-4">
       <div class="col-md-4">
-        <!-- Album Cover -->
         {% if album.images %}
           <img src="{{ album.images.0.url }}" class="img-fluid" alt="{{ album.name }}" />
         {% else %}
@@ -26,7 +25,7 @@
         <div class="genres-section">
           <h5>Genres</h5>
           {% for genre in genres %}
-            <span class="badge badge-secondary genre-badge">{{ genre }}</span>
+            <span class="badge badge-secondary genre-badge"><a href="{% url 'music:genre' genre %}" class="text-white">{{ genre }}</a></span>
           {% endfor %}
         </div>
       </div>

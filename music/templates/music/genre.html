@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  {{ genre_name|title }} - Genre
+{% endblock %}
+{% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/search_results.css' %}" />
+
+  <div class="container">
+    <!-- Artists Section -->
+    <div class="search-section">
+      <h3 class="text-white">Artists in "{{ genre_name|title }}"</h3>
+      <div class="scroll-container">
+        <div class="d-flex flex-row flex-nowrap">
+          {% for artist in artists %}
+            <div class="card search-card">
+              <a href="{% url 'music:artist' artist.id %}" class="text-decoration-none">
+                {% if artist.images %}
+                  <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
+                {% else %}
+                  <img src="{% static 'images/default_artist.png' %}" class="card-img-top" alt="{{ artist.name }}" />
+                {% endif %}
+                <div class="card-body">
+                  <h5 class="card-title">{{ artist.name }}</h5>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tracks Section -->
+    <div class="search-section">
+      <h3 class="text-white">Tracks in "{{ genre_name|title }}"</h3>
+      <div class="scroll-container">
+        <div class="d-flex flex-row flex-nowrap">
+          {% for track in tracks %}
+            <div class="card search-card">
+              <a href="{% url 'music:track' track.id %}">
+                {% if track.album.images %}
+                  <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
+                {% else %}
+                  <img src="{% static 'images/default_track.png' %}" class="card-img-top" alt="{{ track.name }}" />
+                {% endif %}
+                <div class="card-body">
+                  <h5 class="card-title">{{ track.name }}</h5>
+                  <p class="card-text">{{ track.artists.0.name }}</p>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

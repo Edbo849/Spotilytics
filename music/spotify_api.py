@@ -547,3 +547,13 @@ async def get_recently_played_full(spotify_user_id: str) -> list[dict[str, Any]]
             break
 
     return recently_played
+
+
+async def get_items_by_genre(
+    genre_name: str, spotify_user_id: str
+) -> tuple[list[dict], list[dict]]:
+    params = {"q": f'genre:"{genre_name}"', "type": "artist,album,track", "limit": 25}
+    response = await make_spotify_request("search", spotify_user_id, params)
+    artists = response.get("artists", {}).get("items", [])
+    tracks = response.get("tracks", {}).get("items", [])
+    return artists, tracks
