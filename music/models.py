@@ -32,5 +32,8 @@ class PlayedTrack(models.Model):
     artist_name = models.CharField(max_length=200)
     album_name = models.CharField(max_length=200)
 
+    class Meta:
+        unique_together = ("user", "stream_id", "played_at")
+
     def __str__(self):
         return f"{self.track_name} by {self.artist_name}  - {self.played_at}"

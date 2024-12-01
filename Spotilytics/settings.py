@@ -15,6 +15,16 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = True
 ALLOWED_HOSTS: list[str] = []
 
+# Celery Configuration
+CELERY_BROKER_URL = config("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
+CELERY_BEAT_SCHEDULE = {
+    "update-played-tracks-every-5-minutes": {
+        "task": "music.tasks.update_played_tracks_task",
+        "schedule": 300.0,
+    },
+}
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",

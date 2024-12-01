@@ -557,3 +557,50 @@ async def get_items_by_genre(
     artists = response.get("artists", {}).get("items", [])
     tracks = response.get("tracks", {}).get("items", [])
     return artists, tracks
+
+
+async def get_recently_played_since(
+    spotify_user_id: str, after_timestamp: int
+) -> list[dict[str, Any]]:
+    """
+    Fetch up to 50 recently played tracks since a specific timestamp.
+    """
+    access_token = await get_access_token(spotify_user_id)
+    if not access_token:
+        logger.error(f"No access token available for user {spotify_user_id}.")
+        return []
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"limit": 50, "after": after_timestamp}
+    url = f"{SPOTIFY_API_BASE_URL}/me/player/recently-played"
+
+    recently_played = []
+
+    async with aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(ssl=ssl_context)
+    ) as session:
+        try:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status == 429:
+                    retry_after = int(response.headers.get("Retry-After", 1))
+                    logger.warning(
+                        f"Rate limited. Retrying after {retry_after} seconds."
+                    )
+                    await asyncio.sleep(retry_after)
+                    return await get_recently_played_since(
+                        spotify_user_id, after_timestamp
+                    )
+
+                response.raise_for_status()
+                data = await response.json()
+                items = data.get("items", [])
+
+                if items:
+                    recently_played.extend(items)
+
+        except aiohttp.ClientError as e:
+            logger.error(f"HTTP error while fetching recently played tracks: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+
+    return recently_played

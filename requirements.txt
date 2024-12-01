@@ -11,3 +11,5 @@ pandas
 psycopg2-binary
 django-environ
 aiohttp
+celery
+certifi
