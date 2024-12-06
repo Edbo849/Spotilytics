@@ -132,3 +132,45 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 10px;
   }
 }
+
+.listening-stats-container .card-header {
+  background-color: #1DB954; /* Spotify green */
+  color: #ffffff;            /* White text */
+  font-size: 1.5rem;
+  text-align: center;
+  border-bottom: none;
+}
+
+/* Optional: Style the card body if needed */
+.listening-stats-container .card-body {
+  background-color: #282828; /* Match the background color */
+}
+.listening-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.listening-stats p {
+  font-size: 1.5rem; /* Make stats bigger */
+  color: #ffffff;    /* White text for labels */
+  margin: 15px 0;    /* Increase spacing between stats */
+  flex: 0 0 48%;     /* Two stats per row */
+}
+
+.listening-stats p .number {
+  color: #1DB954;    /* Spotify green for numbers */
+  font-weight: bold; /* Make numbers bold */
+}
+
+.message p {
+  color: #1DB954;
+  font-style: italic;
+  text-align: center;
+}
+
+.blurred {
+  filter: blur(5px);
+  pointer-events: none;
+}

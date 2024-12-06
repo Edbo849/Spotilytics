@@ -145,19 +145,30 @@ async def get_spotify_track_id(
     return None
 
 
-async def get_deezer_preview(song_name: str) -> str | None:
-    cache_key = (
-        f"deezer_preview_{hashlib.sha256(song_name.lower().encode()).hexdigest()}"
-    )
+async def get_deezer_preview(song_name: str, artist_name: str) -> str | None:
+    """
+    Fetches the 30-second preview URL from Deezer based on song and artist name.
+
+    Args:
+        song_name (str): The name of the song.
+        artist_name (str): The name of the artist.
+
+    Returns:
+        str | None: The preview URL if found, else None.
+    """
+    combined_key = f"{song_name.lower()}_{artist_name.lower()}"
+    cache_key = f"deezer_preview_{hashlib.sha256(combined_key.encode()).hexdigest()}"
     preview_url = cache.get(cache_key)
     if preview_url:
         return preview_url
+
+    search_query = f'track:"{song_name}" artist:"{artist_name}"'
 
     async with aiohttp.ClientSession() as session:
         try:
             async with session.get(
                 "https://api.deezer.com/search",
-                params={"q": song_name, "limit": 1},
+                params={"q": search_query, "limit": 1},
                 ssl=ssl_context,
             ) as response:
                 response.raise_for_status()
@@ -168,7 +179,7 @@ async def get_deezer_preview(song_name: str) -> str | None:
                     return preview_url
         except aiohttp.ClientError as e:
             logger.error(
-                f"Error fetching preview from Deezer for song '{song_name}': {e}"
+                f"Error fetching preview from Deezer for song '{song_name}' by '{artist_name}': {e}"
             )
     return None
 
@@ -339,7 +350,9 @@ async def get_track_details(track_id: str, spotify_user_id: str) -> dict[str, An
     if not track.get("preview_url"):
         song_name = track.get("name")
         if song_name:
-            preview_url = await get_deezer_preview(song_name)
+            preview_url = await get_deezer_preview(
+                song_name, track["artists"][0]["name"]
+            )
             track["preview_url"] = preview_url
     return track
 

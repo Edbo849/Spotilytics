@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
+
 {% block title %}
   Dashboard - Spotify Analytics
 {% endblock %}
@@ -17,6 +19,49 @@
 
   <!-- Dashboard Content -->
   <div class="container">
+    <div class="row">
+      <div class="col-md-12 mb-4">
+        <div class="card h-100 listening-stats-container">
+          <div class="card-header">Your Listening Stats</div>
+          <div class="card-body">
+            {% if listening_stats %}
+              <div class="listening-stats">
+                <p>
+                  Total Minutes Streamed: <span class="number">{{ listening_stats.total_minutes_streamed|floatformat:'0'|intcomma }}</span>
+                </p>
+                <p>
+                  Different Tracks: <span class="number">{{ listening_stats.different_tracks|intcomma }}</span>
+                </p>
+                <p>
+                  Different Artists: <span class="number">{{ listening_stats.different_artists|intcomma }}</span>
+                </p>
+                <p>
+                  Different Albums: <span class="number">{{ listening_stats.different_albums|intcomma }}</span>
+                </p>
+                <p>
+                  Total Days Streamed: <span class="number">{{ listening_stats.days_streamed|intcomma }}</span>
+                </p>
+                <p>
+                  Average Minutes Listened Per Day: <span class="number">{{ listening_stats.average_listening_time_per_day|floatformat:'0'|intcomma }}</span>
+                </p>
+              </div>
+            {% else %}
+              <div class="message">
+                <p>Your listening stats will appear here after you import your listening history.</p>
+              </div>
+              <div class="listening-stats blurred">
+                <p>Total Minutes Streamed: --</p>
+                <p>Different Tracks: --</p>
+                <p>Different Artists: --</p>
+                <p>Different Albums: --</p>
+                <p>Total Days Streamed: --</p>
+                <p>Average Listening Time per Day: -- minutes</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="row">
       <!-- Top Tracks -->
       <div class="col-md-6 mb-4">

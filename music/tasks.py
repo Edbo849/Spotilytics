@@ -6,7 +6,7 @@ from celery import shared_task
 from django.db import IntegrityError
 
 from music.models import PlayedTrack, SpotifyUser
-from music.spotify_api import get_recently_played_since
+from music.spotify_api import get_recently_played_since, get_track_details
 from spotify.util import is_spotify_authenticated
 
 logger = logging.getLogger(__name__)
@@ -25,15 +25,7 @@ async def update_played_tracks():
             logger.info(f"User {spotify_user_id} is not authenticated. Skipping.")
             continue
 
-        has_history = await sync_to_async(
-            PlayedTrack.objects.filter(user=user).exists
-        )()
-        if not has_history:
-            logger.info(
-                f"User {spotify_user_id} has not imported listening history. Skipping."
-            )
-            continue
-
+        # Fetch the latest track
         latest_track = await sync_to_async(
             PlayedTrack.objects.filter(user=user).order_by("-played_at").first
         )()
@@ -58,13 +50,12 @@ async def update_played_tracks():
             try:
                 played_at = datetime.datetime.strptime(
                     played_at_str, "%Y-%m-%dT%H:%M:%S.%fZ"
-                )
-                played_at = played_at.replace(tzinfo=datetime.UTC)
+                ).replace(tzinfo=datetime.UTC)
             except ValueError as ve:
                 logger.warning(f"Invalid timestamp format: {played_at_str} - {ve}")
                 continue
 
-            if played_at <= latest_track.played_at:
+            if latest_track and played_at <= latest_track.played_at:
                 continue
 
             track = item.get("track")
@@ -72,15 +63,25 @@ async def update_played_tracks():
                 continue
 
             track_id = track["id"]
-            track_name = track.get("name", "Unknown Track")
+
+            # Fetch full track details to get 'duration_ms'
+            track_details = await get_track_details(track_id, spotify_user_id)
+            if not track_details:
+                logger.error(f"Failed to fetch details for track {track_id}")
+                continue
+
+            track_name = track_details.get("name", "Unknown Track")
             artist_name = (
-                track["artists"][0]["name"]
-                if track.get("artists") and len(track["artists"]) > 0
+                track_details["artists"][0]["name"]
+                if track_details.get("artists") and len(track_details["artists"]) > 0
                 else "Unknown Artist"
             )
             album_name = (
-                track["album"]["name"] if track.get("album") else "Unknown Album"
+                track_details["album"]["name"]
+                if track_details.get("album")
+                else "Unknown Album"
             )
+            duration_ms = track_details.get("duration_ms", 0)
 
             try:
                 await sync_to_async(PlayedTrack.objects.create)(
@@ -90,6 +91,7 @@ async def update_played_tracks():
                     track_name=track_name,
                     artist_name=artist_name,
                     album_name=album_name,
+                    duration_ms=duration_ms,
                 )
                 logger.critical(f"Added track: {track_name} - {played_at}")
                 new_tracks_added += 1

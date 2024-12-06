@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from music.models import PlayedTrack, SpotifyUser
+from music.utils import get_listening_stats
 from spotify.util import is_spotify_authenticated
 
 from .spotify_api import (
@@ -68,7 +69,21 @@ async def home(request: HttpRequest) -> HttpResponse:
     ):
         return redirect("spotify-auth")
 
+    try:
+        user = await sync_to_async(SpotifyUser.objects.get)(
+            spotify_user_id=spotify_user_id
+        )
+        has_history = await sync_to_async(
+            PlayedTrack.objects.filter(user=user).exists
+        )()
+    except SpotifyUser.DoesNotExist:
+        return redirect("spotify-auth")
+
     time_range = request.GET.get("time_range", "medium_term")
+
+    stats = None
+    if has_history:
+        stats = await sync_to_async(get_listening_stats)(user, time_range)
 
     try:
         top_tracks, top_artists, recently_played, top_genres = await asyncio.gather(
@@ -82,6 +97,7 @@ async def home(request: HttpRequest) -> HttpResponse:
         top_tracks, top_artists, recently_played, top_genres = [], [], [], []
 
     context = {
+        "listening_stats": stats,
         "top_tracks": top_tracks,
         "top_artists": top_artists,
         "recently_played": recently_played,
@@ -378,6 +394,7 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                 artist_name = item["master_metadata_album_artist_name"]
                 album_name = item["master_metadata_album_album_name"]
                 track_uri = item.get("spotify_track_uri")
+                duration_ms = item.get("ms_played", 0)
 
                 if not track_uri or not track_uri.startswith("spotify:track:"):
                     continue
@@ -392,6 +409,7 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                         track_name=track_name,
                         artist_name=artist_name,
                         album_name=album_name,
+                        duration_ms=duration_ms,
                     )
                 except IntegrityError as e:
                     return HttpResponse(f"Database error: {str(e)}", status=500)

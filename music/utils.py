@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.db.models import Count, Max, Min, Sum
 from django.utils import timezone
 
 from music.models import PlayedTrack
@@ -36,3 +39,43 @@ def read_full_history(self, *args, **options):
             album_name=track["album"]["name"],
         )
     self.stdout.write(self.style.SUCCESS(f"Fetched and stored {len(tracks)} tracks."))
+
+
+def get_listening_stats(user, time_range="long_term"):
+    if time_range == "short_term":
+        since = timezone.now() - timedelta(weeks=4)
+    elif time_range == "medium_term":
+        since = timezone.now() - timedelta(weeks=24)
+    else:
+        since = None
+
+    if since:
+        tracks = PlayedTrack.objects.filter(user=user, played_at__gte=since)
+    else:
+        tracks = PlayedTrack.objects.filter(user=user)
+
+    stats = tracks.aggregate(
+        total_tracks=Count("stream_id"),
+        total_minutes_streamed=Sum("duration_ms") / 60000.0,
+        different_tracks=Count("track_id", distinct=True),
+        different_artists=Count("artist_name", distinct=True),
+        different_albums=Count("album_name", distinct=True),
+        first_play_date=Min("played_at"),
+        last_play_date=Max("played_at"),
+    )
+
+    if stats["first_play_date"] and stats["last_play_date"]:
+        stats["days_streamed"] = (
+            stats["last_play_date"].date() - stats["first_play_date"].date()
+        ).days + 1
+    else:
+        stats["days_streamed"] = 0
+
+    if stats["days_streamed"] > 0:
+        stats["average_listening_time_per_day"] = (
+            stats["total_minutes_streamed"] / stats["days_streamed"]
+        )
+    else:
+        stats["average_listening_time_per_day"] = 0
+
+    return stats

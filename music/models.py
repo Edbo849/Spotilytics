@@ -31,6 +31,7 @@ class PlayedTrack(models.Model):
     track_name = models.CharField(max_length=200)
     artist_name = models.CharField(max_length=200)
     album_name = models.CharField(max_length=200)
+    duration_ms = models.BigIntegerField(default=0)
 
     class Meta:
         unique_together = ("user", "stream_id", "played_at")
