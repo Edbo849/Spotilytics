@@ -5,6 +5,7 @@ import ssl
 from typing import Any
 
 import aiohttp
+import certifi
 from asgiref.sync import sync_to_async
 from decouple import config
 from django.core.cache import cache
@@ -27,9 +28,7 @@ class SpotifyClient:
         self.access_token: str | None = None
 
     def _create_ssl_context(self):
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
+        context = ssl.create_default_context(cafile=certifi.where())
         return context
 
     async def _get_session(self) -> aiohttp.ClientSession:
