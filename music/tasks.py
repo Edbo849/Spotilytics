@@ -6,7 +6,7 @@ from celery import shared_task
 from django.db import IntegrityError
 
 from music.models import PlayedTrack, SpotifyUser
-from music.spotify_api import get_recently_played_since, get_track_details
+from music.SpotifyClient import SpotifyClient
 from spotify.util import is_spotify_authenticated
 
 logger = logging.getLogger(__name__)
@@ -34,9 +34,9 @@ async def update_played_tracks():
         else:
             after_timestamp = 0
 
-        recently_played = await get_recently_played_since(
-            spotify_user_id, after_timestamp
-        )
+        async with SpotifyClient(spotify_user_id) as client:
+            recently_played = await client.get_recently_played_since(after_timestamp)
+
         if not recently_played:
             logger.info(f"No new recently played tracks for user {spotify_user_id}.")
             continue
@@ -61,27 +61,44 @@ async def update_played_tracks():
             track = item.get("track")
             if not track or not track.get("id"):
                 continue
-
             track_id = track["id"]
 
-            # Fetch full track details to get 'duration_ms'
-            track_details = await get_track_details(track_id, spotify_user_id)
+            # Fetch track details from Spotify API
+            async with SpotifyClient(spotify_user_id) as client:
+                track_details = await client.get_track_details(track_id)
             if not track_details:
                 logger.error(f"Failed to fetch details for track {track_id}")
                 continue
 
+            # Extract track information
             track_name = track_details.get("name", "Unknown Track")
-            artist_name = (
-                track_details["artists"][0]["name"]
-                if track_details.get("artists") and len(track_details["artists"]) > 0
-                else "Unknown Artist"
-            )
-            album_name = (
-                track_details["album"]["name"]
-                if track_details.get("album")
-                else "Unknown Album"
-            )
             duration_ms = track_details.get("duration_ms", 0)
+            popularity = track_details.get("popularity", 0)  # Fetch popularity
+
+            # Extract artist information
+            artists = track_details.get("artists", [])
+            if artists:
+                artist_name = artists[0].get("name", "Unknown Artist")
+                artist_id = artists[0].get("id")
+            else:
+                artist_name = "Unknown Artist"
+                artist_id = None
+
+            # Fetch artist details to get genres
+            if artist_id:
+                async with SpotifyClient(spotify_user_id) as client:
+                    artist_details = await client.get_artist(artist_id)
+                if artist_details:
+                    genres = artist_details.get("genres", [])
+                else:
+                    genres = []
+            else:
+                genres = []
+
+            # Extract album information
+            album = track_details.get("album", {})
+            album_name = album.get("name", "Unknown Album")
+            album_id = album.get("id")
 
             try:
                 await sync_to_async(PlayedTrack.objects.create)(
@@ -92,6 +109,10 @@ async def update_played_tracks():
                     artist_name=artist_name,
                     album_name=album_name,
                     duration_ms=duration_ms,
+                    artist_id=artist_id,
+                    album_id=album_id,
+                    popularity=popularity,
+                    genres=genres,
                 )
                 logger.critical(f"Added track: {track_name} - {played_at}")
                 new_tracks_added += 1

@@ -17,6 +17,7 @@
     background-color: #333;
     border-radius: 8px;
     margin-right: 1rem;
+    margin-left: 1rem;
     padding: 1rem;
     text-align: center;
     width: 200px;
@@ -56,6 +57,7 @@ a:hover {
 audio {
     width: 35%;
     margin-top: 1rem;
+
 }
 .img-fluid {
     border-radius: 8px;

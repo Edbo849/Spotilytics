@@ -13,3 +13,4 @@ django-environ
 aiohttp
 celery
 certifi
+plotly>=5.0.0

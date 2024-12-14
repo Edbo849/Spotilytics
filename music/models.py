@@ -32,9 +32,13 @@ class PlayedTrack(models.Model):
     artist_name = models.CharField(max_length=200)
     album_name = models.CharField(max_length=200)
     duration_ms = models.BigIntegerField(default=0)
+    genres = models.JSONField(default=list)
+    popularity = models.IntegerField(default=0)
+    artist_id = models.CharField(max_length=50, db_index=True)
+    album_id = models.CharField(max_length=50, db_index=True)
 
     class Meta:
         unique_together = ("user", "stream_id", "played_at")
 
     def __str__(self):
-        return f"{self.track_name} by {self.artist_name}  - {self.played_at}"
+        return f"{self.track_name} by {self.artist_name}"

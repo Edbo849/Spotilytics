@@ -7,19 +7,48 @@
 {% endblock %}
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   <!-- Time Range Selection -->
   <div class="time-range-selector text-center my-4">
-    <form method="get" action="" class="btn-group" role="group">
-      <button type="submit" name="time_range" value="short_term" class="btn btn-outline-primary {% if time_range == 'short_term' %}active{% endif %}">4 Weeks</button>
-      <button type="submit" name="time_range" value="medium_term" class="btn btn-outline-primary {% if time_range == 'medium_term' %}active{% endif %}">6 Months</button>
-      <button type="submit" name="time_range" value="long_term" class="btn btn-outline-primary {% if time_range == 'long_term' %}active{% endif %}">All Time</button>
+    <form method="get" action="" id="timeRangeForm">
+      <div class="time-range-main">
+        <!-- Main Row: 5 Predefined Buttons -->
+        <div class="time-range-row main-row">
+          <button type="submit" name="time_range" value="last_7_days" class="btn btn-outline-primary {% if time_range == 'last_7_days' %}active{% endif %}">Last 7 Days</button>
+          <button type="submit" name="time_range" value="last_4_weeks" class="btn btn-outline-primary {% if time_range == 'last_4_weeks' %}active{% endif %}">Last 4 Weeks</button>
+          <button type="submit" name="time_range" value="6_months" class="btn btn-outline-primary {% if time_range == '6_months' %}active{% endif %}">6 Months</button>
+          <button type="submit" name="time_range" value="all_time" class="btn btn-outline-primary {% if time_range == 'all_time' %}active{% endif %}">All Time</button>
+        </div>
+
+        <!-- Secondary Row: Custom Button -->
+        <div class="time-range-row custom-row mt-3">
+          <button type="button" class="btn btn-outline-secondary" id="customRangeBtn">Custom</button>
+        </div>
+      </div>
+
+      <!-- Custom Date Range Inputs -->
+      <div class="custom-date-inputs" style="display: none;">
+        <div class="input-group">
+          <label for="start_date" class="input-group-text">Start Date</label>
+          <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}" />
+          <label for="end_date" class="input-group-text">End Date</label>
+          <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}" />
+          <button type="submit" name="time_range" value="custom" class="btn btn-outline-success">Apply</button>
+        </div>
+      </div>
+      <!-- Error Message Display -->
+      {% if error_message %}
+        <div class="alert alert-danger mt-3" role="alert">{{ error_message }}</div>
+      {% endif %}
     </form>
   </div>
 
   <!-- Dashboard Content -->
   <div class="container">
     <div class="row">
+      <!-- Listening Stats -->
       <div class="col-md-12 mb-4">
         <div class="card h-100 listening-stats-container">
           <div class="card-header">Your Listening Stats</div>
@@ -39,7 +68,7 @@
                   Different Albums: <span class="number">{{ listening_stats.different_albums|intcomma }}</span>
                 </p>
                 <p>
-                  Total Days Streamed: <span class="number">{{ listening_stats.days_streamed|intcomma }}</span>
+                  Total Days Streamed: <span class="number">{{ listening_stats.days_streamed }}</span>
                 </p>
                 <p>
                   Average Minutes Listened Per Day: <span class="number">{{ listening_stats.average_listening_time_per_day|floatformat:'0'|intcomma }}</span>
@@ -71,11 +100,11 @@
             <ul class="list-group list-group-flush">
               {% for track in top_tracks %}
                 <li class="list-group-item d-flex align-items-center">
-                  <a href="{% url 'music:album' track.album.id %}"><img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="album-cover" /></a>
+                  <a href="{% url 'music:album' track.album_id %}"><img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="album-cover" /></a>
                   <div class="ms-3">
-                    <a href="{% url 'music:track' track.id %}">{{ track.name }}</a>
+                    <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
                     <br />
-                    <small><a href="{% url 'music:artist' track.artists.0.id %}">{{ track.artists.0.name }}</a></small>
+                    <small><a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a></small>
                   </div>
                 </li>
               {% endfor %}
@@ -92,9 +121,9 @@
             <ul class="list-group list-group-flush">
               {% for artist in top_artists %}
                 <li class="list-group-item d-flex align-items-center">
-                  <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" class="album-cover" />
+                  <img src="{{ artist.image.0.url }}" alt="{{ artist.name }}" class="album-cover" />
                   <div class="ms-3">
-                    <a href="{% url 'music:artist' artist.id %}">{{ artist.name }}</a>
+                    <a href="{% url 'music:artist' artist.artist_id %}">{{ artist.name }}</a>
                   </div>
                 </li>
               {% endfor %}
@@ -110,7 +139,12 @@
         <div class="card">
           <div class="card-header">Listening Activity Over Time</div>
           <div class="card-body text-center">
-            <img src="{% url 'music:line_graph' %}" alt="Listening Activity Over Time" class="img-fluid" />
+            <!-- Plotly Line Graph -->
+            {% if line_graph %}
+              <div class="plotly-graph my-4">{{ line_graph|safe }}</div>
+            {% else %}
+              <p class="text-warning">Line graph data is unavailable.</p>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -123,13 +157,17 @@
           <div class="card-header">Recently Played Tracks</div>
           <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
-              {% for item in recently_played %}
+              {% for track in recently_played %}
                 <li class="list-group-item d-flex align-items-center">
-                  <a href="{% url 'music:album' item.track.album.id %}"><img src="{{ item.track.album.images.0.url }}" alt="{{ item.track.name }}" class="album-cover" /></a>
+                  <a href="{% url 'music:album' track.album_id %}"><img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="album-cover" /></a>
                   <div class="ms-3">
-                    <a href="{% url 'music:track' item.track.id %}">{{ item.track.name }}</a>
+                    <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
                     <br />
-                    <small><a href="{% url 'music:artist' item.track.artists.0.id %}">{{ item.track.artists.0.name }}</a></small>
+                    <small>
+                      <a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a>
+                      <br />
+                      {{ track.played_at|date:'M d, Y H:i' }}
+                    </small>
                   </div>
                 </li>
               {% endfor %}
@@ -138,11 +176,18 @@
         </div>
       </div>
 
-      <!-- Undecided -->
+      <!-- Top Genres -->
       <div class="col-md-6 mb-4">
         <div class="card h-100">
-          <div class="card-header">Undecided</div>
-          <ul class="list-group list-group-flush"></ul>
+          <div class="card-header">Your Top Genres</div>
+          <div class="card-body text-center">
+            <!-- Plotly Pie Chart -->
+            {% if pie_chart %}
+              <div class="plotly-graph my-4">{{ pie_chart|safe }}</div>
+            {% else %}
+              <p class="text-warning">Pie chart data is unavailable.</p>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
@@ -158,15 +203,18 @@
         </div>
       </div>
 
-      <!-- Top Genres -->
+      <!-- Undecided -->
       <div class="col-md-6 mb-4">
         <div class="card h-100">
-          <div class="card-header">Your Top Genres</div>
+          <div class="card-header">Undecided</div>
           <div class="card-body text-center">
-            <img src="{% url 'music:pie_chart' %}?time_range={{ time_range }}" alt="Top Genres" class="img-fluid" />
+            <p>Undecided</p>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <script src="{% static 'js/home.js' %}"></script>
 {% endblock %}
