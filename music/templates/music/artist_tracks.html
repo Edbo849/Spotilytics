@@ -15,6 +15,7 @@
           <th scope="col" data-sort="string">Title</th>
           <th scope="col" data-sort="string">Album</th>
           <th scope="col" data-sort="date">Release Date</th>
+          <th scope="col">Preview</th>
           <th scope="col" data-sort="number">Length</th>
           <th scope="col" data-sort="number">Popularity</th>
         </tr>
@@ -31,6 +32,15 @@
               <a href="{% url 'music:album' track.album.id %}" class="text-white">{{ track.album.name }}</a>
             </td>
             <td>{{ track.album.release_date }}</td>
+            <td>
+              {% if track.preview_url %}
+                <audio controls>
+                  <source src="{{ track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                </audio>
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
             <td>{{ track.duration }}</td>
             <td>{{ track.popularity }}/100</td>
           </tr>

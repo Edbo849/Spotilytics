@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import ssl
 from typing import Any
 
@@ -82,7 +83,7 @@ class SpotifyClient:
                 url, headers=headers, params=params, ssl=self.ssl_context
             ) as response:
                 response.raise_for_status()
-                return await response.json(content_type=None)
+                return await response.json()
         except aiohttp.ClientResponseError as e:
             logger.error(f"HTTP error while fetching {url}: {e.status} {e.message}")
         except Exception as e:
@@ -122,20 +123,49 @@ class SpotifyClient:
         track = await self.make_spotify_request(f"tracks/{track_id}")
         if not track.get("preview_url"):
             song_name = track.get("name")
+
             if song_name and preview:
-                preview_url = await self.get_apple_music_preview(
+                preview_url = await self.get_deezer_preview(
                     song_name, track["artists"][0]["name"]
                 )
                 track["preview_url"] = preview_url
         return track
 
-    async def get_multiple_track_details(self, track_ids: list[str]) -> dict[str, Any]:
+    async def get_multiple_track_details(
+        self, track_ids: list[str], include_preview: bool = False
+    ) -> dict[str, Any]:
+        """
+        Fetch details for multiple tracks, optionally including preview URLs.
+
+        :param track_ids: A list of Spotify track IDs.
+        :param include_preview: Whether to fetch preview URLs from Deezer Music.
+        :return: A dictionary containing track details.
+        """
         headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
         ids_param = ",".join(track_ids)
         params = {"ids": ids_param}
         url = f"{self.SPOTIFY_API_BASE_URL}/tracks"
         response = await self.fetch(url, headers=headers, params=params)
-        return {"tracks": response.get("tracks", [])}
+        tracks = response.get("tracks", [])
+
+        if include_preview:
+            preview_tasks = []
+            for track in tracks:
+                if not track.get("preview_url"):
+                    song_name = track.get("name")
+                    artist_name = (
+                        track["artists"][0]["name"] if track.get("artists") else ""
+                    )
+                    task = asyncio.create_task(
+                        self.get_deezer_preview(song_name, artist_name)
+                    )
+                    preview_tasks.append((track, task))
+
+            for track, task in preview_tasks:
+                preview_url = await task
+                track["preview_url"] = preview_url
+
+        return {"tracks": tracks}
 
     async def get_artist(self, artist_id: str) -> dict[str, Any]:
         return await self.make_spotify_request(f"artists/{artist_id}")
@@ -416,30 +446,45 @@ class SpotifyClient:
         tracks = response.get("tracks", {}).get("items", [])
         return artists, tracks
 
-    async def get_apple_music_preview(
-        self, song_name: str, artist_name: str
-    ) -> str | None:
-        search_query = f"{song_name} {artist_name}"
-        params = {
-            "term": search_query,
-            "media": "music",
-            "limit": 1,
-        }
+    @staticmethod
+    def sanitise_song_name(song_name: str) -> str:
+        """
+        Remove anything after the '-' symbol and content within parentheses or brackets from the song name.
+
+        :param song_name: The original song name.
+        :return: The sanitized song name.
+        """
+        sanitized_name = song_name.split("-", 1)[0].strip()
+
+        sanitized_name = re.sub(r"\(.*?\)|\[.*?\]", "", sanitized_name).strip()
+
+        return sanitized_name
+
+    async def get_deezer_preview(self, song_name: str, artist_name: str) -> str | None:
+        """
+        Fetches the 30-second preview URL from Deezer based on song and artist name.
+        :param song_name: The name of the song.
+        :param artist_name: The name of the artist.
+        :return: The preview URL if available, otherwise None.
+        """
+        song_name = self.sanitise_song_name(song_name)
+
+        search_query = f'track:"{song_name}" artist:"{artist_name}"'
 
         try:
             response = await self.fetch(
-                "https://itunes.apple.com/search", params=params
+                "https://api.deezer.com/search", params={"q": search_query, "limit": 1}
             )
-
-            if response.get("results"):
-                return response["results"][0].get("previewUrl")
+            if response.get("data"):
+                preview_url = response["data"][0].get("preview")
+                return preview_url
         except aiohttp.ClientError as e:
             logger.error(
-                f"Error fetching preview from Apple Music for song '{song_name}' by '{artist_name}': {e}"
+                f"Error fetching preview from Deezer for song '{song_name}' by '{artist_name}': {e}"
             )
         except Exception as e:
             logger.error(
-                f"Unexpected error while fetching Apple Music preview for '{song_name}' by '{artist_name}': {e}"
+                f"Unexpected error while fetching Deezer preview for '{song_name}' by '{artist_name}': {e}"
             )
         return None
 

@@ -74,7 +74,7 @@ async def home(request: HttpRequest) -> HttpResponse:
     except SpotifyUser.DoesNotExist:
         return redirect("spotify-auth")
 
-    time_range = request.GET.get("time_range", "all_time")
+    time_range = request.GET.get("time_range", "last_4_weeks")
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
 
@@ -337,7 +337,6 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
     try:
         async with SpotifyClient(spotify_user_id) as client:
             artist = await client.get_artist(artist_id)
-            logger.critical(artist)
             albums = await client.get_artist_albums(artist_id, True)
 
             track_ids_set: set[str] = set()
@@ -354,7 +353,7 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
             track_details_dict = {}
 
             async def fetch_track_batch(batch_ids):
-                response = await client.get_multiple_track_details(batch_ids)
+                response = await client.get_multiple_track_details(batch_ids, True)
                 tracks = response.get("tracks", [])
                 for track in tracks:
                     if track and track.get("id"):
@@ -385,6 +384,7 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
                                 "name": album["name"],
                                 "images": album["images"],
                                 "release_date": album.get("release_date"),
+                                "preview_url": track_detail.get("preview_url"),
                             },
                             "duration": SpotifyClient.get_duration_ms(
                                 track_detail.get("duration_ms")
@@ -392,8 +392,6 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
                             "popularity": track_detail.get("popularity", "N/A"),
                         }
                         tracks.append(track_info)
-
-            logger.critical(artist)
 
     except Exception as e:
         logger.error(f"Error fetching artist data from Spotify: {e}")

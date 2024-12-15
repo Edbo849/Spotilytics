@@ -37,27 +37,29 @@
     <div class="row">
       <!-- Other Tracks -->
       <div class="col-md-12">
-        <h2>Other tracks you might like</h2>
-        <div class="similar-tracks-scroll-container d-flex">
-          {% for similar_track in similar_tracks %}
-            <div class="track-card">
-              <a href="{% url 'music:track' similar_track.id %}">
-                <img src="{{ similar_track.album.images.0.url }}" class="track-img" alt="{{ similar_track.name }}" />
-                <div class="track-info">
-                  <h5>{{ similar_track.name }}</h5>
-                  <p>{{ similar_track.artists.0.name }}</p>
-                </div>
-              </a>
-              {% if similar_track.preview_url %}
-                <audio controls>
-                  <source src="{{ similar_track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
-                </audio>
-              {% else %}
-                <p class="text-muted">No preview available</p>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </div>
+        {% if similar_tracks %}
+          <h2>Other tracks you might like</h2>
+          <div class="similar-tracks-scroll-container d-flex">
+            {% for similar_track in similar_tracks %}
+              <div class="track-card">
+                <a href="{% url 'music:track' similar_track.id %}">
+                  <img src="{{ similar_track.album.images.0.url }}" class="track-img" alt="{{ similar_track.name }}" />
+                  <div class="track-info">
+                    <h5>{{ similar_track.name }}</h5>
+                    <p>{{ similar_track.artists.0.name }}</p>
+                  </div>
+                </a>
+                {% if similar_track.preview_url %}
+                  <audio controls>
+                    <source src="{{ similar_track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                  </audio>
+                {% else %}
+                  <p class="text-muted">No preview available</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
