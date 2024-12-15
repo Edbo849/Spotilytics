@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 import logging
@@ -6,13 +7,14 @@ from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.vary import vary_on_cookie
 
 from music.graphs import generate_plotly_line_graph, generate_plotly_pie_chart
 from music.models import PlayedTrack, SpotifyUser
@@ -53,6 +55,8 @@ async def search(request: HttpRequest) -> HttpResponse:
     return render(request, "music/search_results.html", {"results": results})
 
 
+@vary_on_cookie
+@cache_page(60 * 30)
 async def home(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -164,6 +168,8 @@ async def home(request: HttpRequest) -> HttpResponse:
     return render(request, "music/home.html", context)
 
 
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 7)
 async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -196,6 +202,8 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/artist.html", context)
 
 
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 30)
 async def album(request: HttpRequest, album_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -232,6 +240,8 @@ async def album(request: HttpRequest, album_id: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/album.html", context)
 
 
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 30)
 async def track(request: HttpRequest, track_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -243,7 +253,6 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
-            logger.critical("Fetching track details")
             track = await client.get_track_details(track_id)
             if not track:
                 raise ValueError("Track details not found.")
@@ -291,6 +300,8 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/track.html", context)
 
 
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 7)
 async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -313,6 +324,8 @@ async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/genre.html", context)
 
 
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 7)
 @csrf_exempt
 async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
@@ -321,51 +334,70 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
     ):
         return await sync_to_async(redirect)("spotify-auth")
 
-    artist_cache_key = f"artist_{artist_id}"
-    tracks_cache_key = f"artist_tracks_{artist_id}"
-    cache_timeout = 3600
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            artist = await client.get_artist(artist_id)
+            logger.critical(artist)
+            albums = await client.get_artist_albums(artist_id, True)
 
-    artist = await sync_to_async(cache.get)(artist_cache_key)
-    tracks = await sync_to_async(cache.get)(tracks_cache_key)
+            track_ids_set: set[str] = set()
+            for album in albums:
+                album_data = await client.get_album(album["id"])
+                album_tracks = album_data.get("tracks", {}).get("items", [])
+                for track in album_tracks:
+                    track_id = track.get("id")
+                    if track_id:
+                        track_ids_set.add(track_id)
 
-    if artist is None or tracks is None:
-        try:
-            async with SpotifyClient(spotify_user_id) as client:
-                artist = await client.get_artist(artist_id)
-                await sync_to_async(cache.set)(artist_cache_key, artist, cache_timeout)
+            track_ids_list: list[str] = list(track_ids_set)
+            batch_size = 50
+            track_details_dict = {}
 
-                albums = await client.get_artist_albums(artist_id, True)
-                tracks = []
-                track_ids = set()
+            async def fetch_track_batch(batch_ids):
+                response = await client.get_multiple_track_details(batch_ids)
+                tracks = response.get("tracks", [])
+                for track in tracks:
+                    if track and track.get("id"):
+                        track_details_dict[track["id"]] = track
 
-                for album in albums:
-                    album_data = await client.get_album(album["id"])
-                    album_tracks = album_data["tracks"]["items"]
+            tasks = [
+                asyncio.create_task(
+                    fetch_track_batch(track_ids_list[i : i + batch_size])
+                )
+                for i in range(0, len(track_ids_list), batch_size)
+            ]
 
-                    for track in album_tracks:
-                        if track["id"] not in track_ids:
-                            track_ids.add(track["id"])
-                            track_details = await client.get_track_details(track["id"])
-                            track["album"] = {
+            await asyncio.gather(*tasks)
+
+            tracks = []
+            for album in albums:
+                album_data = await client.get_album(album["id"])
+                album_tracks = album_data.get("tracks", {}).get("items", [])
+                for track in album_tracks:
+                    track_id = track.get("id")
+                    if track_id and track_id in track_details_dict:
+                        track_detail = track_details_dict[track_id]
+                        track_info = {
+                            "id": track_id,
+                            "name": track_detail.get("name"),
+                            "album": {
                                 "id": album["id"],
                                 "name": album["name"],
                                 "images": album["images"],
-                            }
-                            track["duration"] = await sync_to_async(
-                                client.get_duration_ms
-                            )(track["duration_ms"])
+                                "release_date": album.get("release_date"),
+                            },
+                            "duration": SpotifyClient.get_duration_ms(
+                                track_detail.get("duration_ms")
+                            ),
+                            "popularity": track_detail.get("popularity", "N/A"),
+                        }
+                        tracks.append(track_info)
 
-                            track["preview_url"] = track_details.get(
-                                "preview_url", None
-                            )
-                            track["popularity"] = track_details.get("popularity", "N/A")
-                        tracks.append(track)
+            logger.critical(artist)
 
-            await sync_to_async(cache.set)(tracks_cache_key, tracks, cache_timeout)
-
-        except Exception as e:
-            logger.error(f"Error fetching artist data from Spotify: {e}")
-            artist, tracks = None, []
+    except Exception as e:
+        logger.error(f"Error fetching artist data from Spotify: {e}")
+        artist, tracks = None, []
 
     context = {
         "artist": artist,

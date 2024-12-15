@@ -1,5 +1,4 @@
 import asyncio
-import hashlib
 import logging
 import ssl
 from typing import Any
@@ -8,7 +7,6 @@ import aiohttp
 import certifi
 from asgiref.sync import sync_to_async
 from decouple import config
-from django.core.cache import cache
 
 from music.models import SpotifyUser
 from spotify.util import refresh_spotify_token
@@ -110,115 +108,45 @@ class SpotifyClient:
     async def get_spotify_track_id(
         self, song_name: str, artist_name: str
     ) -> str | None:
-        """
-        Search for a track on Spotify by its name and artist to retrieve its Spotify ID.
-        """
-        cache_key = f"spotify_track_id_{hashlib.sha256((song_name + artist_name).lower().encode()).hexdigest()}"
-        spotify_id = cache.get(cache_key)
-        if spotify_id:
-            return spotify_id
-
         query = f"track:{song_name} artist:{artist_name}"
         params = {"q": query, "type": "track", "limit": 1}
         response = await self.make_spotify_request("search", params=params)
         tracks = response.get("tracks", {}).get("items", [])
         if tracks:
-            spotify_id = tracks[0].get("id")
-            cache.set(cache_key, spotify_id, timeout=86400)
-            return spotify_id
+            return tracks[0].get("id")
         return None
 
-    async def get_track_details(self, track_id: str) -> dict[str, Any]:
-        """
-        Retrieve detailed information about a specific track.
-        """
-        cache_key = f"track_details_{track_id}"
-        track = cache.get(cache_key)
-        if track:
-            return track
-
+    async def get_track_details(
+        self, track_id: str, preview: bool = True
+    ) -> dict[str, Any]:
         track = await self.make_spotify_request(f"tracks/{track_id}")
-        preview_url = None
         if not track.get("preview_url"):
             song_name = track.get("name")
-            if song_name:
+            if song_name and preview:
                 preview_url = await self.get_apple_music_preview(
                     song_name, track["artists"][0]["name"]
                 )
                 track["preview_url"] = preview_url
-        if track:
-            cache.set(cache_key, track, timeout=86400)
         return track
 
     async def get_multiple_track_details(self, track_ids: list[str]) -> dict[str, Any]:
-        """
-        Fetch details for multiple tracks from Spotify.
-        """
-        uncached_ids = []
-        track_details_cached = []
-
-        for track_id in track_ids:
-            cached_details = cache.get(f"track_details_{track_id}")
-            if cached_details:
-                track_details_cached.append(cached_details)
-            else:
-                uncached_ids.append(track_id)
-
-        track_details_fetched = []
-        if uncached_ids:
-            headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
-            ids_param = ",".join(uncached_ids)
-            params = {"ids": ids_param}
-            url = f"{self.SPOTIFY_API_BASE_URL}/tracks"
-            response = await self.fetch(url, headers=headers, params=params)
-            fetched_tracks = response.get("tracks", [])
-            for track in fetched_tracks:
-                cache.set(f"track_details_{track['id']}", track, timeout=86400)
-            track_details_fetched.extend(fetched_tracks)
-
-        return {"tracks": track_details_cached + track_details_fetched}
+        headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
+        ids_param = ",".join(track_ids)
+        params = {"ids": ids_param}
+        url = f"{self.SPOTIFY_API_BASE_URL}/tracks"
+        response = await self.fetch(url, headers=headers, params=params)
+        return {"tracks": response.get("tracks", [])}
 
     async def get_artist(self, artist_id: str) -> dict[str, Any]:
-        """
-        Retrieve detailed information about a specific artist.
-        """
-        cache_key = f"artist_details_{artist_id}"
-        artist = cache.get(cache_key)
-        if artist:
-            return artist
-
-        artist = await self.make_spotify_request(f"artists/{artist_id}")
-        if artist:
-            cache.set(cache_key, artist, timeout=86400)
-        return artist
+        return await self.make_spotify_request(f"artists/{artist_id}")
 
     async def get_multiple_artists(self, artist_ids: list[str]) -> dict[str, Any]:
-        """
-        Fetch details for multiple artists from Spotify.
-        """
-        uncached_ids = []
-        artist_details_cached = []
-
-        for artist_id in artist_ids:
-            cached_details = cache.get(f"artist_details_{artist_id}")
-            if cached_details:
-                artist_details_cached.append(cached_details)
-            else:
-                uncached_ids.append(artist_id)
-
-        artist_details_fetched = []
-        if uncached_ids:
-            headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
-            ids_param = ",".join(uncached_ids)
-            params = {"ids": ids_param}
-            url = f"{self.SPOTIFY_API_BASE_URL}/artists"
-            response = await self.fetch(url, headers=headers, params=params)
-            fetched_artists = response.get("artists", [])
-            for artist in fetched_artists:
-                cache.set(f"artist_details_{artist['id']}", artist, timeout=86400)
-            artist_details_fetched.extend(fetched_artists)
-
-        return {"artists": artist_details_cached + artist_details_fetched}
+        headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
+        ids_param = ",".join(artist_ids)
+        params = {"ids": ids_param}
+        url = f"{self.SPOTIFY_API_BASE_URL}/artists"
+        response = await self.fetch(url, headers=headers, params=params)
+        return {"artists": response.get("artists", [])}
 
     async def search_artist_on_spotify(self, artist_name: str) -> dict[str, Any]:
         """
@@ -491,21 +419,6 @@ class SpotifyClient:
     async def get_apple_music_preview(
         self, song_name: str, artist_name: str
     ) -> str | None:
-        """
-        Fetches the preview URL from Apple Music based on song and artist name.
-
-        :param song_name: The name of the song.
-        :param artist_name: The name of the artist.
-        :return: The preview URL if available, otherwise None.
-        """
-        combined_key = f"{song_name.lower()}_{artist_name.lower()}"
-        cache_key = (
-            f"apple_music_preview_{hashlib.sha256(combined_key.encode()).hexdigest()}"
-        )
-        preview_url = cache.get(cache_key)
-        if preview_url:
-            return preview_url
-
         search_query = f"{song_name} {artist_name}"
         params = {
             "term": search_query,
@@ -517,10 +430,9 @@ class SpotifyClient:
             response = await self.fetch(
                 "https://itunes.apple.com/search", params=params
             )
+
             if response.get("results"):
-                preview_url = response["results"][0].get("previewUrl")
-                cache.set(cache_key, preview_url, timeout=86400)
-                return preview_url
+                return response["results"][0].get("previewUrl")
         except aiohttp.ClientError as e:
             logger.error(
                 f"Error fetching preview from Apple Music for song '{song_name}' by '{artist_name}': {e}"
@@ -534,22 +446,6 @@ class SpotifyClient:
     async def get_lastfm_similar_tracks(
         self, artist_name: str, track_name: str, limit: int = 20
     ) -> list[dict[str, Any]]:
-        """
-        Fetches similar tracks from Last.fm based on artist and track name.
-
-        :param artist_name: The name of the artist.
-        :param track_name: The name of the track.
-        :param limit: The number of similar tracks to fetch.
-        :return: A list of similar track dictionaries.
-        """
-        combined_key = f"{artist_name.lower()}_{track_name.lower()}"
-        cache_key = (
-            f"lastfm_similar_tracks_{hashlib.sha256(combined_key.encode()).hexdigest()}"
-        )
-        similar_tracks = cache.get(cache_key)
-        if similar_tracks:
-            return similar_tracks
-
         params = {
             "method": "track.getsimilar",
             "artist": artist_name,
@@ -574,7 +470,6 @@ class SpotifyClient:
                         "url": track.get("url"),
                     }
                 )
-            cache.set(cache_key, formatted_tracks, timeout=86400)
             return formatted_tracks
         except aiohttp.ClientError as e:
             logger.error(

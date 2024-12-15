@@ -1,5 +1,13 @@
 /* static/css/base.css */
 
+.spotify-green {
+    color: #1DB954;
+}
+
+.spotify-green:hover {
+    color: #1ed760;
+}
+
 .scroll-container {
     overflow-x: auto;
     padding: 1rem 0;
