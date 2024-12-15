@@ -84,7 +84,7 @@ class SpotifyClient:
                 url, headers=headers, params=params, ssl=self.ssl_context
             ) as response:
                 response.raise_for_status()
-                return await response.json()
+                return await response.json(content_type=None)
         except aiohttp.ClientResponseError as e:
             logger.error(f"HTTP error while fetching {url}: {e.status} {e.message}")
         except Exception as e:
@@ -142,7 +142,7 @@ class SpotifyClient:
         if not track.get("preview_url"):
             song_name = track.get("name")
             if song_name:
-                preview_url = await self.get_deezer_preview(
+                preview_url = await self.get_apple_music_preview(
                     song_name, track["artists"][0]["name"]
                 )
                 track["preview_url"] = preview_url
@@ -488,9 +488,11 @@ class SpotifyClient:
         tracks = response.get("tracks", {}).get("items", [])
         return artists, tracks
 
-    async def get_deezer_preview(self, song_name: str, artist_name: str) -> str | None:
+    async def get_apple_music_preview(
+        self, song_name: str, artist_name: str
+    ) -> str | None:
         """
-        Fetches the 30-second preview URL from Deezer based on song and artist name.
+        Fetches the preview URL from Apple Music based on song and artist name.
 
         :param song_name: The name of the song.
         :param artist_name: The name of the artist.
@@ -498,29 +500,34 @@ class SpotifyClient:
         """
         combined_key = f"{song_name.lower()}_{artist_name.lower()}"
         cache_key = (
-            f"deezer_preview_{hashlib.sha256(combined_key.encode()).hexdigest()}"
+            f"apple_music_preview_{hashlib.sha256(combined_key.encode()).hexdigest()}"
         )
         preview_url = cache.get(cache_key)
         if preview_url:
             return preview_url
 
-        search_query = f'track:"{song_name}" artist:"{artist_name}"'
+        search_query = f"{song_name} {artist_name}"
+        params = {
+            "term": search_query,
+            "media": "music",
+            "limit": 1,
+        }
 
         try:
             response = await self.fetch(
-                "https://api.deezer.com/search", params={"q": search_query, "limit": 1}
+                "https://itunes.apple.com/search", params=params
             )
-            if response.get("data"):
-                preview_url = response["data"][0].get("preview")
+            if response.get("results"):
+                preview_url = response["results"][0].get("previewUrl")
                 cache.set(cache_key, preview_url, timeout=86400)
                 return preview_url
         except aiohttp.ClientError as e:
             logger.error(
-                f"Error fetching preview from Deezer for song '{song_name}' by '{artist_name}': {e}"
+                f"Error fetching preview from Apple Music for song '{song_name}' by '{artist_name}': {e}"
             )
         except Exception as e:
             logger.error(
-                f"Unexpected error while fetching Deezer preview for '{song_name}' by '{artist_name}': {e}"
+                f"Unexpected error while fetching Apple Music preview for '{song_name}' by '{artist_name}': {e}"
             )
         return None
 

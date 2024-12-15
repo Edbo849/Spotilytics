@@ -243,6 +243,7 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
+            logger.critical("Fetching track details")
             track = await client.get_track_details(track_id)
             if not track:
                 raise ValueError("Track details not found.")
@@ -270,7 +271,7 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
             else:
                 artist = await client.get_artist(artist_id)
 
-            similar_tracks = await client.get_similar_tracks(track_id, 10)
+            similar_tracks = await client.get_similar_tracks(track_id, 6)
 
     except Exception as e:
         logger.critical(f"Error fetching track data from Spotify: {e}")
