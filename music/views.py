@@ -87,8 +87,12 @@ async def home(request: HttpRequest) -> HttpResponse:
             )
         else:
             try:
-                start = datetime.strptime(start_date, "%Y-%m-%d")
-                end = datetime.strptime(end_date, "%Y-%m-%d")
+                naive_start = datetime.strptime(start_date, "%Y-%m-%d")
+                naive_end = datetime.strptime(end_date, "%Y-%m-%d")
+
+                start = timezone.make_aware(naive_start)
+                end = timezone.make_aware(naive_end) + timedelta(days=1)
+
                 if start > end:
                     error_message = "Start date cannot be after end date."
                 elif end > timezone.now() or start > timezone.now():
@@ -98,7 +102,6 @@ async def home(request: HttpRequest) -> HttpResponse:
 
     stats = None
     if has_history and not error_message:
-        # Set since and until based on time_range
         since, until = None, None
         if time_range == "last_7_days":
             since = timezone.now() - timedelta(days=7)
@@ -121,13 +124,11 @@ async def home(request: HttpRequest) -> HttpResponse:
             since = None
             until = None
 
-        # Fetch stats using the correct time range
         stats = await sync_to_async(get_listening_stats)(
             user, time_range, start_date, end_date
         )
         logger.debug(f"Listening stats: {stats}")
 
-        # Use sync_to_async to call the functions with since and until
         top_tracks = await get_top_tracks(user, since, until, 10)
         top_artists = await get_top_artists(user, since, until, 10)
         recently_played = await get_recently_played(user, since, until, 20)
@@ -533,7 +534,7 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                         "spotify_track_uri",
                     ]
                     if not all(key in item for key in required_keys):
-                        continue  # Skip items with missing keys
+                        continue
 
                     played_at_str = item["ts"]
                     try:
@@ -541,10 +542,10 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                             played_at_str, "%Y-%m-%dT%H:%M:%S%z"
                         )
                     except ValueError:
-                        continue  # Skip items with invalid timestamps
+                        continue
 
                     if played_at > timezone.now():
-                        continue  # Skip items with future timestamps
+                        continue
 
                     track_name = item["master_metadata_track_name"]
                     artist_name = item["master_metadata_album_artist_name"]
@@ -574,7 +575,6 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                         "No valid tracks found in the uploaded file.", status=400
                     )
 
-                # Batch fetch track details
                 batch_size = 50
                 track_details_dict = {}
                 for i in range(0, len(track_ids), batch_size):
@@ -590,7 +590,6 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                         if track_id:
                             track_details_dict[track_id] = track_details
 
-                # Fetch artist details and cache them
                 artist_ids = set()
                 for track_details in track_details_dict.values():
                     artist_info_list = track_details.get("artists", [])
@@ -612,12 +611,10 @@ async def import_history(request: HttpRequest) -> HttpResponse:
                         if artist_id:
                             artist_details_dict[artist_id] = artist_details
 
-                # Begin atomic transaction
                 new_tracks_added = await save_tracks_atomic(
                     user, track_info_list, track_details_dict, artist_details_dict
                 )
 
-                # If all processing steps succeed, save the file
                 await sync_to_async(default_storage.save)(file_path, file)
                 logger.info(
                     f"Successfully imported and saved file: {file.name} {new_tracks_added} tracks)"

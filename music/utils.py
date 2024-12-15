@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
 from django.db.models import Count, Max, Min, Sum
-from django.db.models.functions import TruncDay, TruncMonth, TruncWeek
+from django.db.models.functions import TruncDay, TruncHour, TruncMonth, TruncWeek
 from django.utils import timezone
 
 from music.models import PlayedTrack, SpotifyUser
@@ -87,21 +87,19 @@ def get_listening_stats(user, time_range="all_time", start_date=None, end_date=N
         until = timezone.now()
         truncate_func = TruncWeek("played_at")
         x_label = "Week"
-
     elif time_range == "6_months":
-        since = timezone.now() - timedelta(days=182)  # Approximate 6 months
+        since = timezone.now() - timedelta(days=182)
         until = timezone.now()
         truncate_func = TruncMonth("played_at")
         x_label = "Month"
-
     elif time_range == "last_year":
         since = timezone.now() - timedelta(days=365)
         until = timezone.now()
         truncate_func = TruncMonth("played_at")
         x_label = "Month"
-
     elif time_range == "custom" and start_date and end_date:
         try:
+            # Parse and make aware
             since = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d"))
             until = timezone.make_aware(
                 datetime.strptime(end_date, "%Y-%m-%d")
@@ -112,7 +110,10 @@ def get_listening_stats(user, time_range="all_time", start_date=None, end_date=N
             until = None
         total_duration = (until - since).days if since and until else None
         # Set truncate_func and x_label based on duration
-        if total_duration and total_duration <= 30:
+        if total_duration and total_duration <= 2:
+            truncate_func = TruncHour("played_at")
+            x_label = "Hour"
+        elif total_duration and total_duration <= 30:
             truncate_func = TruncDay("played_at")
             x_label = "Day"
         elif total_duration and total_duration <= 180:
@@ -123,7 +124,6 @@ def get_listening_stats(user, time_range="all_time", start_date=None, end_date=N
             x_label = "Month"
     else:
         # Default to all time
-
         since = None
         until = None
         truncate_func = TruncMonth("played_at")
@@ -178,6 +178,7 @@ def get_listening_stats(user, time_range="all_time", start_date=None, end_date=N
         }
     )
 
+    # Aggregate counts based on the truncate function
     date_counts = (
         tracks.annotate(period=truncate_func)
         .values("period")
@@ -185,8 +186,68 @@ def get_listening_stats(user, time_range="all_time", start_date=None, end_date=N
         .order_by("period")
     )
 
-    dates = [item["period"].strftime("%Y-%m-%d") for item in date_counts]
-    counts = [item["count"] for item in date_counts]
+    # Generate all period start dates within the range
+    all_periods = []
+    if since and isinstance(truncate_func, TruncWeek):
+        # Align 'since' to the start of the week (Monday)
+        current = since - timedelta(days=since.weekday())
+    elif since and isinstance(truncate_func, TruncMonth):
+        # Align 'since' to the first day of the month
+        current = since.replace(day=1)
+    elif since and isinstance(truncate_func, TruncDay):
+        current = since
+    elif since and isinstance(truncate_func, TruncHour):
+        current = since.replace(minute=0, second=0, microsecond=0)
+    else:
+        # If no 'since', use the earliest period in date_counts or default to now
+        if date_counts.exists():
+            current = date_counts.first()["period"]
+        else:
+            current = timezone.now()
+
+    # Ensure 'current' is timezone-aware
+    if not timezone.is_aware(current):
+        current = timezone.make_aware(current)
+
+    while True:
+        all_periods.append(current)
+        if isinstance(truncate_func, TruncWeek):
+            current += timedelta(weeks=1)
+        elif isinstance(truncate_func, TruncMonth):
+            # Advance to the next month
+            year = current.year + (current.month // 12)
+            month = (current.month % 12) + 1
+            try:
+                current = current.replace(year=year, month=month, day=1)
+            except ValueError as e:
+                logger.error(f"Error advancing month: {e}")
+                break
+        elif isinstance(truncate_func, TruncDay):
+            current += timedelta(days=1)
+        elif isinstance(truncate_func, TruncHour):
+            current += timedelta(hours=1)
+        else:
+            break
+
+        # Ensure 'current' remains timezone-aware
+        if not timezone.is_aware(current):
+            current = timezone.make_aware(current)
+
+        if current > until:
+            break
+
+    # Create a dictionary from date_counts for quick lookup
+    count_dict = {item["period"]: item["count"] for item in date_counts}
+
+    # Populate dates and counts, ensuring all periods are included
+    dates = []
+    counts = []
+    for period in all_periods:
+        if isinstance(truncate_func, TruncHour):
+            dates.append(period.strftime("%Y-%m-%d %H:%M"))
+        else:
+            dates.append(period.strftime("%Y-%m-%d"))
+        counts.append(count_dict.get(period, 0))
 
     stats["dates"] = dates
     stats["counts"] = counts

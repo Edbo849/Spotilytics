@@ -14,12 +14,12 @@ def generate_plotly_line_graph(date_labels, counts, x_label="Date"):
             mode="lines+markers",
             line=dict(color="#1DB954"),
             marker=dict(size=8),
+            hovertemplate=f"{x_label}: %{{x}}<br>Songs: %{{y}}<extra></extra>",
         )
     )
 
-    # Configure x-axis based on label type
     tickformat = {
-        "Hour": "%H:00",
+        "Hour": "%Y-%m-%d %H:%M",
         "Day": "%Y-%m-%d",
         "Week": "%Y-%m-%d",
         "Month": "%Y-%m",
@@ -41,7 +41,7 @@ def generate_plotly_line_graph(date_labels, counts, x_label="Date"):
     )
 
     fig.update_traces(
-        hovertemplate=f"Date: %{{x|{tickformat}}}<br>Songs: %{{y}}<extra></extra>"
+        hovertemplate=f"{x_label}: %{{x|{tickformat}}}<br>Songs: %{{y}}<extra></extra>"
     )
 
     return fig.to_html(full_html=False, include_plotlyjs=False)
