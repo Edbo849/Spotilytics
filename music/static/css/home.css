@@ -35,7 +35,13 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.3s ease;
 }
 
-
+.list-group-item .text-end {
+    text-align: right;
+    white-space: nowrap;
+}
+.minutes-listened {
+    color: #b1b1b1;
+}
 
 /* Card and List Styles */
 .card {

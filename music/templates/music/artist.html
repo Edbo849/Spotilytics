@@ -72,6 +72,25 @@
           {% endfor %}
         </div>
       </div>
+      <!-- Compilation Albums -->
+      {% if compilations %}
+        <h4 class="mt-3 text-white">Compilation Albums</h4>
+        <div class="container-fluid py-2">
+          <div class="d-flex flex-row flex-nowrap album-scroll-container">
+            {% for album in compilations %}
+              <div class="card album-card">
+                <a href="{% url 'music:album' album.id %}">
+                  <img src="{{ album.images.0.url }}" alt="{{ album.name }}" class="album-img" />
+                  <div class="album-info">
+                    <span class="text-white">{{ album.name }}</span>
+                    <p>{{ album.release_date|slice:':4' }}</p>
+                  </div>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
       <!-- Similar Artists -->
       {% if similar_artists %}
         <div class="row mb-4">

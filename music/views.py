@@ -183,6 +183,9 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
             artist = await client.get_artist(artist_id)
             similar_artists_spotify = await client.get_similar_artists(artist["name"])
             albums = await client.get_artist_albums(artist_id)
+            compilations = [
+                album for album in albums if album.get("album_type") == "compilation"
+            ]
             top_tracks = await client.get_artist_top_tracks(5, artist_id)
 
             for track in top_tracks:
@@ -198,6 +201,7 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
         "artist": artist,
         "similar_artists": similar_artists_spotify,
         "albums": albums,
+        "compilations": compilations,
         "top_tracks": top_tracks,
     }
     return await sync_to_async(render)(request, "music/artist.html", context)
@@ -354,7 +358,7 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
             track_details_dict = {}
 
             async def fetch_track_batch(batch_ids):
-                response = await client.get_multiple_track_details(batch_ids, True)
+                response = await client.get_multiple_track_details(batch_ids)
                 tracks = response.get("tracks", [])
                 for track in tracks:
                     if track and track.get("id"):
@@ -385,7 +389,6 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
                                 "name": album["name"],
                                 "images": album["images"],
                                 "release_date": album.get("release_date"),
-                                "preview_url": track_detail.get("preview_url"),
                             },
                             "duration": SpotifyClient.get_duration_ms(
                                 track_detail.get("duration_ms")

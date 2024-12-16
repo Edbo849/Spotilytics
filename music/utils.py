@@ -257,7 +257,6 @@ def get_listening_stats(user, time_range="all_time", start_date=None, end_date=N
 
 
 async def get_top_tracks(user, since=None, until=None, limit=10):
-    # Wrap the database query in sync_to_async
     @sync_to_async
     def get_tracks():
         tracks_query = PlayedTrack.objects.filter(user=user)
@@ -270,7 +269,10 @@ async def get_top_tracks(user, since=None, until=None, limit=10):
             tracks_query.values(
                 "track_id", "track_name", "artist_name", "album_id", "artist_id"
             )
-            .annotate(play_count=Count("stream_id"))
+            .annotate(
+                play_count=Count("stream_id"),
+                total_minutes=Sum("duration_ms") / 60000.0,
+            )
             .order_by("-play_count")[:limit]
         )
 
@@ -304,7 +306,10 @@ async def get_top_artists(user, since=None, until=None, limit=10):
 
         return list(
             tracks_query.values("artist_name", "artist_id")
-            .annotate(play_count=Count("stream_id"))
+            .annotate(
+                play_count=Count("stream_id"),
+                total_minutes=Sum("duration_ms") / 60000.0,
+            )
             .order_by("-play_count")[:limit]
         )
 

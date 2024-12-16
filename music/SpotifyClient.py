@@ -267,7 +267,9 @@ class SpotifyClient:
         :return: A list of unique album dictionaries.
         """
         params = {
-            "include_groups": "album,single" if include_single else "album",
+            "include_groups": (
+                "album,single,compilation" if include_single else "album,compilation"
+            ),
             "limit": 50,
         }
         endpoint = f"artists/{artist_id}/albums"

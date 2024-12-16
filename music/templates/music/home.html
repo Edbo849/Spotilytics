@@ -91,20 +91,25 @@
         </div>
       </div>
     </div>
+    <!-- Top Tracks -->
     <div class="row">
-      <!-- Top Tracks -->
       <div class="col-md-6 mb-4">
         <div class="card h-100">
           <div class="card-header">Your Top Tracks</div>
           <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
               {% for track in top_tracks %}
-                <li class="list-group-item d-flex align-items-center">
-                  <a href="{% url 'music:album' track.album_id %}"><img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="album-cover" /></a>
-                  <div class="ms-3">
-                    <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
-                    <br />
-                    <small><a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a></small>
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <a href="{% url 'music:album' track.album_id %}"><img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="album-cover" /></a>
+                    <div class="ms-3">
+                      <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
+                      <br />
+                      <small><a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a></small>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <span class="minutes-listened">{{ track.total_minutes|floatformat:'0'|intcomma }} minutes</span>
                   </div>
                 </li>
               {% endfor %}
@@ -120,10 +125,15 @@
           <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
               {% for artist in top_artists %}
-                <li class="list-group-item d-flex align-items-center">
-                  <img src="{{ artist.image.0.url }}" alt="{{ artist.name }}" class="album-cover" />
-                  <div class="ms-3">
-                    <a href="{% url 'music:artist' artist.artist_id %}">{{ artist.name }}</a>
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <img src="{{ artist.image.0.url }}" alt="{{ artist.artist_name }}" class="album-cover" />
+                    <div class="ms-3">
+                      <a href="{% url 'music:artist' artist.artist_id %}">{{ artist.artist_name }}</a>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <span class="minutes-listened">{{ artist.total_minutes|floatformat:'0'|intcomma }} minutes</span>
                   </div>
                 </li>
               {% endfor %}
