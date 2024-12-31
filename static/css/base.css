@@ -1,42 +1,51 @@
+/* Global Styles */
 body {
-    padding-top: 56px; /* Adjust padding to account for the fixed navbar */
-    background-color: #000; /* Black background */
-    color: #fff; /* White text */
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
     margin: 0;
     padding: 0;
+    background-color: #000;
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
 }
 
+/* Links */
 a {
-    color: #1DB954; /* Spotify green for links */
+    color: #1DB954;
     text-decoration: none;
 }
 
 a:hover {
-    color: #1ED760; /* Slightly lighter green on hover */
+    color: #1ED760;
 }
 
 /* Navbar */
-.navbar {
-    background-color: #1DB954; /* Spotify green */
-    padding: 15px;
-    border-radius: 10px; /* Add rounded corners */
-    height: 67px;
+.navbar.navbar-absolute.navbar-transparent {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1030 !important;
+    background-color: #1e1e2f !important;
+    padding: 15px !important;
+    height: 70px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
 }
 
 .navbar-brand {
-    color: #fff; /* White for brand name */
+    color: #fff;
     font-size: 1.5rem;
 }
 
 .navbar-nav .nav-link {
-    color: #fff; /* White links */
-    
+    color: #fff;
 }
 
 .navbar-nav .nav-link:hover {
-    color: #85d3a0; /* Lighter green on hover */
+    color: #85d3a0;
 }
 
 /* Buttons */
@@ -65,12 +74,14 @@ a:hover {
     background-color: #444;
 }
 
+
+
 /* Cards */
 .card {
     background: linear-gradient(100deg, #2e2e2e, #393939);
     border-radius: 10px;
-    box-shadow:  2px 2px 5px #1a1a1a,
-                 -2px -2px 5px #505050;
+    box-shadow: 2px 2px 5px #1a1a1a,
+                -2px -2px 5px #505050;
     margin-bottom: 20px;
     margin-left: 5px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -78,8 +89,8 @@ a:hover {
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow:  4px 4px 8px #1a1a1a,
-                 -4px -4px 8px #505050;
+    box-shadow: 4px 4px 8px #1a1a1a,
+                -4px -4px 8px #505050;
 }
 
 .card-header {
@@ -96,23 +107,14 @@ a:hover {
 }
 
 .card-title, .card-text {
-    color: #fff; /* White text in cards */
-}
-
-/* Footer */
-.footer {
-    background-color: #1DB954;
     color: #fff;
-    padding: 0.5rem;
-    text-align: center;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    font-size: 0.8rem;
 }
 
 /* Forms */
-input[type="text"], input[type="email"], input[type="password"], textarea {
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+textarea {
     background-color: #222;
     border: 1px solid #444;
     color: #fff;
@@ -122,19 +124,22 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
     margin-bottom: 10px;
 }
 
-input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, textarea:focus {
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+textarea:focus {
     border-color: #1DB954;
     outline: none;
 }
 
 /* Lists */
 ul.list-group li {
-    background-color: #222; /* Darker grey for list items */
+    background-color: #222;
     border-color: #1DB954;
 }
 
 ul.list-group li:hover {
-    background-color: #3f3f3f; /* Slightly lighter than default #222 */
+    background-color: #3f3f3f;
     color: #fff;
 }
 
@@ -163,16 +168,67 @@ table th, table td {
     padding: 12px;
     text-align: left;
 }
-
 /* Modals */
+
 .modal-content {
-    background-color: #333;
-    color: #fff;
+  background-color: #1e1e2f;
+  color: #1e1e2f;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
-.modal-header, .modal-footer {
-    background-color: #1DB954;
-    color: #fff;
+.modal-header {
+  border-bottom: none;
+  background-color: #1DB954 !important;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  padding: 1rem 1.5rem;
+}
+
+.modal-title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  background-color: #1e1e2f;
+}
+
+.modal-body p {
+  color: #fff !important;
+}
+
+.modal-footer {
+  border-top: none;
+  padding: 1rem 1rem;
+  display: flex;
+  justify-content: flex-end;
+  background-color: #1DB954 !important;
+}
+
+.modal-footer .btn {
+  margin-left: 0.5rem;
+}
+
+.modal-footer .btn-primary {
+  background-color: #1DB954;
+  border: none;
+}
+
+.modal-footer .btn-primary:hover {
+  background-color: #1ed760;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #444;
+  border: none;
+}
+
+.modal-footer .btn-secondary:hover {
+  background-color: #555;
 }
 
 /* Custom Scrollbar */
@@ -181,25 +237,94 @@ table th, table td {
 }
 
 ::-webkit-scrollbar-track {
-    background-color: #000;
+    background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
     background-color: #5d8259;
-    border-radius: 10px;
+    border-radius: 4px;
+}
+
+/* Search Form */
+.input-group .form-control {
+    border-radius: 0.25rem 0 0 0.25rem;
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #ccc;
+}
+
+.input-group .input-group-text {
+    border-radius: 0 0.25rem 0.25rem 0;
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #ccc;
+}
+
+.input-group .form-control:focus {
+    box-shadow: none;
+    border-color: #1DB954;
+}
+
+.input-group .input-group-text:hover, 
+.input-group .input-group-text:focus {
+    background-color: #1DB954;
+    color: #fff;
+    border-color: #1DB954;
+}
+
+.search-form {
+    width: 60%;
+    max-width: 500px;
+    margin: auto;
+    text-align: center;
+}
+
+.search-input {
+    height: 40px;
+    border-radius: 30px 0 0 30px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.search-icon {
+    height: 40px;
+    border-radius: 0 30px 30px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.search-input:focus, 
+.search-input:hover {
+    box-shadow: none;
+    border-color: #1DB954;
+}
+
+.search-icon:hover, 
+.search-icon:focus {
+    background-color: #1DB954;
+    color: #fff;
+    border-color: #1DB954;
 }
 
 /* Utility Classes */
 .text-green {
-    color: #1DB954; /* Green text utility class */
+    color: #1DB954;
 }
 
 .bg-black {
-    background-color: #000; /* Black background utility class */
+    background-color: #000;
 }
 
 .bg-dark {
-    background-color: #333; /* Dark background utility class */
+    background-color: #333;
+}
+
+.bg-spotify-green {
+    background-color: #1DB954;
 }
 
 .text-center {
@@ -212,76 +337,4 @@ table th, table td {
 
 .mb-5 {
     margin-bottom: 3rem;
-}
-
-/* static/css/base.css */
-.input-group .form-control {
-    border-radius: 0.25rem 0 0 0.25rem;
-    background-color: #fff; /* White background */
-    color: #000; /* Black text */
-    border: 1px solid #ccc; /* Light grey border */
-}
-
-.input-group .input-group-text {
-    border-radius: 0 0.25rem 0.25rem 0;
-    background-color: #fff; /* White background for the icon initially */
-    color: #000; /* Black icon */
-    border: 1px solid #ccc; /* Light grey border */
-}
-
-.input-group .form-control:focus {
-    box-shadow: none;
-    border-color: #1DB954; /* Spotify green border on focus */
-}
-
-.input-group .input-group-text:hover, .input-group .input-group-text:focus {
-    background-color: #1DB954; /* Spotify green background on hover */
-    color: #fff; /* White icon on hover */
-    border-color: #1DB954; /* Green border on hover */
-}
-
-/* Center the search form in the navbar */
-.search-form {
-    width: 60%; /* Adjust width as necessary */
-    max-width: 500px; /* Restrict max size */
-    margin: auto; /* Ensure form is centered */
-    text-align: center;
-}
-
-/* Adjusting the search input and icon size */
-.search-input {
-    height: 40px; /* Match the height of the input and icon */
-    border-radius: 30px 0 0 30px;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    transition: border-color 0.3s ease; /* Smooth transition for border color */
-}
-
-.search-icon {
-    height: 40px; /* Same height as input */
-    border-radius: 0 30px 30px 0; /* Rounded corners */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.search-input:focus, .search-input:hover {
-    box-shadow: none; /* No shadow on focus */
-    border-color: #1DB954; /* Spotify green border on focus/hover */
-}
-
-.search-icon:hover, .search-icon:focus {
-    background-color: #1DB954; /* Green background on hover */
-    color: #fff; /* White icon on hover */
-    border-color: #1DB954;
-}
-
-input[type="file"]:focus {
-    outline: 2px solid #1DB954; /* Spotify green outline */
-}
-
-.bg-spotify-green {
-    background-color: #1DB954; /* Spotify green */
 }

@@ -1,256 +1,242 @@
-/* static/css/home.css */
-
-/* Color Palette and Typography */
-body {
-  font-family: 'Poppins', sans-serif;
-
-  margin: 0;
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 600;
+.card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-.card-header {
-  font-weight: bold;
-  font-size: 1.2rem;
-  border-bottom: none;
-  text-align: center;
+.listening-stats {
+    max-height: 150px;
 }
 
-.card-body {
-  padding: 20px;
-  border-radius: 8px;
+.chart-area {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform: translateY(-25px);
 }
 
-.time-range-selector {
-  margin-bottom: 20px;
+.stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
-/* Buttons for Time Range Selector */
-.time-range-selector .btn {
-  margin: 0 5px;
-
-  transition: all 0.3s ease;
+.stat-item {
+    flex: 1 1 calc(33.333% - 1rem);
+    box-sizing: border-box;
 }
 
-.list-group-item .text-end {
-    text-align: right;
+/* Styles for Top Artists card */
+.card-list {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 1.5rem;
+}
+
+.card-list .card-header {
+    background-color: #1DB954;
+    color: #fff;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 1rem;
+}
+
+.card-list .card-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.card-list .card-body {
+    padding: 0.5rem;
+    height: 400px;
+    overflow-y: auto;
+}
+
+.card-list .list-group-item {
+    background-color: rgba(34, 42, 66, 0.1);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1rem;
+    transition: background-color 0.3s ease;
+    display: flex;
+    flex-direction: left;
+}
+
+.card-list .list-group-item:hover {
+    background-color: rgba(88, 95, 117, 0.1);
+}
+
+.card-list .album-cover {
+    width: 50px;
+    height: 50px;
+    border-radius: 4px;
+    margin-right: 0.5rem;
+}
+
+.card-list .minutes-listened {
+    color: #fff;
+    display: flex;
+    flex-direction: left;
+    margin-top: 4px;
+    font-size: 0.875rem;
+}
+
+.card-list .list-group-item .d-flex {
+    width: 100%;
+}
+
+.card-list .ms-3 {
+    flex: 1;
+}
+
+.card-list .ms-3 a {
+    color: #1DB954;
+    text-decoration: none;
+}
+
+.card-list .ms-3 a:hover {
+    color: #1ed760;
+}
+
+.card-list .ms-3 small a {
+    color: #b3b3b3;
+}
+
+.card-list .ms-3 small a:hover {
+    color: #1DB954;
+}
+
+/* DateRangePicker Dark Theme Styling */
+.daterangepicker {
+    background-color: #1e1e2f !important;
+    border: 1px solid #2b2b3c !important;
+    color: #ffffff !important;
+}
+
+.daterangepicker .calendar-table {
+    background-color: #1e1e2f !important;
+    border: none !important;
+}
+
+.daterangepicker td.off, 
+.daterangepicker td.off.in-range, 
+.daterangepicker td.off.start-date, 
+.daterangepicker td.off.end-date {
+    background-color: #2b2b3c !important;
+    color: #666 !important;
+}
+
+.daterangepicker td.available:hover, 
+.daterangepicker th.available:hover {
+    background-color: #1DB954 !important;
+    color: #fff !important;
+}
+
+.daterangepicker td.active, 
+.daterangepicker td.active:hover {
+    background-color: #1DB954 !important;
+    color: #fff !important;
+}
+
+.daterangepicker td.in-range {
+    background-color: rgba(29, 185, 84, 0.2) !important;
+    color: #fff !important;
+}
+
+.daterangepicker .calendar-table .next span, 
+.daterangepicker .calendar-table .prev span {
+    border-color: #fff !important;
+}
+
+.daterangepicker .drp-buttons {
+    border-top: 1px solid #2b2b3c !important;
+}
+
+.daterangepicker .drp-selected {
+    color: #fff !important;
+}
+
+.daterangepicker .applyBtn {
+    background-color: #1DB954 !important;
+    border-color: #1DB954 !important;
+    color: #fff !important;
+}
+
+.daterangepicker .cancelBtn {
+    background-color: #333 !important;
+    border-color: #333 !important;
+    color: #fff !important;
+}
+
+.daterangepicker .calendar-table thead tr th {
+    color: #fff !important;
+}
+
+.daterangepicker td.available, 
+.daterangepicker th.available {
+    color: #fff !important;
+}
+
+/* Custom date inputs styling */
+.custom-date-inputs .input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.custom-date-inputs .input-group-text {
+    background-color: #1DB954;
+    color: white;
+    border: none;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    border-radius: 20px 0 0 20px;
+    padding: 0.375rem 0.75rem;
+}
+
+.custom-date-inputs .form-control {
+    background-color: #2b2b3c;
+    border: 1px solid #2b2b3c;
+    color: white;
+    height: 38px;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0;
+    margin: 0;
+}
+
+.custom-date-inputs .btn-outline-success {
+    color: #1DB954;
+    border: 1px solid #1DB954;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0 20px 20px 0;
+    margin: 0;
     white-space: nowrap;
 }
-.minutes-listened {
-    color: #b1b1b1;
+
+.custom-date-inputs .input-group > * {
+    margin: 0;
+    flex-shrink: 0;
 }
 
-/* Card and List Styles */
-.card {
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  margin-bottom: 20px;
-}
-
-.scrollable {
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.list-group-item {
-  background-color: transparent;
-  border: none;
-  transition: background-color 0.3s ease;
-  padding: 15px 10px;
-}
-
-
-.album-cover {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
-  margin-right: 15px;
-}
-
-.list-group-item a {
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.list-group-item small a {
-  font-size: 0.8rem;
-  color: #b3b3b3;
-}
-
-.list-group-item small a:hover {
-  color: #1DB954;
-}
-
-/* Buttons for Time Range Selector */
-.time-range-selector .btn {
-  margin: 0 5px;
-  border-color: #1DB954;
-  color: #1DB954;
-  transition: all 0.3s ease;
-}
-
-.time-range-selector .btn:hover, 
-.time-range-selector .btn.active {
-  background-color: #1DB954;
-  color: #ffffff;
-}
-
-
-.img-fluid {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-
-.text-center p {
-  color: #b3b3b3;
-}
-
-/* Transition effects */
-.btn, .list-group-item a, .album-cover {
-  transition: all 0.3s ease-in-out;
-}
-
-.btn:hover {
-  transform: scale(1.05);
-}
-
-.album-cover:hover {
-  transform: scale(1.1);
-}
-
-/* Responsive tweaks */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .container {
-    padding: 0 10px;
-  }
+    .stats-row {
+        flex-direction: column;
+        align-items: center;
+    }
 
-  .list-group-item {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .list-group-item .album-cover {
-    margin-bottom: 10px;
-  }
-}
-
-.listening-stats-container .card-header {
-  background-color: #1DB954; /* Spotify green */
-  color: #ffffff;            /* White text */
-  font-size: 1.5rem;
-  text-align: center;
-  border-bottom: none;
-}
-
-/* Optional: Style the card body if needed */
-.listening-stats-container .card-body {
-  background-color: #282828; /* Match the background color */
-}
-.listening-stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  text-align: center;
-}
-
-.listening-stats p {
-  font-size: 1.5rem; /* Make stats bigger */
-  color: #ffffff;    /* White text for labels */
-  margin: 15px 0;    /* Increase spacing between stats */
-  flex: 0 0 48%;     /* Two stats per row */
-}
-
-.listening-stats p .number {
-  color: #1DB954;    /* Spotify green for numbers */
-  font-weight: bold; /* Make numbers bold */
-}
-
-.message p {
-  color: #1DB954;
-  font-style: italic;
-  text-align: center;
-}
-
-.blurred {
-  filter: blur(5px);
-  pointer-events: none;
-}
-
-.custom-date-inputs {
-  display: none; /* Initially hidden */
-  margin-top: 20px;
-}
-
-/* Style the Input Group */
-.custom-date-inputs .input-group {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* Style the Labels */
-.custom-date-inputs .input-group-text {
-  background-color: #1DB954;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.custom-date-inputs .input-group-text:hover {
-  background-color: #17a44c;
-}
-
-/* Style the Date Inputs */
-.custom-date-inputs .form-control {
-  background-color: #222;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 5px;
-  padding: 10px;
-  width: 150px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.custom-date-inputs .form-control:focus {
-  border-color: #1DB954;
-  box-shadow: 0 0 5px rgba(29, 185, 84, 0.5);
-  outline: none;
-}
-
-/* Style the Apply Button */
-.custom-date-inputs .btn-outline-success {
-  background-color: #1DB954;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  transition: background-color 0.3s ease;
-}
-
-.custom-date-inputs .btn-outline-success:hover {
-  background-color: #17a44c;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 600px) {
-  .custom-date-inputs .input-group {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .custom-date-inputs .form-control,
-  .custom-date-inputs .btn-outline-success {
-    width: 100%;
-  }
+    .stat-item {
+        flex: 0 0 80%;
+        margin-bottom: 1rem;
+    }
 }

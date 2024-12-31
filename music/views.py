@@ -16,12 +16,13 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
 
-from music.graphs import generate_plotly_line_graph, generate_plotly_pie_chart
+from music.graphs import generate_chartjs_line_graph, generate_chartjs_pie_chart
 from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
 from music.utils import (
     get_listening_stats,
     get_recently_played,
+    get_top_albums,
     get_top_artists,
     get_top_genres,
     get_top_tracks,
@@ -127,14 +128,20 @@ async def home(request: HttpRequest) -> HttpResponse:
         stats = await sync_to_async(get_listening_stats)(
             user, time_range, start_date, end_date
         )
-        logger.debug(f"Listening stats: {stats}")
 
         top_tracks = await get_top_tracks(user, since, until, 10)
         top_artists = await get_top_artists(user, since, until, 10)
         recently_played = await get_recently_played(user, since, until, 20)
         top_genres = await get_top_genres(user, since, until, 10)
+        top_albums = await get_top_albums(user, since, until, 10)
     else:
-        top_tracks, top_artists, top_genres, recently_played = [], [], [], []
+        top_tracks, top_artists, top_genres, recently_played, top_albums = (
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
 
     # Ensure stats is a dictionary
     stats = stats or {}
@@ -143,22 +150,25 @@ async def home(request: HttpRequest) -> HttpResponse:
     listening_counts = stats.get("counts", [])
     x_label = stats.get("x_label", "Date")
 
-    line_graph = (
-        generate_plotly_line_graph(listening_dates, listening_counts, x_label)
+    chart_data = (
+        generate_chartjs_line_graph(listening_dates, listening_counts, x_label)
         if listening_dates
         else None
     )
-
     genres = [item["genre"] for item in top_genres] if top_genres else []
     genre_counts = [item["count"] for item in top_genres] if top_genres else []
-    pie_chart = generate_plotly_pie_chart(genres, genre_counts) if genres else None
+    genre_chart_data = (
+        generate_chartjs_pie_chart(genres, genre_counts) if genres else None
+    )
 
     context = {
-        "line_graph": line_graph,
-        "pie_chart": pie_chart,
+        "segment": "home",
+        "chart_data": json.dumps(chart_data) if chart_data else None,
+        "top_genres": json.dumps(genre_chart_data) if genre_chart_data else None,
         "listening_stats": stats,
         "top_tracks": top_tracks,
         "top_artists": top_artists,
+        "top_albums": top_albums,
         "recently_played": recently_played,
         "time_range": time_range,
         "start_date": start_date,

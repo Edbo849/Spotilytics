@@ -1,101 +1,217 @@
 {% extends 'base.html' %}
-{% load static %}
 {% load humanize %}
-
+{% load static %}
 {% block title %}
-  Dashboard - Spotify Analytics
+  Dashboard
 {% endblock %}
+
+<!-- Specific Page CSS goes HERE -->
+{% block stylesheets %}
+
+{% endblock %}
+
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Time Range Selection -->
-  <div class="time-range-selector text-center my-4">
-    <form method="get" action="" id="timeRangeForm">
-      <div class="time-range-main">
-        <!-- Main Row: 5 Predefined Buttons -->
-        <div class="time-range-row main-row">
-          <button type="submit" name="time_range" value="last_7_days" class="btn btn-outline-primary {% if time_range == 'last_7_days' %}active{% endif %}">Last 7 Days</button>
-          <button type="submit" name="time_range" value="last_4_weeks" class="btn btn-outline-primary {% if time_range == 'last_4_weeks' %}active{% endif %}">Last 4 Weeks</button>
-          <button type="submit" name="time_range" value="6_months" class="btn btn-outline-primary {% if time_range == '6_months' %}active{% endif %}">6 Months</button>
-          <button type="submit" name="time_range" value="all_time" class="btn btn-outline-primary {% if time_range == 'all_time' %}active{% endif %}">All Time</button>
-        </div>
-
-        <!-- Secondary Row: Custom Button -->
-        <div class="time-range-row custom-row mt-3">
-          <button type="button" class="btn btn-outline-secondary" id="customRangeBtn">Custom</button>
-        </div>
-      </div>
-
-      <!-- Custom Date Range Inputs -->
-      <div class="custom-date-inputs" style="display: none;">
-        <div class="input-group">
-          <label for="start_date" class="input-group-text">Start Date</label>
-          <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}" />
-          <label for="end_date" class="input-group-text">End Date</label>
-          <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}" />
-          <button type="submit" name="time_range" value="custom" class="btn btn-outline-success">Apply</button>
-        </div>
-      </div>
-      <!-- Error Message Display -->
-      {% if error_message %}
-        <div class="alert alert-danger mt-3" role="alert">{{ error_message }}</div>
-      {% endif %}
-    </form>
-  </div>
-
-  <!-- Dashboard Content -->
-  <div class="container">
+  <div class="content">
     <div class="row">
-      <!-- Listening Stats -->
-      <div class="col-md-12 mb-4">
-        <div class="card h-100 listening-stats-container">
-          <div class="card-header">Your Listening Stats</div>
-          <div class="card-body">
-            {% if listening_stats %}
-              <div class="listening-stats">
-                <p>
-                  Total Minutes Streamed: <span class="number">{{ listening_stats.total_minutes_streamed|floatformat:'0'|intcomma }}</span>
-                </p>
-                <p>
-                  Different Tracks: <span class="number">{{ listening_stats.different_tracks|intcomma }}</span>
-                </p>
-                <p>
-                  Different Artists: <span class="number">{{ listening_stats.different_artists|intcomma }}</span>
-                </p>
-                <p>
-                  Different Albums: <span class="number">{{ listening_stats.different_albums|intcomma }}</span>
-                </p>
-                <p>
-                  Total Days Streamed: <span class="number">{{ listening_stats.days_streamed }}</span>
-                </p>
-                <p>
-                  Average Minutes Listened Per Day: <span class="number">{{ listening_stats.average_listening_time_per_day|floatformat:'0'|intcomma }}</span>
-                </p>
+      <div class="col-12">
+        <div class="text-center mb-4">
+          <form method="get">
+            <div class="btn-group">
+              <button type="submit" name="time_range" value="last_7_days" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_7_days' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last 7 Days</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="last_4_weeks" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_4_weeks' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last 4 Weeks</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="6_months" class="btn btn-sm btn-primary btn-simple {% if time_range == '6_months' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">6 Months</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="last_year" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_year' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last Year</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="all_time" class="btn btn-sm btn-primary btn-simple {% if time_range == 'all_time' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">All Time</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="button" class="btn btn-sm btn-primary btn-simple" id="customRangeBtn">Custom</button>
+            </div>
+
+            <!-- Custom Date Range Inputs -->
+            <div class="custom-date-inputs mt-3" style="display: none;">
+              <div class="input-group">
+                <label for="start_date" class="input-group-text">Start Date</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}" />
+                <label for="end_date" class="input-group-text">End Date</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}" />
+                <button type="submit" name="time_range" value="custom" class="btn btn-outline-success">Apply</button>
               </div>
-            {% else %}
-              <div class="message">
-                <p>Your listening stats will appear here after you import your listening history.</p>
-              </div>
-              <div class="listening-stats blurred">
-                <p>Total Minutes Streamed: --</p>
-                <p>Different Tracks: --</p>
-                <p>Different Artists: --</p>
-                <p>Different Albums: --</p>
-                <p>Total Days Streamed: --</p>
-                <p>Average Listening Time per Day: -- minutes</p>
-              </div>
+            </div>
+
+            <!-- Error Message Display -->
+            {% if error_message %}
+              <div class="alert alert-danger mt-3" role="alert">{{ error_message }}</div>
             {% endif %}
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="row">
+              <div class="col-sm-6 text-left">
+                <h2 class="card-title">Your Listening Stats</h2>
+              </div>
+              <div class="col-12">
+                <div class="card-body">
+                  {% if listening_stats %}
+                    <div class="listening-stats container">
+                      <div class="stats-row">
+                        <div class="stat-item">
+                          <p>
+                            Total Minutes Streamed: <span class="number">{{ listening_stats.total_minutes_streamed|floatformat:'0'|intcomma }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Different Tracks: <span class="number">{{ listening_stats.different_tracks|intcomma }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Different Artists: <span class="number">{{ listening_stats.different_artists|intcomma }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Different Albums: <span class="number">{{ listening_stats.different_albums|intcomma }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Total Days Streamed: <span class="number">{{ listening_stats.days_streamed }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Average Listening Time per Day: <span class="number">{{ listening_stats.average_listening_time_per_day|floatformat:'0'|intcomma }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Most Played Genre: <span class="number">{{ listening_stats.most_played_genre }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Top Listening Hour: <span class="number">{{ listening_stats.top_listening_hour }}</span>
+                          </p>
+                        </div>
+                        <div class="stat-item">
+                          <p>
+                            Most Popular Day: <span class="number">{{ listening_stats.most_popular_day }}</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <div class="message">
+                      <p>Your listening stats will appear here after you import your listening history.</p>
+                    </div>
+                    <div class="listening-stats blurred">
+                      <p>Total Minutes Streamed: --</p>
+                      <p>Different Tracks: --</p>
+                      <p>Different Artists: --</p>
+                      <p>Different Albums: --</p>
+                      <p>Total Days Streamed: --</p>
+                      <p>Average Listening Time per Day: -- minutes</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Listening History Line Graph -->
+        <div class="card card-chart">
+          <div class="card-header">
+            <div class="row">
+              <div class="col-sm-6 text-left">
+                <h2 class="card-title">Listening History</h2>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-area">
+              {% if chart_data %}
+                <script id="chart-data" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ chart_data|json_script:'chartData' }}"></script>
+                <canvas id="listeningStatsChart"></canvas>
+              {% else %}
+                <p class="text-warning">Line graph data is unavailable.</p>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- Top Tracks -->
     <div class="row">
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">Your Top Tracks</div>
+      <div class="col-lg-4">
+        <div class="card card-list">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-single-02 text-primary"></i>Top Artists</h3>
+          </div>
+          <div class="card-body scrollable">
+            <ul class="list-group list-group-flush">
+              {% for artist in top_artists %}
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <img src="{{ artist.image.0.url }}" alt="{{ artist.artist_name }}" class="album-cover" />
+                    <div class="ms-3">
+                      <a href="{% url 'music:artist' artist.artist_id %}">{{ artist.artist_name }}</a>
+                      <br />
+                      <small>{{ artist.total_minutes|floatformat:'0'|intcomma }} minutes</small>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card card-list">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-headphones text-primary"></i>Top Albums</h3>
+          </div>
+          <div class="card-body scrollable">
+            <ul class="list-group list-group-flush">
+              {% for album in top_albums %}
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <a href="{% url 'music:album' album.album_id %}"><img src="{{ album.image.0.url }}" alt="{{ album.album_name }}" class="album-cover" /></a>
+                    <div class="ms-3">
+                      <a href="{% url 'music:album' album.album_id %}">{{ album.album_name }}</a>
+                      <br />
+                      <small><a href="{% url 'music:artist' album.artist_id %}">{{ album.artist_name }}</a></small>
+                      <br />
+                      <small>{{ album.total_minutes|floatformat:'0'|intcomma }} minutes</small>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card card-list">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-sound-wave text-info"></i>Top Tracks</h3>
+          </div>
           <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
               {% for track in top_tracks %}
@@ -106,34 +222,9 @@
                       <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
                       <br />
                       <small><a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a></small>
+                      <br />
+                      <small>{{ track.total_minutes|floatformat:'0'|intcomma }} minutes</small>
                     </div>
-                  </div>
-                  <div class="text-end">
-                    <span class="minutes-listened">{{ track.total_minutes|floatformat:'0'|intcomma }} minutes</span>
-                  </div>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Top Artists -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">Your Top Artists</div>
-          <div class="card-body scrollable">
-            <ul class="list-group list-group-flush">
-              {% for artist in top_artists %}
-                <li class="list-group-item d-flex align-items-center justify-content-between">
-                  <div class="d-flex align-items-center">
-                    <img src="{{ artist.image.0.url }}" alt="{{ artist.artist_name }}" class="album-cover" />
-                    <div class="ms-3">
-                      <a href="{% url 'music:artist' artist.artist_id %}">{{ artist.artist_name }}</a>
-                    </div>
-                  </div>
-                  <div class="text-end">
-                    <span class="minutes-listened">{{ artist.total_minutes|floatformat:'0'|intcomma }} minutes</span>
                   </div>
                 </li>
               {% endfor %}
@@ -142,30 +233,13 @@
         </div>
       </div>
     </div>
-
-    <!-- Listening Activity Over Time -->
     <div class="row">
-      <div class="col-md-12 mb-4">
-        <div class="card">
-          <div class="card-header">Listening Activity Over Time</div>
-          <div class="card-body text-center">
-            <!-- Plotly Line Graph -->
-            {% if line_graph %}
-              <div class="plotly-graph my-4">{{ line_graph|safe }}</div>
-            {% else %}
-              <p class="text-warning">Line graph data is unavailable.</p>
-            {% endif %}
+      <div class="col-lg-6 col-md-12">
+        <div class="card card-list">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-notes text-success"></i>Recently Played</h3>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recently Played Tracks -->
-    <div class="row">
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">Recently Played Tracks</div>
-          <div class="card-body scrollable">
+          <div class="card-body scrollable" style="height: 440px;">
             <ul class="list-group list-group-flush">
               {% for track in recently_played %}
                 <li class="list-group-item d-flex align-items-center">
@@ -185,46 +259,31 @@
           </div>
         </div>
       </div>
-
-      <!-- Top Genres -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">Your Top Genres</div>
-          <div class="card-body text-center">
-            <!-- Plotly Pie Chart -->
-            {% if pie_chart %}
-              <div class="plotly-graph my-4">{{ pie_chart|safe }}</div>
-            {% else %}
-              <p class="text-warning">Pie chart data is unavailable.</p>
-            {% endif %}
+      <div class="col-lg-6 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <div class="row">
+              <div class="col-sm-6 text-left">
+                <h2 class="card-title">Top Genres</h2>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <!-- Undecided -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">Undecided</div>
-          <div class="card-body text-center">
-            <p>Undecided</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Undecided -->
-      <div class="col-md-6 mb-4">
-        <div class="card h-100">
-          <div class="card-header">Undecided</div>
-          <div class="card-body text-center">
-            <p>Undecided</p>
+          <div class="card-body">
+            <div class="chart-area" style="height: 400px;">
+              {% if top_genres %}
+                <script id="genre-data" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ top_genres|json_script:'genreChart' }}"></script>
+                <canvas id="genreChart"></canvas>
+              {% else %}
+                <p class="text-warning">Line graph data is unavailable.</p>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+{% endblock %}
+
+{% block javascripts %}
   <script src="{% static 'js/home.js' %}"></script>
 {% endblock %}

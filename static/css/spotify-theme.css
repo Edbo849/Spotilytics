@@ -1,0 +1,214 @@
+:root {
+  /* Primary Spotify Colors */
+  --spotify-green: #1DB954;
+  --spotify-dark: #32325d;
+  --spotify-gray: #B3B3B3;
+  --spotify-white: #FFFFFF;
+  --spotify-black: #000000;
+
+  /* Bootstrap / General Overrides */
+  --primary: var(--spotify-green);
+  --secondary: var(--spotify-gray);
+  --success: #5cb85c;       /* Adjust if desired */
+  --info: #5bc0de;          /* Adjust if desired */
+  --warning: #f0ad4e;       /* Adjust if desired */
+  --danger: #d9534f;        /* Adjust if desired */
+  --light: #abb6c2;         /* Adjust if desired */
+  --dark: #4E5D6C;          /* Adjust if desired */
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+                            Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+                            "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+                           "Courier New", monospace;
+}
+
+/* Global Resets and Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  font-family: sans-serif;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font-family-sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--spotify-white);
+  background-color: var(--spotify-dark);
+  text-align: left;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+  color: var(--spotify-white);
+}
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }
+
+/* Paragraphs and Text */
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--spotify-gray);
+}
+a {
+  color: var(--spotify-green);
+  text-decoration: none;
+}
+a:hover,
+a:focus {
+  color: var(--spotify-white);
+  text-decoration: underline;
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--spotify-green) !important;
+}
+.navbar-brand,
+.navbar-nav .nav-link {
+  color: var(--spotify-white) !important;
+}
+.navbar-nav .nav-link:hover {
+  color: var(--spotify-gray) !important;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--spotify-green);
+  border-color: var(--spotify-green);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--spotify-gray);
+  border-color: var(--spotify-gray);
+  color: var(--spotify-dark);
+}
+
+/* Tables */
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: var(--spotify-white);
+  background-color: var(--spotify-dark);
+}
+.table th,
+.table td {
+  border-color: var(--spotify-gray);
+}
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--spotify-dark);
+}
+.table-hover tbody tr:hover {
+  background-color: var(--spotify-dark);
+}
+
+/* Forms */
+.form-control {
+  background-color: var(--spotify-dark);
+  color: var(--spotify-white);
+  border: 1px solid var(--spotify-gray);
+}
+.form-control:focus {
+  border-color: var(--spotify-green);
+  box-shadow: none;
+  color: var(--spotify-white);
+}
+
+/* Alerts (optional examples) */
+.alert-primary {
+  background-color: var(--spotify-green);
+  border: none;
+  color: var(--spotify-white);
+}
+.alert-secondary {
+  background-color: var(--spotify-gray);
+  border: none;
+  color: var(--spotify-black);
+}
+
+/* Footer */
+footer {
+  background-color: var(--spotify-green);
+  color: var(--spotify-white);
+  padding: 1rem;
+  text-align: center;
+}
+
+.btn-outline-primary:focus,
+.btn-outline-primary.focus {
+  box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.5); /* Change to desired color, e.g., Spotify green */
+}
+
+/* If buttons use .btn-primary */
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary.active {
+  box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.5); /* Green fade */
+  background-color: var(--spotify-green); /* Ensure background matches theme */
+  border-color: var(--spotify-green);
+}
+
+/* Table Styles */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--spotify-white);
+    background-color: var(--spotify-dark);
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-color: var(--spotify-gray);
+}
+
+.table thead th {
+    background-color: var(--spotify-green);
+    color: var(--spotify-white);
+    border-bottom: 2px solid var(--spotify-green);
+}
+
+.table-dark {
+    background-color: var(--spotify-dark);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(29, 185, 84, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+/* Utility Classes */
+.text-spotify-green { color: var(--spotify-green) !important; }
+.text-spotify-white { color: var(--spotify-white) !important; }
+.text-spotify-dark  { color: var(--spotify-dark) !important; }
+.bg-spotify-green   { background-color: var(--spotify-green) !important; }
+.bg-spotify-dark    { background-color: var(--spotify-dark) !important; }
+.bg-spotify-black   { background-color: var(--spotify-black) !important; }
+
+/* Responsive Adjustments (example) */
+@media (max-width: 576px) {
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+}

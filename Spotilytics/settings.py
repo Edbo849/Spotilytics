@@ -15,6 +15,10 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = True
 ALLOWED_HOSTS: list[str] = []
 
+# filepath: settings.py
+
+ASSETS_ROOT = "/static/"
+
 # Celery Configuration
 CELERY_BROKER_URL = config("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
@@ -107,6 +111,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "Spotilytics.context_processors.assets_root",
             ],
         },
     },
