@@ -11,6 +11,12 @@
           <p>Dashboard</p>
         </a>
       </li>
+      <li class="{% if 'chat' in segment %} active {% endif %}">
+        <a href="{% url 'music:chat' %}">
+          <i class="tim-icons icon-chat-33"></i>
+          <p>Spotify Chat Bot</p>
+        </a>
+      </li>
       <li>
         <a href="{% url 'spotify-logout' %}">
           <i class="tim-icons icon-button-power"></i>

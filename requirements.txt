@@ -3,7 +3,6 @@ djangorestframework
 requests
 python-decouple
 pre-commit
-matplotlib
 pytz
 redis
 django-redis
@@ -13,4 +12,4 @@ django-environ
 aiohttp
 celery
 certifi
-plotly>=5.0.0
+openai

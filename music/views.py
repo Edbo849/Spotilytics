@@ -5,13 +5,17 @@ import logging
 import os
 from datetime import datetime, timedelta
 
+import openai
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
-from django.http import HttpRequest, HttpResponse
+from django.db.models import Count
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
@@ -483,6 +487,17 @@ def save_tracks_atomic(user, track_info_list, track_details_dict, artist_details
     return count
 
 
+@vary_on_cookie
+async def chat(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
+        spotify_user_id
+    ):
+        return redirect("spotify-auth")
+
+    return render(request, "music/chat.html", {"segment": "chat"})
+
+
 @csrf_exempt
 async def import_history(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
@@ -680,3 +695,77 @@ async def delete_history(request: HttpRequest) -> HttpResponse:
 
         return HttpResponse("All listening history has been deleted.", status=200)
     return HttpResponse(status=405)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class ChatAPI(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        try:
+            data = json.loads(request.body)
+            user_message = data.get("message")
+            if not user_message:
+                return JsonResponse({"error": "No message provided."}, status=400)
+
+            spotify_user_id = request.session.get("spotify_user_id")
+            if not spotify_user_id or not is_spotify_authenticated(spotify_user_id):
+                return JsonResponse({"error": "User not authenticated."}, status=401)
+
+            listening_data = self.get_listening_data(spotify_user_id)
+            prompt = self.create_prompt(user_message, listening_data)
+            ai_response = self.get_ai_response(prompt)
+
+            return JsonResponse({"reply": ai_response})
+
+        except Exception as e:
+            logger.error(f"Error in ChatAPI: {e}")
+            return JsonResponse({"error": "Internal server error."}, status=500)
+
+    def get_listening_data(self, spotify_user_id: str) -> str:
+        top_artists = (
+            PlayedTrack.objects.filter(user_id=spotify_user_id)
+            .values("artist_name")
+            .annotate(count=Count("artist_name"))
+            .order_by("-count")[:15]
+        )
+        top_tracks = (
+            PlayedTrack.objects.filter(user_id=spotify_user_id)
+            .values("track_name")
+            .annotate(count=Count("track_name"))
+            .order_by("-count")[:15]
+        )
+        top_albums = (
+            PlayedTrack.objects.filter(user_id=spotify_user_id)
+            .values("album_name")
+            .annotate(count=Count("album_name"))
+            .order_by("-count")[:15]
+        )
+
+        artists = ", ".join([artist["artist_name"] for artist in top_artists])
+        tracks = ", ".join([track["track_name"] for track in top_tracks])
+        albums = ", ".join([album["album_name"] for album in top_albums])
+
+        return f"Top artists: {artists}. Top tracks: {tracks}. Top albums: {albums}."
+
+    def create_prompt(self, user_message: str, listening_data: str) -> str:
+        return (
+            f"User's listening data: {listening_data}\n"
+            f"User's question: {user_message}\n"
+            f"AI response:"
+        )
+
+    def get_ai_response(self, prompt: str) -> str:
+        openai.api_key = settings.OPENAI_API_KEY
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=150,
+                temperature=0.7,
+            )
+            return response.choices[0].message["content"].strip()
+        except Exception as e:
+            logger.error(f"OpenAI API error: {e}")
+            return "I'm sorry, I couldn't process your request at the moment."

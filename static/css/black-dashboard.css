@@ -3183,13 +3183,13 @@ input[type="button"].btn-block {
   margin-bottom: 0;
   list-style: none; }
 
-.nav-link {
+.nav-link  p {
   display: block;
   padding: 0.5rem 1rem; }
   .nav-link:hover, .nav-link:focus {
     text-decoration: none; }
   .nav-link.disabled {
-    color: #6c757d;
+    color: green !important;
     pointer-events: none;
     cursor: default; }
 
@@ -11571,6 +11571,7 @@ table.tablesorter thead tr .headerSortDown {
   display: block;
   height: auto;
   white-space: nowrap;
+  color: #d7d7d7;
 }
 .sidebar .nav i,
 .off-canvas-sidebar .nav i {

@@ -17,4 +17,6 @@ urlpatterns = [
     path("import-history/", views.import_history, name="import_history"),
     path("delete-history/", views.delete_history, name="delete_history"),
     path("genre/<str:genre_name>/", views.genre, name="genre"),
+    path("chat/", views.chat, name="chat"),
+    path("chat-api/", views.ChatAPI.as_view(), name="chat_api"),
 ]

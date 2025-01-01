@@ -198,6 +198,10 @@ footer {
     transition: background-color 0.3s ease;
 }
 
+.sidebar .nav .nav-link p{
+    color: #ffffff; /* Set text color to white */
+}
+
 /* Utility Classes */
 .text-spotify-green { color: var(--spotify-green) !important; }
 .text-spotify-white { color: var(--spotify-white) !important; }

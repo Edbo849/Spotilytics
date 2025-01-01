@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  Music Chat
+{% endblock %}
+{% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/chat.css' %}" />
+  <div class="container">
+    <header class="mb-4">
+      <h1 class="text-center text-white">Spotify Chat Bot</h1>
+    </header>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="message bot">
+          <p>Hello! I'm your music assistant. You can ask me questions about your music or music in general.</p>
+        </div>
+      </div>
+      <div class="chat-input">
+        <form id="chatForm">
+          <div class="input-group">
+            <input type="text" id="userInput" class="form-control" placeholder="Ask me about your music..." />
+            <button type="submit" class="btn btn-primary">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="loadingIndicator" class="loading-dots" style="display: none;"></div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <script>
+    const CHAT_API_URL = "{% url 'music:chat_api' %}"
+  </script>
+  <script src="{% static 'js/chat.js' %}"></script>
+  <script src="{% static 'js/core/jquery.min.js' %}"></script>
+{% endblock %}
