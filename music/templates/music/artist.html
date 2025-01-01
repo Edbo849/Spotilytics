@@ -6,65 +6,63 @@
 {% endblock %}
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/artist.css' %}" />
-  <div class="artist-detail card mb-4">
-    <div class="card-body">
-      <div class="row">
-        <!-- Artist Details -->
-        <div class="col-md-4">
-          <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" class="img-fluid rounded" />
-          <p class="card-text text-white mt-3">Followers: {{ artist.followers.total|intcomma }}</p>
-          <p class="card-text text-white">Popularity: {{ artist.popularity }}/100</p>
-          <a href="{{ artist.external_urls.spotify }}" class="btn btn-primary" target="_blank">View on Spotify</a>
-          <div class="mb-3">
-            <a href="{% url 'music:artist_all_songs' artist.id %}" class="btn btn-primary all-songs">All Songs</a>
-          </div>
-        </div>
-        <!-- Top Genres -->
-        <div class="col-md-8">
-          <h1 class="card-title text-white">{{ artist.name }}</h1>
-          <h5 class="mt-3 text-white">Top Genres</h5>
-          <div class="card-text genres-section">
+  <div class="container">
+    <!-- Artist Details -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" class="img-fluid artist-image" />
+        <div class="artist-stats mt-3">
+          <p>Followers: {{ artist.followers.total|intcomma }}</p>
+          <p>Popularity: {{ artist.popularity }}/100</p>
+          <div class="genres-section">
+            <h5>Genres</h5>
             {% for genre in artist.genres %}
               <span class="badge badge-secondary genre-badge"><a href="{% url 'music:genre' genre %}" class="text-white">{{ genre }}</a></span>
             {% endfor %}
           </div>
-          <h5 class="mt-3 text-white">Top 5 Songs</h5>
-          <ul class="list-group mb-3">
+        </div>
+        <div class="btn-container">
+          <a href="{{ artist.external_urls.spotify }}" class="btn btn-primary" target="_blank">View on Spotify</a>
+          <a href="{% url 'music:artist_all_songs' artist.id %}" class="btn btn-primary">All Songs</a>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <h1>{{ artist.name }}</h1>
+        <!-- Top Tracks -->
+        <div class="top-tracks-section mt-4">
+          <h5>Popular Tracks</h5>
+          <div class="tracks-list">
             {% for track in top_tracks %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <a href="{% url 'music:album' track.album.id %}"><img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" /></a>
-                <div class="flex-grow-1">
-                  <span>
-                    <td>
-                      <a href="{% url 'music:track' track.id %}" class="text-white">{{ track.name }}</a>
-                    </td>
-                  </span>
-                  <br />
+              <div class="track-item">
+                <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="track-thumbnail" />
+                <div class="track-details">
+                  <a href="{% url 'music:track' track.id %}">{{ track.name }}</a>
                   <small><a href="{% url 'music:album' track.album.id %}">{{ track.album.name }}</a></small>
                 </div>
                 {% if track.preview_url %}
                   <audio controls>
-                    <source src="{{ track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                    <source src="{{ track.preview_url }}" type="audio/mpeg" />
                   </audio>
-                {% else %}
-                  <span class="text-muted">No preview available</span>
                 {% endif %}
-                <span class="badge badge-primary badge-pill">Popularity: {{ track.popularity }}/100</span>
-              </li>
+                <span class="popularity-badge">{{ track.popularity }}/100</span>
+              </div>
             {% endfor %}
-          </ul>
+          </div>
         </div>
       </div>
-      <!-- Albums Section -->
-      <h4 class="mt-3 text-white">Albums</h4>
-      <div class="container-fluid py-2">
-        <div class="d-flex flex-row flex-nowrap album-scroll-container">
+    </div>
+
+    <!-- Albums Section -->
+    <div class="row">
+      <div class="col-12">
+        <h2>Albums</h2>
+        <div class="albums-scroll-container d-flex">
           {% for album in albums %}
-            <div class="card album-card">
+            <div class="album-card">
               <a href="{% url 'music:album' album.id %}">
                 <img src="{{ album.images.0.url }}" alt="{{ album.name }}" class="album-img" />
                 <div class="album-info">
-                  <span class="text-white">{{ album.name }}</span>
+                  <h5>{{ album.name }}</h5>
                   <p>{{ album.release_date|slice:':4' }}</p>
                 </div>
               </a>
@@ -72,50 +70,32 @@
           {% endfor %}
         </div>
       </div>
-      <!-- Compilation Albums -->
-      {% if compilations %}
-        <h4 class="mt-3 text-white">Compilation Albums</h4>
-        <div class="container-fluid py-2">
-          <div class="d-flex flex-row flex-nowrap album-scroll-container">
-            {% for album in compilations %}
-              <div class="card album-card">
-                <a href="{% url 'music:album' album.id %}">
-                  <img src="{{ album.images.0.url }}" alt="{{ album.name }}" class="album-img" />
-                  <div class="album-info">
-                    <span class="text-white">{{ album.name }}</span>
-                    <p>{{ album.release_date|slice:':4' }}</p>
+    </div>
+
+    <!-- Similar Artists -->
+    {% if similar_artists %}
+      <div class="row mt-4">
+        <div class="col-12">
+          <h2>Similar Artists</h2>
+          <div class="similar-artists-scroll-container d-flex">
+            {% for similar_artist in similar_artists %}
+              <div class="artist-card">
+                <a href="{% url 'music:artist' similar_artist.id %}">
+                  <img src="{{ similar_artist.images.0.url }}" alt="{{ similar_artist.name }}" class="artist-img" />
+                  <div class="artist-info">
+                    <h5>{{ similar_artist.name }}</h5>
                   </div>
                 </a>
+                {% if similar_artist.genres %}
+                  <p>
+                    <a href="{% url 'music:genre' similar_artist.genres.0 %}" class="genre-link">{{ similar_artist.genres.0|title }}</a>
+                  </p>
+                {% endif %}
               </div>
             {% endfor %}
           </div>
         </div>
-      {% endif %}
-      <!-- Similar Artists -->
-      {% if similar_artists %}
-        <div class="row mb-4">
-          <div class="col">
-            <h4 class="mt-3 text-white">Other Artists you might like</h4>
-            <div class="container-fluid py-2">
-              <div class="d-flex flex-row flex-nowrap album-scroll-container">
-                {% for similar_artist in similar_artists %}
-                  <div class="card album-card">
-                    <a href="{% url 'music:artist' similar_artist.id %}">
-                      <img src="{{ similar_artist.images.0.url }}" alt="{{ similar_artist.name }}" class="album-img" />
-                      <div class="album-info">
-                        <span class="text-white">{{ similar_artist.name }}</span>
-                        {% if similar_artist.genres %}
-                          <p>{{ similar_artist.genres.0|title }}</p>
-                        {% endif %}
-                      </div>
-                    </a>
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-      {% endif %}
-    </div>
+      </div>
+    {% endif %}
   </div>
 {% endblock %}

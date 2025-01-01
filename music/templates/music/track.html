@@ -25,6 +25,7 @@
         </p>
         <p>Duration: {{ track.duration }}</p>
         <p>Popularity: {{ track.popularity }} / 100</p>
+        <p>Release Date: {{ track.album.release_date }}</p>
         {% if track.preview_url %}
           <audio controls>
             <source src="{{ track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
@@ -42,16 +43,18 @@
           <div class="similar-tracks-scroll-container d-flex">
             {% for similar_track in similar_tracks %}
               <div class="track-card">
-                <a href="{% url 'music:track' similar_track.id %}">
-                  <img src="{{ similar_track.album.images.0.url }}" class="track-img" alt="{{ similar_track.name }}" />
-                  <div class="track-info">
-                    <h5>{{ similar_track.name }}</h5>
-                    <p>{{ similar_track.artists.0.name }}</p>
-                  </div>
-                </a>
+                <div class="track-img-container">
+                  <a href="{% url 'music:album' similar_track.album.id %}"><img src="{{ similar_track.album.images.0.url }}" class="track-img" alt="{{ similar_track.name }}" /></a>
+                </div>
+                <div class="track-info">
+                  <h5><a href="{% url 'music:track' similar_track.id %}" class="track-name">{{ similar_track.name }}</a></h5>
+                  <p>
+                    <a href="{% url 'music:artist' similar_track.artists.0.id %}" class="artist-name">{{ similar_track.artists.0.name }}</a>
+                  </p>
+                </div>
                 {% if similar_track.preview_url %}
                   <audio controls>
-                    <source src="{{ similar_track.preview_url }}" type="audio/mpeg" />Your browser does not support the audio element.
+                    <source src="{{ similar_track.preview_url }}" type="audio/mpeg" />
                   </audio>
                 {% else %}
                   <p class="text-muted">No preview available</p>

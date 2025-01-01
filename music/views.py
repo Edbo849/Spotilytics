@@ -33,6 +33,11 @@ logger = logging.getLogger(__name__)
 
 
 def index(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = request.session.get("spotify_user_id")
+    if not spotify_user_id or not is_spotify_authenticated(spotify_user_id):
+        if "spotify_user_id" in request.session:
+            request.session.flush()
+        return render(request, "music/index.html")
     return render(request, "music/index.html")
 
 

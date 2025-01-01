@@ -356,7 +356,7 @@ async def get_top_tracks(user, since=None, until=None, limit=10):
                 play_count=Count("stream_id"),
                 total_minutes=Sum("duration_ms") / 60000.0,
             )
-            .order_by("-play_count")[:limit]
+            .order_by("-total_minutes")[:limit]
         )
 
     top_tracks = await get_tracks()
@@ -393,7 +393,7 @@ async def get_top_artists(user, since=None, until=None, limit=10):
                 play_count=Count("stream_id"),
                 total_minutes=Sum("duration_ms") / 60000.0,
             )
-            .order_by("-play_count")[:limit]
+            .order_by("-total_minutes")[:limit]
         )
 
     top_artists = await get_artists()
@@ -495,7 +495,7 @@ async def get_top_albums(user, since=None, until=None, limit=10):
                 play_count=Count("stream_id"),
                 total_minutes=Sum("duration_ms") / 60000.0,
             )
-            .order_by("-play_count")[:limit]
+            .order_by("-total_minutes")[:limit]
         )
 
     top_albums = await get_albums()

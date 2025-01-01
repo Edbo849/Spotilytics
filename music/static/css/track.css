@@ -1,9 +1,22 @@
 /* music/static/css/track.css */
+.container {
+    background-color: #282828;
+    padding: 2rem;
+    margin-top: 75px;
+    margin-left: 270px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
 .similar-tracks-scroll-container {
     overflow-x: auto;
     padding: 1rem 0;
     margin-bottom: 1.2rem;
 }
+.similar-tracks-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
 .album-cover {
   transition: transform 0.3s ease;
 }
@@ -23,34 +36,42 @@
     width: 200px;
     transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
+
 .track-card:hover {
     background-color: #444;
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
-.track-img {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
+
+.track-info .track-name {
+    color: #ffffff;
+    transition: color 0.3s ease;
 }
-.track-info {
-    margin-top: 0.5rem;
+
+.track-info .track-name:hover {
+    color: #1DB954;
+}
+
+.track-info .artist-name {
+    color: #b3b3b3;
+    transition: color 0.3s ease;
+}
+
+.track-info .artist-name:hover {
+    color: #1DB954;
 }
 .track-card audio {
     margin-top: 0.5rem;
     width: 100%;
-}
-.container {
-    background-color: #282828;
-    padding: 2rem;
-    border-radius: 8px;
 }
 h1, h2, p {
     color: #ffffff;
 }
 a {
     color: #1DB954;
+    text-decoration: none !important;
 }
+
 a:hover {
     color: #1ed760;
 }

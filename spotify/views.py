@@ -1,3 +1,4 @@
+from django.contrib.auth import logout
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from requests import Request, get, post
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from music.models import SpotifyUser
+from spotify.models import SpotifyToken
 
 from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 from .util import is_spotify_authenticated, update_or_create_user_tokens
@@ -122,6 +124,26 @@ def spotify_callback(request: HttpRequest) -> HttpResponse:
     )
 
     return redirect("music:home")
+
+
+def logout_view(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = request.session.get("spotify_user_id")
+
+    # Clear session
+    logout(request)
+    request.session.flush()
+
+    # Delete associated token if it exists
+    if spotify_user_id:
+        SpotifyToken.objects.filter(
+            spotify_user__spotify_user_id=spotify_user_id
+        ).delete()
+
+    # Force clear any remaining session data
+    request.session.clear()
+    request.session.cycle_key()
+
+    return redirect("music:index")
 
 
 class IsAuthenticated(APIView):

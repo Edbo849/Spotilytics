@@ -1,89 +1,94 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}
-  {% load static %}Discover
+  Search Results
 {% endblock %}
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/search_results.css' %}" />
-  {% if results %}
-    <!-- Artists -->
-    <div class="search-section">
-      <h3 class="text-white">Artists</h3>
-      <div class="scroll-container">
-        <div class="d-flex flex-row flex-nowrap">
-          {% for artist in results.artists.items %}
-            <div class="card search-card">
-              <a href="{% url 'music:artist' artist.id %}" class="text-decoration-none">
-                <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
-                <div class="card-body">
-                  <h5 class="card-title spotify-green">{{ artist.name }}</h5>
-                </div>
-              </a>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <!-- Albums -->
-    <div class="search-section">
-      <h3 class="text-white">Albums</h3>
-      <div class="scroll-container">
-        <div class="d-flex flex-row flex-nowrap">
-          {% for album in results.albums.items %}
-            <div class="card search-card">
-              <a href="{% url 'music:album' album.id %}">
-                <img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" />
-                <div class="card-body">
-                  <h5 class="card-title">{{ album.name }}</h5>
-                  <a href="{% url 'music:artist' album.artists.0.id %}" class="spotify-green"><p class="card-text">{{ album.artists.0.name }}</p></a>
-                  <p class="spotify-green">{{ album.release_date|slice:':4' }}</p>
-                </div>
-              </a>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <!-- Songs -->
-    <div class="search-section">
-      <h3 class="text-white">Songs</h3>
-      <div class="scroll-container">
-        <div class="d-flex flex-row flex-nowrap">
-          {% for track in results.tracks.items %}
-            <div class="card search-card">
-              <a href="{% url 'music:track' track.id %}">
-                <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
-                <div class="card-body">
-                  <h5 class="card-title">{{ track.name }}</h5>
-                  <p class="card-text spotify-green">{{ track.artists.0.name }}</p>
-                </div>
-              </a>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <!-- Playlists -->
-    <div class="search-section">
-      <h3 class="text-white">Playlists</h3>
-      <div class="scroll-container">
-        <div class="d-flex flex-row flex-nowrap">
-          {% for playlist in results.playlists.items %}
-            {% if playlist %}
+  <div class="container">
+    {% if results %}
+      <!-- Artists Section -->
+      <div class="search-section">
+        <h3>Artists</h3>
+        <div class="scroll-container">
+          <div class="d-flex flex-row flex-nowrap">
+            {% for artist in results.artists.items %}
               <div class="card search-card">
-                <a href="{{ playlist.external_urls.spotify }}" class="text-decoration-none" target="_blank">
-                  <img src="{{ playlist.images.0.url }}" class="card-img-top" alt="{{ playlist.name }}" />
+                <a href="{% url 'music:artist' artist.id %}">
+                  {% if artist.images %}
+                    <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
+                  {% else %}
+                    <img src="{% static 'images/default_artist.png' %}" class="card-img-top" alt="{{ artist.name }}" />
+                  {% endif %}
                   <div class="card-body">
-                    <h5 class="card-title">{{ playlist.name }}</h5>
-                    <p class="card-text spotify-green">{{ playlist.owner.display_name }}</p>
+                    <h5 class="card-title">{{ artist.name }}</h5>
                   </div>
                 </a>
               </div>
-            {% endif %}
-          {% endfor %}
+            {% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-  {% else %}
-    <p class="text-white">No results found.</p>
-  {% endif %}
+
+      <!-- Albums Section -->
+      <div class="search-section">
+        <h3>Albums</h3>
+        <div class="scroll-container">
+          <div class="d-flex flex-row flex-nowrap">
+            {% for album in results.albums.items %}
+              <div class="card search-card">
+                <a href="{% url 'music:album' album.id %}"><img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" /></a>
+                <div class="card-body">
+                  <a href="{% url 'music:album' album.id %}"><h5 class="card-title">{{ album.name }}</h5></a>
+                  <a href="{% url 'music:artist' album.artists.0.id %}" class="artist-link"><p class="card-text">{{ album.artists.0.name }}</p></a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracks Section -->
+      <div class="search-section">
+        <h3>Songs</h3>
+        <div class="scroll-container">
+          <div class="d-flex flex-row flex-nowrap">
+            {% for track in results.tracks.items %}
+              <div class="card search-card">
+                <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
+                <div class="card-body">
+                  <a href="{% url 'music:track' track.id %}" class="track-link"><h5 class="card-title">{{ track.name }}</h5></a>
+                  <a href="{% url 'music:artist' track.artists.0.id %}" class="artist-link"><p class="card-text">{{ track.artists.0.name }}</p></a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Playlists Section -->
+      <div class="search-section">
+        <h3>Playlists</h3>
+        <div class="scroll-container">
+          <div class="d-flex flex-row flex-nowrap">
+            {% for playlist in results.playlists.items %}
+              {% if playlist %}
+                <div class="card search-card">
+                  <a href="{{ playlist.external_urls.spotify }}" target="_blank">
+                    <img src="{{ playlist.images.0.url }}" class="card-img-top" alt="{{ playlist.name }}" />
+                    <div class="card-body">
+                      <h5 class="card-title">{{ playlist.name }}</h5>
+                      <p class="card-text">{{ playlist.owner.display_name }}</p>
+                    </div>
+                  </a>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p class="text-white">No results found.</p>
+    {% endif %}
+  </div>
 {% endblock %}
