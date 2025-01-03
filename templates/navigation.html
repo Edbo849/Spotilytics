@@ -13,10 +13,22 @@
         </div>
         <a class="navbar-brand" href="{% url 'music:home' %}">Dashboard</a>
       </div>
+
+      <!-- Centered Search Bar -->
+      <div class="search-container mx-auto d-none d-lg-block">
+        <form class="search-form" action="{% url 'music:search' %}" method="GET">
+          <div class="form position-relative">
+            <input type="text" name="q" class="form-control form-input" placeholder="Search for songs, artists, albums..." value="{{ request.GET.q }}" />
+            <button type="submit" class="search-button"><i class="tim-icons icon-zoom-split search-icon"></i></button>
+          </div>
+        </form>
+      </div>
+
       <div class="collapse navbar-collapse" id="navigation">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <div class="search-container">
+          <!-- Mobile Search -->
+          <li class="nav-item d-lg-none">
+            <div class="search-container w-100">
               <form class="search-form" action="{% url 'music:search' %}" method="GET">
                 <div class="form position-relative">
                   <input type="text" name="q" class="form-control form-input" placeholder="Search for songs, artists, albums..." value="{{ request.GET.q }}" />
@@ -28,27 +40,7 @@
           <li class="nav-item">
             <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#importHistoryModal">Import Listening History</a>
           </li>
-          <li class="nav-item dropdown">
-            <!-- Profile Dropdown -->
-            <a href="#" class="nav-link dropdown-toggle" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <div class="photo">
-                <img src="{% static 'images/anime3.png' %}" alt="Profile Photo" width="30" height="30" class="rounded-circle" />
-              </div>
-              <b class="caret d-none d-lg-block d-xl-block"></b>
-              <p class="d-lg-none">Log out</p>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-              <li>
-                <a href="#" class="dropdown-item">Profile</a>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <a href="#" class="dropdown-item">Logout</a>
-              </li>
-            </ul>
-          </li>
+          <!-- Rest of navbar items... -->
         </ul>
       </div>
     </div>

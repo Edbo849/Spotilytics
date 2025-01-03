@@ -1,53 +1,42 @@
 import logging
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-def generate_chartjs_line_graph(date_labels, counts, x_label="Date"):
+def generate_chartjs_line_graph(date_labels, datasets, x_label="Date"):
     """
-    Generates data for a Chart.js line graph.
+    Generates data for a Chart.js line graph with multiple datasets.
 
     Args:
         date_labels (list): List of date labels for x-axis
-        counts (list): List of count values for y-axis
+        datasets (list): List of dictionaries containing dataset info:
+                        [{'label': 'Name', 'data': [counts], 'color': '#hex'}]
         x_label (str): Label for x-axis
 
     Returns:
         dict: Chart.js compatible data structure
     """
 
-    if x_label.lower() == "month":
-        date_format = "%m-%Y"
-    elif x_label.lower() == "year":
-        date_format = "%Y"
-    else:
-        date_format = "%d-%m-%Y"
-
-    formatted_labels = [
-        datetime.strptime(date, "%Y-%m-%d").strftime(date_format)
-        for date in date_labels
-    ]
-
-    chart_data = {
-        "labels": formatted_labels,
-        "datasets": [
+    chart_datasets = []
+    for dataset in datasets:
+        chart_datasets.append(
             {
-                "label": "Number of Songs",
-                "data": counts,
+                "label": dataset["label"],
+                "data": dataset["data"],
                 "fill": False,
-                "borderColor": "#1DB954",
-                "backgroundColor": "#1DB954",
-                "pointBackgroundColor": "#1DB954",
-                "pointBorderColor": "#1DB954",
-                "pointHoverBackgroundColor": "#1DB954",
+                "borderColor": dataset.get("color", "#1DB954"),
+                "backgroundColor": dataset.get("color", "#1DB954"),
+                "pointBackgroundColor": dataset.get("color", "#1DB954"),
+                "pointBorderColor": dataset.get("color", "#1DB954"),
+                "pointHoverBackgroundColor": dataset.get("color", "#1DB954"),
                 "pointHoverBorderColor": "#fff",
                 "borderWidth": 2,
                 "pointRadius": 4,
                 "pointHoverRadius": 6,
             }
-        ],
-    }
+        )
+
+    chart_data = {"labels": date_labels, "datasets": chart_datasets}
     return chart_data
 
 

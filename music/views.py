@@ -24,8 +24,10 @@ from music.graphs import generate_chartjs_line_graph, generate_chartjs_pie_chart
 from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
 from music.utils import (
+    get_date_range,
     get_listening_stats,
     get_recently_played,
+    get_streaming_trend_data,
     get_top_albums,
     get_top_artists,
     get_top_genres,
@@ -111,38 +113,29 @@ async def home(request: HttpRequest) -> HttpResponse:
                 error_message = "Invalid date format. Please use YYYY-MM-DD."
 
     stats = None
-    if has_history and not error_message:
-        since, until = None, None
-        if time_range == "last_7_days":
-            since = timezone.now() - timedelta(days=7)
-            until = timezone.now()
-        elif time_range == "last_4_weeks":
-            since = timezone.now() - timedelta(weeks=4)
-            until = timezone.now()
-        elif time_range == "6_months":
-            since = timezone.now() - timedelta(days=182)
-            until = timezone.now()
-        elif time_range == "last_year":
-            since = timezone.now() - timedelta(days=365)
-            until = timezone.now()
-        elif time_range == "custom" and start_date and end_date:
-            since = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d"))
-            until = timezone.make_aware(
-                datetime.strptime(end_date, "%Y-%m-%d")
-            ) + timedelta(days=1)
-        else:
-            since = None
-            until = None
+    if has_history:
+        try:
+            since, until = await get_date_range(time_range, start_date, end_date)
 
-        stats = await sync_to_async(get_listening_stats)(
-            user, time_range, start_date, end_date
-        )
+            stats = await sync_to_async(get_listening_stats)(
+                user, time_range, start_date, end_date
+            )
 
-        top_tracks = await get_top_tracks(user, since, until, 10)
-        top_artists = await get_top_artists(user, since, until, 10)
-        recently_played = await get_recently_played(user, since, until, 20)
-        top_genres = await get_top_genres(user, since, until, 10)
-        top_albums = await get_top_albums(user, since, until, 10)
+            top_tracks = await get_top_tracks(user, since, until, 10)
+            top_artists = await get_top_artists(user, since, until, 10)
+            recently_played = await get_recently_played(user, since, until, 20)
+            top_genres = await get_top_genres(user, since, until, 10)
+            top_albums = await get_top_albums(user, since, until, 10)
+
+        except ValueError as e:
+            error_message = str(e)
+            top_tracks, top_artists, top_genres, recently_played, top_albums = (
+                [],
+                [],
+                [],
+                [],
+                [],
+            )
     else:
         top_tracks, top_artists, top_genres, recently_played, top_albums = (
             [],
@@ -159,8 +152,20 @@ async def home(request: HttpRequest) -> HttpResponse:
     listening_counts = stats.get("counts", [])
     x_label = stats.get("x_label", "Date")
 
+    datasets = (
+        [
+            {
+                "label": "Plays",
+                "data": listening_counts,
+                "color": "#1DB954",
+            }
+        ]
+        if listening_counts
+        else []
+    )
+
     chart_data = (
-        generate_chartjs_line_graph(listening_dates, listening_counts, x_label)
+        generate_chartjs_line_graph(listening_dates, datasets, x_label)
         if listening_dates
         else None
     )
@@ -201,6 +206,12 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
         async with SpotifyClient(spotify_user_id) as client:
             artist = await client.get_artist(artist_id)
             similar_artists_spotify = await client.get_similar_artists(artist["name"])
+
+            similar_artists_spotify = [
+                similar
+                for similar in similar_artists_spotify
+                if similar.get("id") != artist_id
+            ]
             albums = await client.get_artist_albums(artist_id)
             compilations = [
                 album for album in albums if album.get("album_type") == "compilation"
@@ -214,7 +225,13 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
 
     except Exception as e:
         logger.critical(f"Error fetching artist data from Spotify: {e}")
-        artist, similar_artists_spotify, albums, top_tracks = None, [], [], []
+        artist, similar_artists_spotify, albums, compilations, top_tracks = (
+            None,
+            [],
+            [],
+            [],
+            [],
+        )
 
     context = {
         "artist": artist,
@@ -496,6 +513,287 @@ async def chat(request: HttpRequest) -> HttpResponse:
         return redirect("spotify-auth")
 
     return render(request, "music/chat.html", {"segment": "chat"})
+
+
+def get_x_label(time_range):
+    x_label = "Date"
+    if time_range == "last_7_days":
+        x_label = "Date"
+    elif time_range in ["last_4_weeks", "6_months"]:
+        x_label = "Month"
+    elif time_range in ["last_year", "all_time"]:
+        x_label = "Year"
+    return x_label
+
+
+@vary_on_cookie
+@cache_page(60 * 60 * 24)
+async def artist_stats(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
+        spotify_user_id
+    ):
+        return redirect("spotify-auth")
+
+    time_range = request.GET.get("time_range", "last_4_weeks")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    since, until = await get_date_range(time_range, start_date, end_date)
+
+    user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
+    top_artists = await get_top_artists(user, since, until, 5)
+
+    top_artist_ids = {artist["artist_id"] for artist in top_artists}
+
+    seen_artist_ids = set(top_artist_ids)
+    similar_artists = []
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            for artist in top_artists:
+                similar = await client.get_similar_artists(
+                    artist["artist_name"], limit=5
+                )
+                for s in similar:
+                    if s["id"] not in seen_artist_ids:
+                        similar_artists.append(s)
+                        seen_artist_ids.add(s["id"])
+    except Exception as e:
+        logger.error(f"Error fetching similar artists: {e}")
+
+    x_label = get_x_label(time_range)
+
+    dates, trends = await get_streaming_trend_data(
+        user, since, until, top_artists, "artist"
+    )
+    trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
+
+    context = {
+        "segment": "artist-stats",
+        "time_range": time_range,
+        "start_date": start_date,
+        "end_date": end_date,
+        "stats_title": "Artists",
+        "top_artists": top_artists,
+        "similar_artists": similar_artists,
+        "trends_chart": trends_chart,
+    }
+
+    return render(request, "music/artist_stats.html", context)
+
+
+@vary_on_cookie
+@cache_page(60 * 60 * 24)
+async def album_stats(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
+        spotify_user_id
+    ):
+        logger.warning(f"User not authenticated: {spotify_user_id}")
+        return redirect("spotify-auth")
+
+    time_range = request.GET.get("time_range", "last_4_weeks")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    since, until = await get_date_range(time_range, start_date, end_date)
+
+    user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
+    top_albums = await get_top_albums(user, since, until, 5)
+
+    similar_albums = []
+    seen_album_ids = {album["album_id"] for album in top_albums}
+
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            for album in top_albums:
+                similar_artists = await client.get_similar_artists(
+                    album["artist_name"], limit=10
+                )
+
+                for artist in similar_artists:
+                    if artist["id"] in seen_album_ids:
+                        continue
+                    artist_top_albums = await client.get_artist_top_albums(
+                        artist["id"], limit=1
+                    )
+
+                    for similar_album in artist_top_albums:
+                        album_id = similar_album["id"]
+                        if album_id not in seen_album_ids:
+                            similar_albums.append(similar_album)
+                            seen_album_ids.add(album_id)
+                            if len(similar_albums) >= 10:
+                                break
+                    if len(similar_albums) >= 10:
+                        break
+                if len(similar_albums) >= 10:
+                    break
+
+    except Exception as e:
+        logger.error(f"Error fetching similar albums: {e}", exc_info=True)
+
+    x_label = get_x_label(time_range)
+    dates, trends = await get_streaming_trend_data(
+        user, since, until, top_albums, "album"
+    )
+    logger.critical("Trends: %s", trends)
+    for trend in trends:
+        album = next(
+            (a for a in top_albums if a.get("album_name") == trend["label"]), None
+        )
+        if album:
+            trend["label"] = album["album_name"]
+
+    trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
+
+    context = {
+        "segment": "album-stats",
+        "time_range": time_range,
+        "start_date": start_date,
+        "end_date": end_date,
+        "stats_title": "Albums",
+        "top_albums": top_albums,
+        "similar_albums": similar_albums,
+        "trends_chart": trends_chart,
+    }
+
+    return render(request, "music/album_stats.html", context)
+
+
+@vary_on_cookie
+@cache_page(60 * 60 * 24)
+async def track_stats(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
+        spotify_user_id
+    ):
+        logger.warning(f"User not authenticated: {spotify_user_id}")
+        return redirect("spotify-auth")
+
+    time_range = request.GET.get("time_range", "last_4_weeks")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    since, until = await get_date_range(time_range, start_date, end_date)
+
+    user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
+    top_tracks = await get_top_tracks(user, since, until, 5)
+
+    similar_tracks = []
+    seen_tracks = set()
+
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            tasks = [
+                client.get_similar_tracks(track["track_id"], False, limit=3)
+                for track in top_tracks
+            ]
+            all_similar_tracks = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for result in all_similar_tracks:
+            if isinstance(result, Exception):
+                continue
+            if isinstance(result, list):
+                for track in result:
+                    identifier = (track["name"], track["artists"][0]["name"])
+                    if identifier not in seen_tracks:
+                        seen_tracks.add(identifier)
+                        similar_tracks.append(track)
+
+    except Exception as e:
+        logger.error(f"Error fetching similar tracks: {e}", exc_info=True)
+
+    x_label = get_x_label(time_range)
+    dates, trends = await get_streaming_trend_data(
+        user, since, until, top_tracks, "track"
+    )
+    trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
+
+    context = {
+        "segment": "track-stats",
+        "time_range": time_range,
+        "start_date": start_date,
+        "end_date": end_date,
+        "stats_title": "Tracks",
+        "top_tracks": top_tracks,
+        "similar_tracks": similar_tracks,
+        "trends_chart": trends_chart,
+    }
+
+    return render(request, "music/track_stats.html", context)
+
+
+@vary_on_cookie
+@cache_page(60 * 60 * 24)
+async def genre_stats(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
+        spotify_user_id
+    ):
+        return redirect("spotify-auth")
+
+    time_range = request.GET.get("time_range", "last_4_weeks")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    since, until = await get_date_range(time_range, start_date, end_date)
+
+    user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
+    top_genres = await get_top_genres(user, since, until, 5)
+
+    similar_genres = []
+    seen_genres = {genre["genre"] for genre in top_genres}
+
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            for genre in top_genres:
+                artists, _ = await client.get_items_by_genre(genre["genre"])
+
+                for artist in artists[:3]:
+                    similar_artists = await client.get_similar_artists(
+                        artist["name"], limit=5
+                    )
+                    for similar_artist in similar_artists:
+                        artist_genres = similar_artist.get("genres", [])
+                        for artist_genre in artist_genres:
+                            if artist_genre not in seen_genres:
+                                seen_genres.add(artist_genre)
+                                similar_genres.append(
+                                    {
+                                        "genre": artist_genre,
+                                        "count": 1,
+                                    }
+                                )
+                                if len(similar_genres) >= 10:
+                                    break
+                        if len(similar_genres) >= 10:
+                            break
+                    if len(similar_genres) >= 10:
+                        break
+                if len(similar_genres) >= 10:
+                    break
+
+    except Exception as e:
+        logger.error(f"Error fetching similar genres: {e}", exc_info=True)
+
+    x_label = get_x_label(time_range)
+    dates, trends = await get_streaming_trend_data(
+        user, since, until, top_genres, "genre"
+    )
+    trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
+
+    context = {
+        "segment": "genre-stats",
+        "time_range": time_range,
+        "start_date": start_date,
+        "end_date": end_date,
+        "stats_title": "Genres",
+        "top_genres": top_genres,
+        "similar_genres": similar_genres,
+        "trends_chart": trends_chart,
+    }
+    return render(request, "music/genre_stats.html", context)
 
 
 @csrf_exempt

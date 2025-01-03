@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
+
+  <div class="content">
+    <div class="row">
+      <div class="col-12">
+        <!-- Time Range Selector -->
+        <div class="text-center mb-4">
+          <form method="get">
+            <div class="btn-group">
+              <button type="submit" name="time_range" value="last_7_days" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_7_days' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last 7 Days</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="last_4_weeks" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_4_weeks' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last 4 Weeks</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="6_months" class="btn btn-sm btn-primary btn-simple {% if time_range == '6_months' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">6 Months</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="last_year" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_year' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last Year</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="submit" name="time_range" value="all_time" class="btn btn-sm btn-primary btn-simple {% if time_range == 'all_time' %}active{% endif %}">
+                <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">All Time</span>
+                <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+              </button>
+              <button type="button" class="btn btn-sm btn-primary btn-simple" id="customRangeBtn">Custom</button>
+            </div>
+
+            <!-- Custom Date Range Inputs -->
+            <div class="custom-date-inputs mt-3" style="display: none;">
+              <div class="input-group">
+                <label for="start_date" class="input-group-text">Start Date</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}" />
+                <label for="end_date" class="input-group-text">End Date</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}" />
+                <button type="submit" name="time_range" value="custom" class="btn btn-outline-success">Apply</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Podium Section -->
+        <div class="row">
+          <!-- Podium Card -->
+          <div class="col-lg-6">
+            <div class="card mb-4">
+              <div class="card-header">
+                <h3 class="card-title"><i class="tim-icons icon-trophy text-info"></i> Your Top {{ stats_title }}</h3>
+              </div>
+              <div class="card-body">
+                {% block podium_content %}
+
+                {% endblock %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendations Card -->
+          <div class="col-lg-6">
+            <div class="card mb-4 card-list">
+              {% block recommendations %}
+
+              {% endblock %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Top 3 Cards Row -->
+        <div class="row">
+          <!-- Streaming Trend Card -->
+          <div class="col-lg-12">
+            <div class="card card-chart">
+              <div class="card-header">
+                <h3 class="card-title"><i class="tim-icons icon-chart-bar-32 text-info"></i> Your Trending {{ stats_title }}</h3>
+              </div>
+              <div class="card-body scrollable">
+                <div class="chart-area" style="height: 300px;">
+                  {% block streaming_trend %}
+
+                  {% endblock %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Two Cards Row -->
+        <div class="row">
+          <div class="col-lg-6 col-md-12">
+            <div class="card card-chart">
+              <div class="card-header">
+                <h3 class="card-title">{{ stats_title }}</h3>
+              </div>
+              <div class="card-body scrollable"></div>
+            </div>
+          </div>
+          <div class="col-lg-6 col-md-12">
+            <div class="card card-chart">
+              <div class="card-header">
+                <h3 class="card-title">{{ stats_title }}</h3>
+              </div>
+              <div class="card-body scrollable"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <script src="{% static 'js/stats_template.js' %}"></script>
+{% endblock %}

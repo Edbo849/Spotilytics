@@ -1,0 +1,123 @@
+{% extends 'music/stats_template.html' %}
+{% load static %}
+{% block title %}
+  Genre stats
+{% endblock %}
+
+{% block podium_content %}
+  <div class="podium">
+    {% for genre in top_genres|slice:':3' %}
+      <div class="podium__item">
+        <a href="{% url 'music:genre' genre.genre %}" class="podium__link">
+          <div class="podium__rank {% if forloop.counter == 1 %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+            
+            first
+
+
+
+
+
+
+
+
+
+
+
+            {% elif forloop.counter == 2 %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+            
+            second
+
+
+
+
+
+
+
+
+
+
+
+            {% else %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+            
+            third
+
+
+
+
+
+
+
+
+
+
+
+            {% endif %}">
+            <span class="rank-number">{{ forloop.counter }}</span>
+          </div>
+          <div class="podium__info">
+            <p class="podium__name">{{ genre.genre|title }}</p>
+            <p class="podium__stats">{{ genre.count }} plays</p>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+
+{% block recommendations %}
+  <div class="card-header">
+    <h3 class="card-title"><i class="tim-icons icon-tag text-warning"></i>Genres You Might Like</h3>
+  </div>
+  <div class="card-body scrollable">
+    <ul class="list-group list-group-flush">
+      {% for genre in similar_genres %}
+        <li class="list-group-item d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <div class="ms-3">
+              <a href="{% url 'music:genre' genre.genre %}">{{ genre.genre|title }}</a>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}
+
+{% block streaming_trend %}
+  {% if trends_chart %}
+    <script id="trends-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ trends_chart|json_script:'trends_data' }}"></script>
+    <canvas id="streamingTrendChart"></canvas>
+  {% else %}
+    <p class="text-warning">Line graph data is unavailable.</p>
+  {% endif %}
+{% endblock %}

@@ -515,3 +515,158 @@ async def get_top_albums(user, since=None, until=None, limit=10):
         logger.error(f"Error fetching album details: {e}")
 
     return top_albums
+
+
+async def get_streaming_trend_data(user, since, until, items, item_type):
+    """Get streaming trend data for top items."""
+    trends = []
+    colors = ["#1DB954", "#FF6B6B", "#4A90E2", "#F7B731", "#A463F2"]
+
+    total_duration = (until - since).days if since and until else None
+
+    if total_duration:
+        if total_duration <= 7:
+            truncate_func = TruncDay("played_at")
+            date_format = "%m-%d"
+            all_dates = {
+                (since + timedelta(days=x)).strftime(date_format) for x in range(8)
+            }
+            chart_format = "%Y-%m-%d"
+
+        elif total_duration <= 28:
+            truncate_func = TruncDay("played_at")
+            date_format = "%b %d"
+            chart_format = "%Y-%m-%d"
+        elif total_duration <= 182:
+            truncate_func = TruncWeek("played_at")
+            date_format = "%b %d"
+            chart_format = "%Y-%m-%d"
+        else:
+            truncate_func = TruncMonth("played_at")
+            date_format = "%b %Y"
+            chart_format = "%Y-%m-%d"
+    else:
+        truncate_func = TruncMonth("played_at")
+        date_format = "%b %Y"
+        chart_format = "%Y-%m-%d"
+
+    @sync_to_async
+    def get_trend_data(item):
+        counts = []
+        dates = []
+        raw_dates = []
+
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        if item_type == "artist":
+            query = base_query.filter(artist_name=item["artist_name"])
+            label = item["artist_name"]
+        elif item_type == "genre":
+            query = base_query.filter(genres__contains=[item["genre"]])
+            label = item["genre"]
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+            label = item["track_name"]
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+            label = item["album_name"]
+
+        query = (
+            query.annotate(period=truncate_func)
+            .values("period")
+            .annotate(count=Count("stream_id"))
+            .order_by("period")
+        )
+
+        for entry in query:
+            display_date = entry["period"].strftime(date_format)
+            chart_date = entry["period"].strftime(chart_format)
+            dates.append(display_date)
+            raw_dates.append(chart_date)
+            counts.append(entry["count"])
+
+        return dates, counts, raw_dates, label
+
+    all_dates = set()
+    trend_data = []
+
+    for idx, item in enumerate(items[:5]):
+        dates, counts, raw_dates, label = await get_trend_data(item)
+        all_dates.update(zip(dates, raw_dates))
+        trend_data.append(
+            {
+                "label": label
+                or item.get("genre")
+                or item.get("track_name")
+                or item.get("album_name"),
+                "data": counts,
+                "dates": dates,
+                "raw_dates": raw_dates,
+                "color": colors[idx],
+            }
+        )
+
+    sorted_date_pairs = sorted(all_dates, key=lambda x: x[1])
+    display_dates, raw_dates = (
+        zip(*sorted_date_pairs) if sorted_date_pairs else ([], [])
+    )
+
+    trends = []
+    for trend in trend_data:
+        normalized_counts = []
+        date_to_count = dict(zip(trend["dates"], trend["data"]))
+
+        for display_date in display_dates:
+            normalized_counts.append(date_to_count.get(display_date, 0))
+
+        trends.append(
+            {
+                "label": trend["label"],
+                "data": normalized_counts,
+                "color": trend["color"],
+            }
+        )
+
+    return display_dates, trends
+
+
+async def get_date_range(
+    time_range: str, start_date: str | None = None, end_date: str | None = None
+) -> tuple[datetime, datetime]:
+    """Get date range based on time range selection."""
+    until = timezone.now()
+
+    @sync_to_async
+    def get_earliest_track():
+        return PlayedTrack.objects.order_by("played_at").first()
+
+    if time_range == "last_7_days":
+        since = until - timedelta(days=7)
+    elif time_range == "last_4_weeks":
+        since = until - timedelta(weeks=4)
+    elif time_range == "6_months":
+        since = until - timedelta(days=182)
+    elif time_range == "last_year":
+        since = until - timedelta(days=365)
+    elif time_range == "all_time":
+        # Get earliest track asynchronously
+        earliest_track = await get_earliest_track()
+        since = (
+            earliest_track.played_at if earliest_track else until - timedelta(days=365)
+        )
+    elif time_range == "custom" and start_date and end_date:
+        try:
+            since = timezone.make_aware(datetime.strptime(start_date, "%Y-%m-%d"))
+            until = timezone.make_aware(
+                datetime.strptime(end_date, "%Y-%m-%d")
+            ) + timedelta(days=1)
+        except ValueError:
+            since = until - timedelta(weeks=4)
+    else:
+        since = until - timedelta(weeks=4)
+
+    return since, until

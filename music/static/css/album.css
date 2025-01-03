@@ -121,7 +121,7 @@ h1 + p a:hover {
 }
 
 .table a:hover {
-    color: #1DB954;
+    color: #1ed760 !important;
 }
 
 /* Audio player column */

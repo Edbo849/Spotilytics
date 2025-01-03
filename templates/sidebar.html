@@ -11,6 +11,30 @@
           <p>Dashboard</p>
         </a>
       </li>
+      <li class="{% if 'artist-stats' in segment %} active {% endif %}">
+        <a href="{% url 'music:artist_stats' %}">
+          <i class="tim-icons icon-single-02"></i>
+          <p>Artist Stats</p>
+        </a>
+      </li>
+      <li class="{% if 'album-stats' in segment %} active {% endif %}">
+        <a href="{% url 'music:album_stats' %}">
+          <i class="tim-icons icon-headphones"></i>
+          <p>Album Stats</p>
+        </a>
+      </li>
+      <li class="{% if 'track-stats' in segment %} active {% endif %}">
+        <a href="{% url 'music:track_stats' %}">
+          <i class="tim-icons icon-sound-wave"></i>
+          <p>Track Stats</p>
+        </a>
+      </li>
+      <li class="{% if 'genre-stats' in segment %} active {% endif %}">
+        <a href="{% url 'music:genre_stats' %}">
+          <i class="tim-icons icon-tag"></i>
+          <p>Genre Stats</p>
+        </a>
+      </li>
       <li class="{% if 'chat' in segment %} active {% endif %}">
         <a href="{% url 'music:chat' %}">
           <i class="tim-icons icon-chat-33"></i>

@@ -19,4 +19,8 @@ urlpatterns = [
     path("genre/<str:genre_name>/", views.genre, name="genre"),
     path("chat/", views.chat, name="chat"),
     path("chat-api/", views.ChatAPI.as_view(), name="chat_api"),
+    path("artist-stats/", views.artist_stats, name="artist_stats"),
+    path("album-stats/", views.album_stats, name="album_stats"),
+    path("track-stats/", views.track_stats, name="track_stats"),
+    path("genre-stats/", views.genre_stats, name="genre_stats"),
 ]

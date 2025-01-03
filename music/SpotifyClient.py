@@ -123,7 +123,6 @@ class SpotifyClient:
         track = await self.make_spotify_request(f"tracks/{track_id}")
         if not track.get("preview_url"):
             song_name = track.get("name")
-
             if song_name and preview:
                 preview_url = await self.get_deezer_preview(
                     song_name, track["artists"][0]["name"]
@@ -257,13 +256,14 @@ class SpotifyClient:
         return response.get("items", [])
 
     async def get_artist_albums(
-        self, artist_id: str, include_single: bool = False
+        self, artist_id: str, include_single: bool = False, include_tracks: bool = True
     ) -> list[dict[str, Any]]:
         """
         Fetch the albums of a given artist.
 
         :param artist_id: The Spotify artist ID.
         :param include_single: Whether to include singles in the album list.
+        :param include_tracks: Whether to include tracks in album details.
         :return: A list of unique album dictionaries.
         """
         params = {
@@ -272,6 +272,10 @@ class SpotifyClient:
             ),
             "limit": 50,
         }
+
+        if not include_tracks:
+            params = {"fields": "artists,id,images,name,release_date"}
+
         endpoint = f"artists/{artist_id}/albums"
         response = await self.make_spotify_request(endpoint, params)
         albums = response.get("items", [])
@@ -298,6 +302,7 @@ class SpotifyClient:
     async def get_album(
         self,
         album_id: str,
+        include_tracks: bool = True,
     ) -> dict[str, Any]:
         """
         Retrieve the details of a given album.
@@ -306,7 +311,10 @@ class SpotifyClient:
         :return: A dictionary containing album details.
         """
         endpoint = f"albums/{album_id}"
-        return await self.make_spotify_request(endpoint)
+        params = None
+        if not include_tracks:
+            params = {"fields": "artists,id,images,name,release_date"}
+        return await self.make_spotify_request(endpoint, params)
 
     async def get_similar_artists(
         self, artist_name: str, limit: int = 20
@@ -351,54 +359,40 @@ class SpotifyClient:
             logger.error(
                 f"Error getting similar artists for {artist_name} from Last.fm: {e}"
             )
-
         return similar_artists_spotify
 
     async def get_similar_tracks(
-        self, track_id: str, limit: int
+        self, track_id: str, get_preview: bool = True, limit: int = 5
     ) -> list[dict[str, Any]]:
         """
-        Get similar tracks based on a seed track using Last.fm's API.
+        Get similar tracks based on a seed track using artist similarity and track popularity.
 
         :param track_id: The Spotify track ID to base recommendations on.
+        :param limit: Number of similar tracks to retrieve.
         :return: A list of similar track dictionaries.
         """
-        track = await self.get_track_details(track_id)
-        song_name = track.get("name")
-        artists = track.get("artists", [])
-        if not song_name or not artists:
-            return []
+        track = await self.get_track_details(track_id, True)
+        artist_name = track["artists"][0]["name"]
 
-        artist_name = artists[0].get("name")
-        if not artist_name:
-            return []
+        similar_artists = await self.get_similar_artists(artist_name, limit=10)
+        similar_tracks = []
 
-        similar_tracks = await self.get_lastfm_similar_tracks(
-            artist_name, song_name, limit
-        )
-
-        similar_tracks_with_details = []
-        for similar in similar_tracks:
-            similar_track_name = similar.get("name")
-            similar_artist_name = similar.get("artist", {}).get("name")
-            spotify_id = None
-            if similar_track_name and similar_artist_name:
-                spotify_id = await self.get_spotify_track_id(
-                    similar_track_name, similar_artist_name
-                )
-                if spotify_id:
-                    track_details = await self.get_track_details(spotify_id)
-                    similar_tracks_with_details.append(track_details)
+        for artist in similar_artists:
+            artist_top_tracks = await self.get_artist_top_tracks(1, artist["id"])
+            for artist_track in artist_top_tracks:
+                if get_preview:
+                    track_details = await self.get_track_details(artist_track["id"])
+                    similar_tracks.append(track_details)
                 else:
-                    logger.warning(
-                        f"Spotify ID not found for track '{similar_track_name}' by '{similar_artist_name}'."
+                    track_details = await self.get_track_details(
+                        artist_track["id"], False
                     )
-            else:
-                logger.warning(
-                    f"Missing track name or artist name for similar track: {similar}"
-                )
+                    similar_tracks.append(track_details)
+        similar_tracks = sorted(
+            similar_tracks, key=lambda x: x["popularity"], reverse=True
+        )[:limit]
 
-        return similar_tracks_with_details
+        return similar_tracks
 
     async def get_recently_played_full(self) -> list[dict[str, Any]]:
         """
@@ -428,6 +422,32 @@ class SpotifyClient:
                 break
 
         return recently_played
+
+    async def get_artist_top_albums(
+        self, artist_id: str, market: str = "US", limit: int = 3
+    ) -> list[dict[str, Any]]:
+        """
+        Retrieve the top albums for a given artist.
+
+        :param artist_id: The Spotify artist ID.
+        :param market: The market code.
+        :param limit: Number of top albums to retrieve.
+        :return: A list of top album dictionaries.
+        """
+        endpoint = f"artists/{artist_id}/albums"
+        params = {
+            "include_groups": "album",
+            "market": market,
+            "limit": limit,
+            "album_type": "album",
+        }
+        response = await self.make_spotify_request(endpoint, params)
+        albums = response.get("items", [])
+        unique_albums: dict[str, dict[str, Any]] = {}
+
+        for album in albums:
+            unique_albums.setdefault(album["name"], album)
+        return list(unique_albums.values())[:limit]
 
     async def get_items_by_genre(
         self, genre_name: str

@@ -1,0 +1,181 @@
+{% extends 'music/stats_template.html' %}
+{% load static %}
+{% block title %}
+  Track stats
+{% endblock %}
+
+{% block podium_content %}
+  <div class="podium">
+    {% for track in top_tracks|slice:':3' %}
+      <div class="podium__item">
+        <a href="{% url 'music:track' track.track_id %}" class="podium__link">
+          <div class="podium__rank {% if forloop.counter == 1 %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+            first
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {% elif forloop.counter == 2 %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+            second
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {% else %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+            third
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {% endif %}">
+            <span class="rank-number">{{ forloop.counter }}</span>
+          </div>
+          <div class="podium__info">
+            <img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="podium__image" />
+            <p class="podium__name">{{ track.track_name }}</p>
+            <p class="podium__stats">{{ track.play_count }} plays</p>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+
+{% block recommendations %}
+  <div class="card-header">
+    <h3 class="card-title"><i class="tim-icons icon-sound-wave text-info"></i>Tracks You Might Like</h3>
+  </div>
+  <div class="card-body scrollable">
+    <ul class="list-group list-group-flush">
+      {% for track in similar_tracks %}
+        <li class="list-group-item d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="album-cover" />
+            <div class="ms-3">
+              <a href="{% url 'music:track' track.id %}">{{ track.name }}</a>
+              <br />
+              <small><a href="{% url 'music:artist' track.artists.0.id %}">{{ track.artists.0.name }}</a></small>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}
+
+{% block streaming_trend %}
+  {% if trends_chart %}
+    <script id="trends-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ trends_chart|json_script:'trends_data' }}"></script>
+    <canvas id="streamingTrendChart"></canvas>
+  {% else %}
+    <p class="text-warning">Line graph data is unavailable.</p>
+  {% endif %}
+{% endblock %}
