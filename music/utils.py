@@ -3,7 +3,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
-from django.db.models import Count, Max, Min, Sum
+from django.db.models import Avg, Count, Max, Min, Sum
 from django.db.models.functions import (
     ExtractHour,
     ExtractWeekDay,
@@ -634,6 +634,93 @@ async def get_streaming_trend_data(user, since, until, items, item_type):
     return display_dates, trends
 
 
+async def get_radar_chart_data(user, since, until, items, item_type):
+    """Get radar chart data for top items."""
+    radar_data = []
+    colors = [
+        "rgba(29, 185, 84, 0.2)",
+        "rgba(255, 107, 107, 0.2)",
+        "rgba(74, 144, 226, 0.2)",
+        "rgba(247, 183, 49, 0.2)",
+        "rgba(164, 99, 242, 0.2)",
+    ]
+    border_colors = ["#1DB954", "#FF6B6B", "#4A90E2", "#F7B731", "#A463F2"]
+
+    @sync_to_async
+    def calculate_metrics(item):
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        if item_type == "artist":
+            query = base_query.filter(artist_name=item["artist_name"])
+            label = item["artist_name"]
+        elif item_type == "genre":
+            query = base_query.filter(genres__contains=[item["genre"]])
+            label = item["genre"]
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+            label = item["track_name"]
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+            label = item["album_name"]
+
+        total_plays = query.count()
+        total_time = query.aggregate(total_time=Sum("duration_ms"))["total_time"] or 0
+        unique_tracks = query.values("track_id").distinct().count()
+        variety = query.values("genres").distinct().count()
+        average_popularity = (
+            query.aggregate(avg_popularity=Avg("popularity"))["avg_popularity"] or 0
+        )
+
+        logger.critical(
+            f"Metrics for {label}: total_plays={total_plays}, total_time={total_time}, unique_tracks={unique_tracks}, variety={variety}, average_popularity={average_popularity}"
+        )
+
+        return {
+            "label": label,
+            "total_plays": total_plays,
+            "total_time": total_time / 60000,
+            "unique_tracks": unique_tracks,
+            "variety": variety,
+            "average_popularity": average_popularity,
+        }
+
+    metrics_list = []
+    for idx, item in enumerate(items):
+        metrics = await calculate_metrics(item)
+        metrics["backgroundColor"] = colors[idx % len(colors)]
+        metrics["borderColor"] = border_colors[idx % len(border_colors)]
+        metrics_list.append(metrics)
+
+    # Normalize the metrics
+    max_values = {
+        "total_plays": max(m["total_plays"] for m in metrics_list) or 1,
+        "total_time": max(m["total_time"] for m in metrics_list) or 1,
+        "unique_tracks": max(m["unique_tracks"] for m in metrics_list) or 1,
+        "variety": max(m["variety"] for m in metrics_list) or 1,
+        "average_popularity": max(m["average_popularity"] for m in metrics_list) or 1,
+    }
+
+    for metrics in metrics_list:
+        metrics["total_plays"] = (
+            metrics["total_plays"] / max_values["total_plays"]
+        ) * 100
+        metrics["total_time"] = (metrics["total_time"] / max_values["total_time"]) * 100
+        metrics["unique_tracks"] = (
+            metrics["unique_tracks"] / max_values["unique_tracks"]
+        ) * 100
+        metrics["variety"] = (metrics["variety"] / max_values["variety"]) * 100
+        metrics["average_popularity"] = (
+            metrics["average_popularity"] / max_values["average_popularity"]
+        ) * 100
+        radar_data.append(metrics)
+
+    return radar_data
+
+
 async def get_date_range(
     time_range: str, start_date: str | None = None, end_date: str | None = None
 ) -> tuple[datetime, datetime]:
@@ -653,7 +740,6 @@ async def get_date_range(
     elif time_range == "last_year":
         since = until - timedelta(days=365)
     elif time_range == "all_time":
-        # Get earliest track asynchronously
         earliest_track = await get_earliest_track()
         since = (
             earliest_track.played_at if earliest_track else until - timedelta(days=365)

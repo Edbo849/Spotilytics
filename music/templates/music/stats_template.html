@@ -78,9 +78,8 @@
           </div>
         </div>
 
-        <!-- Top 3 Cards Row -->
+        <!-- Streaming Trend Card -->
         <div class="row">
-          <!-- Streaming Trend Card -->
           <div class="col-lg-12">
             <div class="card card-chart">
               <div class="card-header">
@@ -97,14 +96,20 @@
           </div>
         </div>
 
-        <!-- Bottom Two Cards Row -->
+        <!-- Three Chart Row -->
         <div class="row">
           <div class="col-lg-6 col-md-12">
             <div class="card card-chart">
               <div class="card-header">
-                <h3 class="card-title">{{ stats_title }}</h3>
+                <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-info"></i> {{ stats_title }} Metrics Comparison</h3>
               </div>
-              <div class="card-body scrollable"></div>
+              <div class="card-body scrollable">
+                <div class="chart-area" style="height: 300px;">
+                  {% block radar_chart %}
+
+                  {% endblock %}
+                </div>
+              </div>
             </div>
           </div>
           <div class="col-lg-6 col-md-12">

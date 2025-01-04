@@ -30,7 +30,9 @@
               
               
               
+              
             first
+
 
 
 
@@ -72,7 +74,9 @@
               
               
               
+              
             second
+
 
 
 
@@ -114,7 +118,9 @@
               
               
               
+              
             third
+
 
 
 
@@ -177,5 +183,14 @@
     <canvas id="streamingTrendChart"></canvas>
   {% else %}
     <p class="text-warning">Line graph data is unavailable.</p>
+  {% endif %}
+{% endblock %}
+
+{% block radar_chart %}
+  {% if radar_chart %}
+    <script id="radar-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ radar_chart|json_script:'radar_chart' }}"></script>
+    <canvas id="statsRadarChart"></canvas>
+  {% else %}
+    <p class="text-warning">Radar chart data is unavailable.</p>
   {% endif %}
 {% endblock %}

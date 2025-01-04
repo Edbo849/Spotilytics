@@ -74,4 +74,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  const radarCtx = document.getElementById("statsRadarChart");
+  if (radarCtx) {
+    const radarDataElement = document.getElementById("radar-chart");
+    if (radarDataElement) {
+      try {
+        let radarData = JSON.parse(radarDataElement.textContent.trim());
+        if (typeof radarData === "string") {
+          radarData = JSON.parse(radarData);
+        }
+        if (typeof radarData === "object") {
+          new Chart(radarCtx, radarData);
+        }
+      } catch (error) {
+        console.error("Error creating radar chart:", error);
+      }
+    }
+  }
 });

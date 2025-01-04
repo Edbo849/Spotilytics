@@ -90,3 +90,72 @@ def generate_chartjs_pie_chart(labels, values):
         },
     }
     return chart_data
+
+
+def generate_chartjs_radar_chart(labels, radar_data):
+    """
+    Generate Chart.js data structure for a radar chart.
+
+    Args:
+        labels: List of metric names
+        radar_data: List of dictionaries containing radar chart data for each item
+    """
+    datasets = [
+        {
+            "label": item["label"],
+            "data": [
+                item["total_plays"],
+                item["total_time"],
+                item["unique_tracks"],
+                item["variety"],
+                item["average_popularity"],
+            ],
+            "fill": True,
+            "backgroundColor": item["backgroundColor"],
+            "borderColor": item["borderColor"],
+            "pointBackgroundColor": item["borderColor"],
+            "pointBorderColor": "#fff",
+            "pointHoverBackgroundColor": "#fff",
+            "pointHoverBorderColor": item["borderColor"],
+        }
+        for item in radar_data
+    ]
+
+    return {
+        "type": "radar",
+        "data": {
+            "labels": labels,
+            "datasets": datasets,
+        },
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "scales": {
+                "r": {
+                    "angleLines": {
+                        "display": True,
+                        "color": "rgba(255,255,255,0.1)",
+                    },
+                    "grid": {
+                        "color": "rgba(255,255,255,0.1)",
+                    },
+                    "pointLabels": {
+                        "color": "#9e9e9e",
+                    },
+                    "ticks": {
+                        "beginAtZero": True,
+                        "color": "#ffffff",
+                        "backdropColor": "rgba(0, 0, 0, 0)",
+                        "min": 0,
+                    },
+                },
+            },
+            "plugins": {
+                "legend": {
+                    "labels": {
+                        "color": "#9e9e9e",
+                    },
+                },
+            },
+        },
+    }

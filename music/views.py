@@ -20,12 +20,17 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
 
-from music.graphs import generate_chartjs_line_graph, generate_chartjs_pie_chart
+from music.graphs import (
+    generate_chartjs_line_graph,
+    generate_chartjs_pie_chart,
+    generate_chartjs_radar_chart,
+)
 from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
 from music.utils import (
     get_date_range,
     get_listening_stats,
+    get_radar_chart_data,
     get_recently_played,
     get_streaming_trend_data,
     get_top_albums,
@@ -568,6 +573,25 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     )
     trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
 
+    radar_labels = [
+        "Total Plays",
+        "Total Time (min)",
+        "Unique Tracks",
+        "Variety",
+        "Average Popularity",
+    ]
+    trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
+
+    radar_labels = [
+        "Total Plays",
+        "Total Time (min)",
+        "Unique Tracks",
+        "Variety",
+        "Average Popularity",
+    ]
+    radar_data = await get_radar_chart_data(user, since, until, top_artists, "artist")
+    radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -577,6 +601,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "top_artists": top_artists,
         "similar_artists": similar_artists,
         "trends_chart": trends_chart,
+        "radar_chart": radar_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -634,18 +659,21 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         logger.error(f"Error fetching similar albums: {e}", exc_info=True)
 
     x_label = get_x_label(time_range)
+
     dates, trends = await get_streaming_trend_data(
         user, since, until, top_albums, "album"
     )
-    logger.critical("Trends: %s", trends)
-    for trend in trends:
-        album = next(
-            (a for a in top_albums if a.get("album_name") == trend["label"]), None
-        )
-        if album:
-            trend["label"] = album["album_name"]
-
     trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
+
+    radar_labels = [
+        "Total Plays",
+        "Total Time (min)",
+        "Unique Tracks",
+        "Variety",
+        "Average Popularity",
+    ]
+    radar_data = await get_radar_chart_data(user, since, until, top_albums, "album")
+    radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
 
     context = {
         "segment": "album-stats",
@@ -656,6 +684,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "top_albums": top_albums,
         "similar_albums": similar_albums,
         "trends_chart": trends_chart,
+        "radar_chart": radar_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -710,6 +739,16 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
     )
     trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
 
+    radar_labels = [
+        "Total Plays",
+        "Total Time (min)",
+        "Unique Tracks",
+        "Variety",
+        "Average Popularity",
+    ]
+    radar_data = await get_radar_chart_data(user, since, until, top_tracks, "track")
+    radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -719,6 +758,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "top_tracks": top_tracks,
         "similar_tracks": similar_tracks,
         "trends_chart": trends_chart,
+        "radar_chart": radar_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -783,6 +823,16 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     )
     trends_chart = generate_chartjs_line_graph(dates, trends, x_label)
 
+    radar_labels = [
+        "Total Plays",
+        "Total Time (min)",
+        "Unique Tracks",
+        "Variety",
+        "Average Popularity",
+    ]
+    radar_data = await get_radar_chart_data(user, since, until, top_genres, "genre")
+    radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -792,6 +842,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "top_genres": top_genres,
         "similar_genres": similar_genres,
         "trends_chart": trends_chart,
+        "radar_chart": radar_chart,
     }
     return render(request, "music/genre_stats.html", context)
 
