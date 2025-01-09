@@ -5,6 +5,7 @@
 {% endblock %}
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/track.css' %}" />
+
   <div class="container">
     <!-- Track Details -->
     <div class="row mb-4">
@@ -40,9 +41,10 @@
       <div class="col-md-12">
         {% if similar_tracks %}
           <h2>Other tracks you might like</h2>
+          <p id="showPreviewsBtn" style="color: #1DB954; cursor: pointer; margin-bottom: 1rem; max-width: 50px fit-content">Show previews</p>
           <div class="similar-tracks-scroll-container d-flex">
             {% for similar_track in similar_tracks %}
-              <div class="track-card">
+              <div class="track-card" data-track-id="{{ similar_track.id }}">
                 <div class="track-img-container">
                   <a href="{% url 'music:album' similar_track.album.id %}"><img src="{{ similar_track.album.images.0.url }}" class="track-img" alt="{{ similar_track.name }}" /></a>
                 </div>
@@ -52,13 +54,7 @@
                     <a href="{% url 'music:artist' similar_track.artists.0.id %}" class="artist-name">{{ similar_track.artists.0.name }}</a>
                   </p>
                 </div>
-                {% if similar_track.preview_url %}
-                  <audio controls>
-                    <source src="{{ similar_track.preview_url }}" type="audio/mpeg" />
-                  </audio>
-                {% else %}
-                  <p class="text-muted">No preview available</p>
-                {% endif %}
+                <div class="preview-placeholder"></div>
               </div>
             {% endfor %}
           </div>
@@ -66,4 +62,8 @@
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block javascripts %}
+  <script src="{% static 'js/track.js' %}"></script>
 {% endblock %}

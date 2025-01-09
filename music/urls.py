@@ -23,4 +23,5 @@ urlpatterns = [
     path("album-stats/", views.album_stats, name="album_stats"),
     path("track-stats/", views.track_stats, name="track_stats"),
     path("genre-stats/", views.genre_stats, name="genre_stats"),
+    path("preview-urls/", views.get_preview_urls, name="preview_urls"),
 ]

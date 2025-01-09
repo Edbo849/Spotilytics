@@ -21,27 +21,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  console.log("Starting streaming trend chart initialization");
-
   const ctx = document.getElementById("streamingTrendChart");
-  console.log("Canvas element:", ctx);
-
   if (ctx) {
     const chartDataElement = document.getElementById("trends-chart");
-    console.log("Chart data element:", chartDataElement);
-
     if (chartDataElement) {
       try {
-        console.log("Raw chart data:", chartDataElement.textContent);
-
         let chartData = JSON.parse(chartDataElement.textContent.trim());
-        console.log("Parsed initial chart data:", chartData);
-
         if (typeof chartData === "string") {
           chartData = JSON.parse(chartData);
-          console.log("Parsed nested chart data:", chartData);
         }
-        if (typeof chartData === "object") {
+        if (
+          typeof chartData === "object" &&
+          chartData.datasets &&
+          chartData.labels
+        ) {
           new Chart(ctx, {
             type: "line",
             data: chartData,
@@ -66,6 +59,11 @@ document.addEventListener("DOMContentLoaded", function () {
                   },
                 },
               },
+              plugins: {
+                datalabels: {
+                  display: false, // Disable datalabels for line chart
+                },
+              },
             },
           });
         }
@@ -75,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Radar chart initialization
   const radarCtx = document.getElementById("statsRadarChart");
   if (radarCtx) {
     const radarDataElement = document.getElementById("radar-chart");
@@ -85,10 +84,81 @@ document.addEventListener("DOMContentLoaded", function () {
           radarData = JSON.parse(radarData);
         }
         if (typeof radarData === "object") {
-          new Chart(radarCtx, radarData);
+          const config = {
+            ...radarData,
+            options: {
+              ...radarData.options,
+              plugins: {
+                ...radarData.options.plugins,
+                datalabels: {
+                  display: false, // Disable datalabels for radar chart
+                },
+              },
+            },
+          };
+          new Chart(radarCtx, config);
         }
       } catch (error) {
         console.error("Error creating radar chart:", error);
+      }
+    }
+  }
+
+  const doughnutCtx = document.getElementById("statsDoughnutChart");
+  if (doughnutCtx) {
+    const doughnutDataElement = document.getElementById("doughnut-chart");
+    if (doughnutDataElement) {
+      try {
+        let doughnutData = JSON.parse(doughnutDataElement.textContent.trim());
+        if (typeof doughnutData === "string") {
+          doughnutData = JSON.parse(doughnutData);
+        }
+        if (typeof doughnutData === "object") {
+          console.log("Chart data:", doughnutData);
+
+          Chart.register(ChartDataLabels);
+
+          new Chart(doughnutCtx, {
+            type: doughnutData.type,
+            data: {
+              ...doughnutData.data,
+              datasets: [
+                {
+                  ...doughnutData.data.datasets[0],
+                  borderColor: "#1e1e2f",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              ...doughnutData.options,
+              plugins: {
+                ...doughnutData.options.plugins,
+                datalabels: {
+                  color: "#ffffff",
+                  font: {
+                    size: 9,
+                    weight: "bold",
+                  },
+                  formatter: function (value, context) {
+                    const label = context.chart.data.labels[context.dataIndex];
+                    return value > 0.5 ? `${label}\n${value.toFixed(1)}%` : "";
+                  },
+                  display: true,
+                  rotation: function (context) {
+                    const value = context.dataset.data[context.dataIndex];
+                    return value > 5 ? 0 : 45;
+                  },
+                  align: "center",
+                  anchor: "center",
+                  offset: 0,
+                },
+              },
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Error creating doughnut chart:", error);
       }
     }
   }

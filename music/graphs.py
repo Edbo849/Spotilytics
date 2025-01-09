@@ -159,3 +159,37 @@ def generate_chartjs_radar_chart(labels, radar_data):
             },
         },
     }
+
+
+def generate_chartjs_doughnut_chart(labels, data, background_colors):
+    return {
+        "type": "doughnut",
+        "data": {
+            "labels": labels,
+            "datasets": [
+                {
+                    "data": data,
+                    "backgroundColor": background_colors,
+                }
+            ],
+        },
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "plugins": {
+                "legend": {
+                    "display": False,
+                },
+                "datalabels": {
+                    "display": True,
+                    "color": "#ffffff",
+                    "font": {
+                        "size": 9,  # Reduced from 11
+                        "weight": "bold",
+                    },
+                    "textAlign": "center",
+                    "rotation": 0,
+                },
+            },
+        },
+    }

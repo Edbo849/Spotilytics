@@ -21,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
 
 from music.graphs import (
+    generate_chartjs_doughnut_chart,
     generate_chartjs_line_graph,
     generate_chartjs_pie_chart,
     generate_chartjs_radar_chart,
@@ -29,6 +30,7 @@ from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
 from music.utils import (
     get_date_range,
+    get_doughnut_chart_data,
     get_listening_stats,
     get_radar_chart_data,
     get_recently_played,
@@ -296,6 +298,8 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
         return redirect("spotify-auth")
 
     artist_id = None
+    similar_tracks = []
+    seen_tracks = set()
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
@@ -315,6 +319,7 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
                 if track.get("album")
                 else None
             )
+
             artist_id = (
                 track["artists"][0]["id"]
                 if track.get("artists") and len(track["artists"]) > 0
@@ -326,21 +331,35 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
             else:
                 artist = await client.get_artist(artist_id)
 
-            similar_tracks = await client.get_similar_tracks(track_id, 6)
+            if track.get("artists") and len(track["artists"]) > 0:
+                lastfm_similar = await client.get_lastfm_similar_tracks(
+                    track["artists"][0]["name"], track["name"], limit=6
+                )
+
+                for similar in lastfm_similar:
+                    identifier = (similar["name"], similar["artist"]["name"])
+                    if identifier not in seen_tracks:
+                        similar_track_id = await client.get_spotify_track_id(
+                            similar["name"], similar["artist"]["name"]
+                        )
+                        if similar_track_id:
+                            track_details = await client.get_track_details(
+                                similar_track_id, preview=False
+                            )
+                            if track_details:
+                                seen_tracks.add(identifier)
+                                similar_tracks.append(track_details)
 
     except Exception as e:
         logger.critical(f"Error fetching track data from Spotify: {e}")
         track, album, artist, similar_tracks = None, None, None, []
-
-    if not artist_id:
-        logger.error("Artist ID is missing. Cannot reverse 'artist' URL.")
-        return HttpResponse("Artist information is unavailable.", status=500)
 
     context = {
         "track": track,
         "album": album,
         "artist": artist,
         "similar_tracks": similar_tracks,
+        "spotify_user_id": spotify_user_id,
     }
 
     return await sync_to_async(render)(request, "music/track.html", context)
@@ -547,7 +566,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     since, until = await get_date_range(time_range, start_date, end_date)
 
     user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
-    top_artists = await get_top_artists(user, since, until, 5)
+    top_artists = await get_top_artists(user, since, until, 10)
 
     top_artist_ids = {artist["artist_id"] for artist in top_artists}
 
@@ -592,6 +611,13 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     radar_data = await get_radar_chart_data(user, since, until, top_artists, "artist")
     radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
 
+    doughnut_labels, doughnut_values, doughnut_colors = await get_doughnut_chart_data(
+        user, since, until, top_artists, "artist"
+    )
+    doughnut_chart = generate_chartjs_doughnut_chart(
+        doughnut_labels, doughnut_values, doughnut_colors
+    )
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -602,6 +628,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "similar_artists": similar_artists,
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
+        "doughnut_chart": doughnut_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -624,7 +651,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
     since, until = await get_date_range(time_range, start_date, end_date)
 
     user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
-    top_albums = await get_top_albums(user, since, until, 5)
+    top_albums = await get_top_albums(user, since, until, 10)
 
     similar_albums = []
     seen_album_ids = {album["album_id"] for album in top_albums}
@@ -675,6 +702,13 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
     radar_data = await get_radar_chart_data(user, since, until, top_albums, "album")
     radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
 
+    doughnut_labels, doughnut_values, doughnut_colors = await get_doughnut_chart_data(
+        user, since, until, top_albums, "album"
+    )
+    doughnut_chart = generate_chartjs_doughnut_chart(
+        doughnut_labels, doughnut_values, doughnut_colors
+    )
+
     context = {
         "segment": "album-stats",
         "time_range": time_range,
@@ -685,6 +719,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "similar_albums": similar_albums,
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
+        "doughnut_chart": doughnut_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -707,28 +742,39 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
     since, until = await get_date_range(time_range, start_date, end_date)
 
     user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
-    top_tracks = await get_top_tracks(user, since, until, 5)
+    top_tracks = await get_top_tracks(user, since, until, 10)
 
-    similar_tracks = []
     seen_tracks = set()
+    similar_tracks = []
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
-            tasks = [
-                client.get_similar_tracks(track["track_id"], False, limit=3)
-                for track in top_tracks
-            ]
-            all_similar_tracks = await asyncio.gather(*tasks, return_exceptions=True)
+            for track in top_tracks:
+                try:
+                    # Get similar tracks from Last.fm
+                    lastfm_similar = await client.get_lastfm_similar_tracks(
+                        track["artist_name"], track["track_name"], limit=1
+                    )
 
-        for result in all_similar_tracks:
-            if isinstance(result, Exception):
-                continue
-            if isinstance(result, list):
-                for track in result:
-                    identifier = (track["name"], track["artists"][0]["name"])
-                    if identifier not in seen_tracks:
-                        seen_tracks.add(identifier)
-                        similar_tracks.append(track)
+                    for similar in lastfm_similar:
+                        identifier = (similar["name"], similar["artist"]["name"])
+                        if identifier not in seen_tracks:
+                            # Get Spotify track ID
+                            track_id = await client.get_spotify_track_id(
+                                similar["name"], similar["artist"]["name"]
+                            )
+                            if track_id:
+                                # Get full track details
+                                track_details = await client.get_track_details(
+                                    track_id, False
+                                )
+                                if track_details:
+                                    seen_tracks.add(identifier)
+                                    similar_tracks.append(track_details)
+
+                except Exception as e:
+                    logger.error(f"Error fetching similar tracks: {e}", exc_info=True)
+                    continue
 
     except Exception as e:
         logger.error(f"Error fetching similar tracks: {e}", exc_info=True)
@@ -749,6 +795,13 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
     radar_data = await get_radar_chart_data(user, since, until, top_tracks, "track")
     radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
 
+    doughnut_labels, doughnut_values, doughnut_colors = await get_doughnut_chart_data(
+        user, since, until, top_tracks, "track"
+    )
+    doughnut_chart = generate_chartjs_doughnut_chart(
+        doughnut_labels, doughnut_values, doughnut_colors
+    )
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -759,6 +812,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "similar_tracks": similar_tracks,
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
+        "doughnut_chart": doughnut_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -780,7 +834,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     since, until = await get_date_range(time_range, start_date, end_date)
 
     user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
-    top_genres = await get_top_genres(user, since, until, 5)
+    top_genres = await get_top_genres(user, since, until, 10)
 
     similar_genres = []
     seen_genres = {genre["genre"] for genre in top_genres}
@@ -833,6 +887,13 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     radar_data = await get_radar_chart_data(user, since, until, top_genres, "genre")
     radar_chart = generate_chartjs_radar_chart(radar_labels, radar_data)
 
+    doughnut_labels, doughnut_values, doughnut_colors = await get_doughnut_chart_data(
+        user, since, until, top_genres, "genre"
+    )
+    doughnut_chart = generate_chartjs_doughnut_chart(
+        doughnut_labels, doughnut_values, doughnut_colors
+    )
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -843,6 +904,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "similar_genres": similar_genres,
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
+        "doughnut_chart": doughnut_chart,
     }
     return render(request, "music/genre_stats.html", context)
 
@@ -1044,6 +1106,29 @@ async def delete_history(request: HttpRequest) -> HttpResponse:
 
         return HttpResponse("All listening history has been deleted.", status=200)
     return HttpResponse(status=405)
+
+
+async def get_preview_urls(request: HttpRequest) -> JsonResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    track_ids = request.GET.get("track_ids", "").split(",")
+    if not track_ids:
+        return JsonResponse({"error": "No track IDs provided"}, status=400)
+
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            preview_urls = {}
+            for track_id in track_ids:
+                track = await client.get_track_details(track_id, preview=True)
+                if track and track.get("preview_url"):
+                    preview_urls[track_id] = track["preview_url"]
+                await asyncio.sleep(0.1)  # Add delay between requests
+            return JsonResponse(preview_urls)
+    except Exception as e:
+        logger.error(f"Error fetching preview URLs: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @method_decorator(csrf_exempt, name="dispatch")

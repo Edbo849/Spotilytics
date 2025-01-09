@@ -96,15 +96,15 @@
           </div>
         </div>
 
-        <!-- Three Chart Row -->
         <div class="row">
+          <!-- Radar Chart Card -->
           <div class="col-lg-6 col-md-12">
             <div class="card card-chart">
               <div class="card-header">
                 <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-info"></i> {{ stats_title }} Metrics Comparison</h3>
               </div>
               <div class="card-body scrollable">
-                <div class="chart-area" style="height: 300px;">
+                <div class="chart-area" style="height: 700px;">
                   {% block radar_chart %}
 
                   {% endblock %}
@@ -112,12 +112,19 @@
               </div>
             </div>
           </div>
+          <!-- Doughnut Chart Card -->
           <div class="col-lg-6 col-md-12">
             <div class="card card-chart">
               <div class="card-header">
-                <h3 class="card-title">{{ stats_title }}</h3>
+                <h3 class="card-title"><i class="tim-icons icon-chart-donut-36 text-info"></i> Top {{ stats_title }} as % of Total Listening</h3>
               </div>
-              <div class="card-body scrollable"></div>
+              <div class="card-body scrollable">
+                <div class="chart-area" style="height: 700px;">
+                  {% block doughnut_chart %}
+
+                  {% endblock %}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -128,5 +135,11 @@
 
 {% block javascripts %}
   {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <script>
+    // Register the plugin globally
+    Chart.register(ChartDataLabels)
+  </script>
   <script src="{% static 'js/stats_template.js' %}"></script>
 {% endblock %}

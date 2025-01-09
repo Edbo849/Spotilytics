@@ -21,6 +21,7 @@
               
               
               
+              
             
             first
 
@@ -35,7 +36,9 @@
 
 
 
+
             {% elif forloop.counter == 2 %}
+              
               
               
               
@@ -61,7 +64,9 @@
 
 
 
+
             {% else %}
+              
               
               
               
@@ -75,6 +80,7 @@
               
             
             third
+
 
 
 
@@ -134,5 +140,14 @@
     <canvas id="statsRadarChart"></canvas>
   {% else %}
     <p class="text-warning">Radar chart data is unavailable.</p>
+  {% endif %}
+{% endblock %}
+
+{% block doughnut_chart %}
+  {% if doughnut_chart %}
+    <script id="doughnut-chart" type="application/json" data-chartdata="{{ doughnut_chart|json_script:'doughnut_chart' }}"></script>
+    <canvas id="statsDoughnutChart"></canvas>
+  {% else %}
+    <p class="text-warning">Doughnut chart data is unavailable.</p>
   {% endif %}
 {% endblock %}

@@ -517,7 +517,7 @@ async def get_top_albums(user, since=None, until=None, limit=10):
     return top_albums
 
 
-async def get_streaming_trend_data(user, since, until, items, item_type):
+async def get_streaming_trend_data(user, since, until, items, item_type, limit=5):
     """Get streaming trend data for top items."""
     trends = []
     colors = ["#1DB954", "#FF6B6B", "#4A90E2", "#F7B731", "#A463F2"]
@@ -594,7 +594,7 @@ async def get_streaming_trend_data(user, since, until, items, item_type):
     all_dates = set()
     trend_data = []
 
-    for idx, item in enumerate(items[:5]):
+    for idx, item in enumerate(items[:limit]):
         dates, counts, raw_dates, label = await get_trend_data(item)
         all_dates.update(zip(dates, raw_dates))
         trend_data.append(
@@ -634,7 +634,7 @@ async def get_streaming_trend_data(user, since, until, items, item_type):
     return display_dates, trends
 
 
-async def get_radar_chart_data(user, since, until, items, item_type):
+async def get_radar_chart_data(user, since, until, items, item_type, limit=5):
     """Get radar chart data for top items."""
     radar_data = []
     colors = [
@@ -675,10 +675,6 @@ async def get_radar_chart_data(user, since, until, items, item_type):
             query.aggregate(avg_popularity=Avg("popularity"))["avg_popularity"] or 0
         )
 
-        logger.critical(
-            f"Metrics for {label}: total_plays={total_plays}, total_time={total_time}, unique_tracks={unique_tracks}, variety={variety}, average_popularity={average_popularity}"
-        )
-
         return {
             "label": label,
             "total_plays": total_plays,
@@ -689,13 +685,12 @@ async def get_radar_chart_data(user, since, until, items, item_type):
         }
 
     metrics_list = []
-    for idx, item in enumerate(items):
+    for idx, item in enumerate(items[:limit]):
         metrics = await calculate_metrics(item)
         metrics["backgroundColor"] = colors[idx % len(colors)]
         metrics["borderColor"] = border_colors[idx % len(border_colors)]
         metrics_list.append(metrics)
 
-    # Normalize the metrics
     max_values = {
         "total_plays": max(m["total_plays"] for m in metrics_list) or 1,
         "total_time": max(m["total_time"] for m in metrics_list) or 1,
@@ -719,6 +714,81 @@ async def get_radar_chart_data(user, since, until, items, item_type):
         radar_data.append(metrics)
 
     return radar_data
+
+
+async def get_doughnut_chart_data(user, since, until, items, item_type):
+    """Get doughnut chart data for top items."""
+    doughnut_data = []
+    colors = [
+        "#FF6384",
+        "#36A2EB",
+        "#FFCE56",
+        "#4BC0C0",
+        "#9966FF",
+    ]
+
+    @sync_to_async
+    def calculate_total_minutes(item):
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        if item_type == "artist":
+            query = base_query.filter(artist_name=item["artist_name"])
+            label = item["artist_name"]
+        elif item_type == "genre":
+            query = base_query.filter(genres__contains=[item["genre"]])
+            label = item["genre"]
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+            label = item["track_name"]
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+            label = item["album_name"]
+
+        total_minutes = (
+            query.aggregate(total_time=Sum("duration_ms"))["total_time"] or 0
+        )
+        total_minutes = total_minutes / 60000
+
+        return {
+            "label": label,
+            "total_minutes": total_minutes,
+        }
+
+    @sync_to_async
+    def calculate_total_listening_time():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        total_minutes = (
+            base_query.aggregate(total_time=Sum("duration_ms"))["total_time"] or 0
+        )
+        return total_minutes / 60000
+
+    total_listening_time = await calculate_total_listening_time()
+
+    for item in items:
+        metrics = await calculate_total_minutes(item)
+        doughnut_data.append(metrics)
+
+    for data in doughnut_data:
+        data["percentage"] = (
+            (data["total_minutes"] / total_listening_time) * 100
+            if total_listening_time > 0
+            else 0
+        )
+
+    labels = [data["label"] for data in doughnut_data]
+    values = [data["percentage"] for data in doughnut_data]
+    background_colors = [colors[idx % len(colors)] for idx in range(len(doughnut_data))]
+
+    return labels, values, background_colors
 
 
 async def get_date_range(
