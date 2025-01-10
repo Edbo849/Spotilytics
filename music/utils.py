@@ -791,6 +791,44 @@ async def get_doughnut_chart_data(user, since, until, items, item_type):
     return labels, values, background_colors
 
 
+async def get_hourly_listening_data(user, since, until, item_type, item=None):
+    """Get hourly listening data for a specific item or all items."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        if item:
+            if item_type == "artist":
+                base_query = base_query.filter(artist_name=item["artist_name"])
+            elif item_type == "genre":
+                base_query = base_query.filter(genres__contains=[item["genre"]])
+            elif item_type == "track":
+                base_query = base_query.filter(track_id=item["track_id"])
+            elif item_type == "album":
+                base_query = base_query.filter(album_id=item["album_id"])
+
+        hourly_data = (
+            base_query.annotate(hour=ExtractHour("played_at"))
+            .values("hour")
+            .annotate(total_minutes=Sum("duration_ms") / 60000.0)
+            .order_by("hour")
+        )
+
+        hours = list(range(24))
+        minutes_by_hour = {
+            entry["hour"]: entry["total_minutes"] for entry in hourly_data
+        }
+
+        return [minutes_by_hour.get(hour, 0) for hour in hours]
+
+    return await get_data()
+
+
 async def get_date_range(
     time_range: str, start_date: str | None = None, end_date: str | None = None
 ) -> tuple[datetime, datetime]:

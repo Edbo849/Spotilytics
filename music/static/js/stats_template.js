@@ -162,4 +162,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  const hourlyCtx = document.getElementById("statsHourlyChart");
+  if (hourlyCtx) {
+    const hourlyDataElement = document.getElementById("polar-area-chart");
+    if (hourlyDataElement) {
+      try {
+        let hourlyData = JSON.parse(hourlyDataElement.textContent.trim());
+        if (typeof hourlyData === "string") {
+          hourlyData = JSON.parse(hourlyData);
+        }
+        if (typeof hourlyData === "object") {
+          new Chart(hourlyCtx, hourlyData);
+        }
+      } catch (error) {
+        console.error("Error creating hourly distribution chart:", error);
+      }
+    }
+  }
 });

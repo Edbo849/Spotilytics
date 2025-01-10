@@ -184,12 +184,62 @@ def generate_chartjs_doughnut_chart(labels, data, background_colors):
                     "display": True,
                     "color": "#ffffff",
                     "font": {
-                        "size": 9,  # Reduced from 11
+                        "size": 9,
                         "weight": "bold",
                     },
                     "textAlign": "center",
                     "rotation": 0,
                 },
+            },
+        },
+    }
+
+
+def generate_chartjs_polar_area_chart(data):
+    hours = [f"{i:02d}:00" for i in range(24)]
+    max_value = max(data) * 1.05
+
+    return {
+        "type": "polarArea",
+        "data": {
+            "labels": hours,
+            "datasets": [
+                {
+                    "data": data,
+                    "backgroundColor": ["#1DB954"] * 24,
+                    "borderWidth": 0,
+                    "spacing": 5,
+                }
+            ],
+        },
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "scales": {
+                "r": {
+                    "ticks": {
+                        "display": False,
+                    },
+                    "pointLabels": {
+                        "display": "function(context) { return [0, 6, 12, 18].includes(context.index); }",
+                        "font": {
+                            "size": 12,
+                            "weight": "bold",
+                        },
+                        "color": "#9e9e9e",
+                    },
+                    "min": 0,
+                    "max": max_value,
+                }
+            },
+            "plugins": {
+                "legend": {"display": False},
+                "datalabels": {"display": False},
+            },
+            "elements": {
+                "arc": {
+                    "borderRadius": 5,
+                }
             },
         },
     }

@@ -24,6 +24,7 @@ from music.graphs import (
     generate_chartjs_doughnut_chart,
     generate_chartjs_line_graph,
     generate_chartjs_pie_chart,
+    generate_chartjs_polar_area_chart,
     generate_chartjs_radar_chart,
 )
 from music.models import PlayedTrack, SpotifyUser
@@ -31,6 +32,7 @@ from music.SpotifyClient import SpotifyClient
 from music.utils import (
     get_date_range,
     get_doughnut_chart_data,
+    get_hourly_listening_data,
     get_listening_stats,
     get_radar_chart_data,
     get_recently_played,
@@ -200,8 +202,8 @@ async def home(request: HttpRequest) -> HttpResponse:
     return render(request, "music/home.html", context)
 
 
-# @vary_on_cookie
-# @cache_page(60 * 60 * 24 * 7)
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 7)
 async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -622,6 +624,11 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         doughnut_labels, doughnut_values, doughnut_colors
     )
 
+    hourly_data = await get_hourly_listening_data(
+        user, since, until, "artist", top_artists[0] if top_artists else None
+    )
+    polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -633,6 +640,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "polar_area_chart": polar_area_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -713,6 +721,15 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         doughnut_labels, doughnut_values, doughnut_colors
     )
 
+    hourly_data = await get_hourly_listening_data(
+        user,
+        since,
+        until,
+        "album",
+        top_albums[0] if top_albums else None,
+    )
+    polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
+
     context = {
         "segment": "album-stats",
         "time_range": time_range,
@@ -724,6 +741,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "polar_area_chart": polar_area_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -806,6 +824,11 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         doughnut_labels, doughnut_values, doughnut_colors
     )
 
+    hourly_data = await get_hourly_listening_data(
+        user, since, until, "track", top_tracks[0] if top_tracks else None
+    )
+    polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -817,6 +840,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "polar_area_chart": polar_area_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -898,6 +922,11 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         doughnut_labels, doughnut_values, doughnut_colors
     )
 
+    hourly_data = await get_hourly_listening_data(
+        user, since, until, "genre", top_genres[0] if top_genres else None
+    )
+    polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -909,6 +938,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "polar_area_chart": polar_area_chart,
     }
     return render(request, "music/genre_stats.html", context)
 

@@ -33,7 +33,9 @@
               
               
               
+              
             first
+
 
 
 
@@ -81,7 +83,9 @@
               
               
               
+              
             second
+
 
 
 
@@ -129,7 +133,9 @@
               
               
               
+              
             third
+
 
 
 
@@ -213,5 +219,14 @@
     <canvas id="statsDoughnutChart"></canvas>
   {% else %}
     <p class="text-warning">Doughnut chart data is unavailable.</p>
+  {% endif %}
+{% endblock %}
+
+{% block polar_area_chart %}
+  {% if polar_area_chart %}
+    <script id="polar-area-chart" type="application/json" data-chartdata="{{ polar_area_chart|json_script:'polar_area_chart' }}"></script>
+    <canvas id="statsHourlyChart"></canvas>
+  {% else %}
+    <p class="text-warning">Hourly distribution data is unavailable.</p>
   {% endif %}
 {% endblock %}
