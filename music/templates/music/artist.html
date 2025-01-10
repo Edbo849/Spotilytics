@@ -52,22 +52,34 @@
       </div>
     </div>
 
-    <!-- Albums Section -->
-    <div class="row">
+    <!-- Latest Releases Section -->
+    <div class="row mt-4">
       <div class="col-12">
-        <h2>Albums</h2>
-        <div class="albums-scroll-container d-flex">
-          {% for album in albums %}
-            <div class="album-card">
-              <a href="{% url 'music:album' album.id %}">
-                <img src="{{ album.images.0.url }}" alt="{{ album.name }}" class="album-img" />
-                <div class="album-info">
-                  <h5>{{ album.name }}</h5>
-                  <p>{{ album.release_date|slice:':4' }}</p>
-                </div>
-              </a>
-            </div>
-          {% endfor %}
+        <h2>Latest Releases</h2>
+        <div id="latest-releases-container" class="albums-scroll-container d-flex">
+          <!-- Content will be loaded here -->
+          <div class="loading-spinner" style="display: none;">
+            <i class="tim-icons icon-refresh-02 spinner"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Albums Section -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <h2>Discography</h2>
+        <div class="btn-group mb-3" role="group" aria-label="Release type filter">
+          <button type="button" class="btn btn-primary btn-simple active" data-type="all">All</button>
+          <button type="button" class="btn btn-primary btn-simple" data-type="album">Albums</button>
+          <button type="button" class="btn btn-primary btn-simple" data-type="single">Singles</button>
+          <button type="button" class="btn btn-primary btn-simple" data-type="compilation">Compilations</button>
+        </div>
+        <div id="releases-container" class="albums-scroll-container d-flex" data-artist-id="{{ artist.id }}">
+          <!-- Content will be loaded here -->
+          <div class="loading-spinner discography-spinner" style="display: none;">
+            <i class="tim-icons icon-refresh-02 spinner"></i>
+          </div>
         </div>
       </div>
     </div>
@@ -98,4 +110,9 @@
       </div>
     {% endif %}
   </div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <script src="{% static 'js/artist.js' %}"></script>
 {% endblock %}

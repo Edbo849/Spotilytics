@@ -26,6 +26,15 @@ class SpotifyClient:
         self.ssl_context = self._create_ssl_context()
         self.access_token: str | None = None
 
+    async def __aenter__(self):
+        """Async context manager enter."""
+        await self._get_session()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.close()
+
     def _create_ssl_context(self):
         context = ssl.create_default_context(cafile=certifi.where())
         return context
@@ -256,31 +265,33 @@ class SpotifyClient:
         return response.get("items", [])
 
     async def get_artist_albums(
-        self, artist_id: str, include_single: bool = False, include_tracks: bool = True
+        self, artist_id: str, include_groups: list[str] | None = None
     ) -> list[dict[str, Any]]:
-        """
-        Fetch the albums of a given artist.
-
-        :param artist_id: The Spotify artist ID.
-        :param include_single: Whether to include singles in the album list.
-        :param include_tracks: Whether to include tracks in album details.
-        :return: A list of unique album dictionaries.
-        """
-        params = {
-            "include_groups": (
-                "album,single,compilation" if include_single else "album,compilation"
-            ),
+        """Get artist albums with optional filtering by release type."""
+        params: dict[str, Any] = {
             "limit": 50,
         }
 
-        if not include_tracks:
-            params = {"fields": "artists,id,images,name,release_date"}
+        type_mapping = {
+            "album": "album",
+            "single": "single",
+            "compilation": "compilation",
+            "appears_on": "appears_on",
+        }
 
-        endpoint = f"artists/{artist_id}/albums"
-        response = await self.make_spotify_request(endpoint, params)
-        albums = response.get("items", [])
-        unique_albums = {album["name"]: album for album in albums}
-        return list(unique_albums.values())
+        if include_groups:
+            valid_groups = [g for g in include_groups if g in type_mapping]
+            if valid_groups:
+                params["include_groups"] = ",".join(valid_groups)
+
+        try:
+            response = await self.make_spotify_request(
+                f"artists/{artist_id}/albums", params
+            )
+            return response.get("items", [])
+        except Exception:
+            logger.error
+            return []
 
     async def get_artist_top_tracks(
         self,
@@ -595,10 +606,3 @@ class SpotifyClient:
         """
         minutes, seconds = divmod(duration_ms / 1000, 60)
         return f"{int(minutes)}:{int(seconds):02d}"
-
-    async def __aenter__(self):
-        await self._get_session()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.close()

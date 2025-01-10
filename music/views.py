@@ -200,8 +200,8 @@ async def home(request: HttpRequest) -> HttpResponse:
     return render(request, "music/home.html", context)
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24 * 7)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24 * 7)
 async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -212,23 +212,28 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     try:
         async with SpotifyClient(spotify_user_id) as client:
             artist = await client.get_artist(artist_id)
-            similar_artists_spotify = await client.get_similar_artists(artist["name"])
+            if not artist:
+                raise ValueError("Artist not found")
 
+            similar_artists_spotify = await client.get_similar_artists(artist["name"])
             similar_artists_spotify = [
                 similar
                 for similar in similar_artists_spotify
                 if similar.get("id") != artist_id
             ]
-            albums = await client.get_artist_albums(artist_id)
+
+            albums = await client.get_artist_albums(artist_id, include_groups=None)
+
             compilations = [
                 album for album in albums if album.get("album_type") == "compilation"
             ]
-            top_tracks = await client.get_artist_top_tracks(5, artist_id)
 
+            top_tracks = await client.get_artist_top_tracks(5, artist_id)
             for track in top_tracks:
-                track_details = await client.get_track_details(track["id"])
-                track["preview_url"] = track_details.get("preview_url")
-                track["album"] = track_details.get("album")
+                if track and track.get("id"):
+                    track_details = await client.get_track_details(track["id"])
+                    track["preview_url"] = track_details.get("preview_url")
+                    track["album"] = track_details.get("album")
 
     except Exception as e:
         logger.critical(f"Error fetching artist data from Spotify: {e}")
@@ -350,18 +355,15 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
                                 seen_tracks.add(identifier)
                                 similar_tracks.append(track_details)
 
-    except Exception as e:
-        logger.critical(f"Error fetching track data from Spotify: {e}")
-        track, album, artist, similar_tracks = None, None, None, []
+    except Exception:
+        return HttpResponse("Error fetching track details", status=500)
 
     context = {
         "track": track,
         "album": album,
         "artist": artist,
         "similar_tracks": similar_tracks,
-        "spotify_user_id": spotify_user_id,
     }
-
     return await sync_to_async(render)(request, "music/track.html", context)
 
 
@@ -402,7 +404,9 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
     try:
         async with SpotifyClient(spotify_user_id) as client:
             artist = await client.get_artist(artist_id)
-            albums = await client.get_artist_albums(artist_id, True)
+            albums = await client.get_artist_albums(
+                artist_id, include_groups=["album", "single", "compilation"]
+            )
 
             track_ids_set: set[str] = set()
             for album in albums:
@@ -1108,6 +1112,7 @@ async def delete_history(request: HttpRequest) -> HttpResponse:
     return HttpResponse(status=405)
 
 
+@vary_on_cookie
 async def get_preview_urls(request: HttpRequest) -> JsonResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id:
@@ -1124,10 +1129,29 @@ async def get_preview_urls(request: HttpRequest) -> JsonResponse:
                 track = await client.get_track_details(track_id, preview=True)
                 if track and track.get("preview_url"):
                     preview_urls[track_id] = track["preview_url"]
-                await asyncio.sleep(0.1)  # Add delay between requests
             return JsonResponse(preview_urls)
     except Exception as e:
         logger.error(f"Error fetching preview URLs: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@vary_on_cookie
+async def get_artist_releases(request: HttpRequest, artist_id: str) -> JsonResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    release_type = request.GET.get("type", "all")
+
+    try:
+        async with SpotifyClient(spotify_user_id) as client:
+            releases = await client.get_artist_albums(
+                artist_id,
+                include_groups=[release_type] if release_type != "all" else None,
+            )
+            return JsonResponse({"releases": releases})
+    except Exception as e:
+        logger.error(f"Error fetching artist releases: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
 

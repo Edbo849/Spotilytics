@@ -224,6 +224,37 @@ audio {
     background: transparent;
 }
 
+.loading-spinner {
+    width: 100%;
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    color: #1DB954;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-group .btn-simple {
+    color: #ffffff;
+    border-color: #1DB954;
+}
+
+.btn-group .btn-simple.active {
+    background-color: #1DB954;
+    color: #ffffff;
+}
+
+.btn-group .btn-simple:hover {
+    background-color: rgba(29, 185, 84, 0.1);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .container {
