@@ -180,4 +180,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  const bubbleCtx = document.getElementById("statsBubbleChart");
+  if (bubbleCtx) {
+    const bubbleDataElement = document.getElementById("bubble-chart");
+    if (bubbleDataElement) {
+      try {
+        let bubbleData = JSON.parse(bubbleDataElement.textContent.trim());
+        if (typeof bubbleData === "string") {
+          bubbleData = JSON.parse(bubbleData);
+        }
+        if (typeof bubbleData === "object") {
+          new Chart(bubbleCtx, bubbleData);
+        }
+      } catch (error) {
+        console.error("Error creating bubble chart:", error);
+      }
+    }
+  }
 });

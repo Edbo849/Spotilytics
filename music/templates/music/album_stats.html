@@ -23,7 +23,9 @@
               
               
               
+              
             first
+
 
 
 
@@ -51,7 +53,9 @@
               
               
               
+              
             second
+
 
 
 
@@ -79,7 +83,9 @@
               
               
               
+              
             third
+
 
 
 
@@ -169,5 +175,12 @@
     <canvas id="statsHourlyChart"></canvas>
   {% else %}
     <p class="text-warning">Hourly distribution data is unavailable.</p>
+  {% endif %}
+{% endblock %}
+
+{% block bubble_chart %}
+  {% if bubble_chart %}
+    <script id="bubble-chart" type="application/json" data-chartdata="{{ bubble_chart|json_script:'bubble_chart' }}"></script>
+    <canvas id="statsBubbleChart"></canvas>
   {% endif %}
 {% endblock %}

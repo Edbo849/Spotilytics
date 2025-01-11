@@ -829,6 +829,56 @@ async def get_hourly_listening_data(user, since, until, item_type, item=None):
     return await get_data()
 
 
+async def get_bubble_chart_data(user, since, until, items, item_type):
+    """Get bubble chart data showing play patterns."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        data_points = []
+
+        for item in items:
+            if item_type == "artist":
+                query = base_query.filter(artist_name=item["artist_name"])
+                name = item["artist_name"]
+            elif item_type == "genre":
+                query = base_query.filter(genres__contains=[item["genre"]])
+                name = item["genre"]
+            elif item_type == "track":
+                query = base_query.filter(track_id=item["track_id"])
+                name = item["track_name"]
+            elif item_type == "album":
+                query = base_query.filter(album_id=item["album_id"])
+                name = item["album_name"]
+
+            play_count = query.count()
+
+            avg_popularity = query.aggregate(Avg("popularity"))["popularity__avg"] or 0
+
+            total_minutes = (
+                query.aggregate(total_time=Sum("duration_ms"))["total_time"] or 0
+            ) / 60000
+
+            if play_count > 0:
+                data_points.append(
+                    {
+                        "x": avg_popularity,
+                        "y": total_minutes,
+                        "r": play_count * 2,
+                        "name": name,
+                    }
+                )
+
+        return data_points
+
+    return await get_data()
+
+
 async def get_date_range(
     time_range: str, start_date: str | None = None, end_date: str | None = None
 ) -> tuple[datetime, datetime]:

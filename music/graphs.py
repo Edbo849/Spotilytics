@@ -1,4 +1,5 @@
 import logging
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +69,9 @@ def generate_chartjs_pie_chart(labels, values):
                 "r": {
                     "ticks": {
                         "display": True,
-                        "color": "#9e9e9e",
+                        "color": "#ffffff",
                         "backdropColor": "rgba(0, 0, 0, 0)",
+                        "callback": "function(value) { return value.toFixed(3); }",
                     },
                     "grid": {"display": True, "color": "#333"},
                     "angleLines": {"display": False},
@@ -240,6 +242,102 @@ def generate_chartjs_polar_area_chart(data):
                 "arc": {
                     "borderRadius": 5,
                 }
+            },
+        },
+    }
+
+
+def generate_chartjs_bubble_chart(data):
+    """Generate bubble chart showing popularity vs. listening time vs. play count."""
+
+    color_palette = [
+        "rgba(29, 185, 84, 0.6)",
+        "rgba(75, 192, 192, 0.6)",
+        "rgba(255, 159, 64, 0.6)",
+        "rgba(255, 99, 132, 0.6)",
+        "rgba(54, 162, 235, 0.6)",
+        "rgba(153, 102, 255, 0.6)",
+        "rgba(201, 203, 207, 0.6)",
+        "rgba(255, 205, 86, 0.6)",
+        "rgba(139, 69, 19, 0.6)",
+        "rgba(255, 105, 180, 0.6)",
+    ]
+
+    max_minutes = max(d["y"] for d in data)
+    max_radius = max(d["r"] for d in data)
+    y_axis_max = math.ceil(max_minutes / 100) * 100 * 1.1
+
+    scaled_data = []
+    for point in data:
+        scaled_point = point.copy()
+        scaled_point["r"] = (point["r"] / max_radius) * 30
+        scaled_data.append(scaled_point)
+
+    datasets = []
+    for i, point in enumerate(scaled_data):
+        datasets.append(
+            {
+                "label": point["name"],
+                "data": [point],
+                "backgroundColor": color_palette[i % len(color_palette)],
+                "borderColor": color_palette[i % len(color_palette)].replace(
+                    "0.6", "1"
+                ),
+                "borderWidth": 1,
+                "hoverBackgroundColor": color_palette[i % len(color_palette)].replace(
+                    "0.6", "0.8"
+                ),
+                "hoverBorderColor": "#fff",
+            }
+        )
+
+    return {
+        "type": "bubble",
+        "data": {"datasets": datasets},
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "scales": {
+                "x": {
+                    "title": {
+                        "display": True,
+                        "text": "Popularity",
+                        "color": "#9e9e9e",
+                    },
+                    "min": 0,
+                    "max": 100,
+                    "grid": {"color": "rgba(255, 255, 255, 0.1)", "drawBorder": False},
+                    "ticks": {
+                        "color": "#9e9e9e",
+                        "stepSize": 20,
+                    },
+                },
+                "y": {
+                    "title": {
+                        "display": True,
+                        "text": "Minutes Played",
+                        "color": "#9e9e9e",
+                    },
+                    "min": 0,
+                    "max": y_axis_max,
+                    "grid": {"color": "rgba(255, 255, 255, 0.1)", "drawBorder": False},
+                    "ticks": {
+                        "color": "#9e9e9e",
+                        "stepSize": 100,
+                    },
+                },
+            },
+            "plugins": {
+                "legend": {
+                    "display": True,
+                    "position": "top",
+                    "labels": {
+                        "color": "#9e9e9e",
+                    },
+                },
+                "datalabels": {
+                    "display": False,
+                },
             },
         },
     }

@@ -21,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
 
 from music.graphs import (
+    generate_chartjs_bubble_chart,
     generate_chartjs_doughnut_chart,
     generate_chartjs_line_graph,
     generate_chartjs_pie_chart,
@@ -30,6 +31,7 @@ from music.graphs import (
 from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
 from music.utils import (
+    get_bubble_chart_data,
     get_date_range,
     get_doughnut_chart_data,
     get_hourly_listening_data,
@@ -582,7 +584,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         async with SpotifyClient(spotify_user_id) as client:
             for artist in top_artists:
                 similar = await client.get_similar_artists(
-                    artist["artist_name"], limit=5
+                    artist["artist_name"], limit=1
                 )
                 for s in similar:
                     if s["id"] not in seen_artist_ids:
@@ -629,6 +631,9 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     )
     polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
 
+    bubble_data = await get_bubble_chart_data(user, since, until, top_artists, "artist")
+    bubble_chart = generate_chartjs_bubble_chart(bubble_data)
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -641,6 +646,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
         "polar_area_chart": polar_area_chart,
+        "bubble_chart": bubble_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -730,6 +736,9 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
     )
     polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
 
+    bubble_data = await get_bubble_chart_data(user, since, until, top_albums, "album")
+    bubble_chart = generate_chartjs_bubble_chart(bubble_data)
+
     context = {
         "segment": "album-stats",
         "time_range": time_range,
@@ -742,6 +751,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
         "polar_area_chart": polar_area_chart,
+        "bubble_chart": bubble_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -773,7 +783,6 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         async with SpotifyClient(spotify_user_id) as client:
             for track in top_tracks:
                 try:
-                    # Get similar tracks from Last.fm
                     lastfm_similar = await client.get_lastfm_similar_tracks(
                         track["artist_name"], track["track_name"], limit=1
                     )
@@ -781,12 +790,10 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
                     for similar in lastfm_similar:
                         identifier = (similar["name"], similar["artist"]["name"])
                         if identifier not in seen_tracks:
-                            # Get Spotify track ID
                             track_id = await client.get_spotify_track_id(
                                 similar["name"], similar["artist"]["name"]
                             )
                             if track_id:
-                                # Get full track details
                                 track_details = await client.get_track_details(
                                     track_id, False
                                 )
@@ -829,6 +836,9 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
     )
     polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
 
+    bubble_data = await get_bubble_chart_data(user, since, until, top_tracks, "track")
+    bubble_chart = generate_chartjs_bubble_chart(bubble_data)
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -841,6 +851,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
         "polar_area_chart": polar_area_chart,
+        "bubble_chart": bubble_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -874,7 +885,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
 
                 for artist in artists[:3]:
                     similar_artists = await client.get_similar_artists(
-                        artist["name"], limit=5
+                        artist["name"], limit=1
                     )
                     for similar_artist in similar_artists:
                         artist_genres = similar_artist.get("genres", [])
@@ -927,6 +938,9 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     )
     polar_area_chart = generate_chartjs_polar_area_chart(hourly_data)
 
+    bubble_data = await get_bubble_chart_data(user, since, until, top_genres, "genre")
+    bubble_chart = generate_chartjs_bubble_chart(bubble_data)
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -939,6 +953,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
         "polar_area_chart": polar_area_chart,
+        "bubble_chart": bubble_chart,
     }
     return render(request, "music/genre_stats.html", context)
 
