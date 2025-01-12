@@ -34,6 +34,7 @@ from music.utils import (
     get_bubble_chart_data,
     get_dashboard_stats,
     get_date_range,
+    get_discovery_timeline_data,
     get_doughnut_chart_data,
     get_hourly_listening_data,
     get_listening_stats,
@@ -640,6 +641,22 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
 
     stats_boxes = await get_stats_boxes_data(user, since, until, top_artists, "artist")
 
+    discovery_dates, discovery_counts = await get_discovery_timeline_data(
+        user, since, until, "artist"
+    )
+
+    discovery_chart = generate_chartjs_line_graph(
+        discovery_dates,
+        [
+            {
+                "label": "Artists Discovered",
+                "data": discovery_counts,
+                "color": "#1DB954",
+            }
+        ],
+        x_label,
+    )
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -654,6 +671,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
+        "discovery_chart": discovery_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -748,6 +766,22 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
 
     stats_boxes = await get_stats_boxes_data(user, since, until, top_albums, "album")
 
+    discovery_dates, discovery_counts = await get_discovery_timeline_data(
+        user, since, until, "album"
+    )
+
+    discovery_chart = generate_chartjs_line_graph(
+        discovery_dates,
+        [
+            {
+                "label": "Albums Dsicovered",
+                "data": discovery_counts,
+                "color": "#1DB954",
+            }
+        ],
+        x_label,
+    )
+
     context = {
         "segment": "album-stats",
         "time_range": time_range,
@@ -762,6 +796,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
+        "discovery_chart": discovery_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -851,6 +886,22 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
 
     stats_boxes = await get_stats_boxes_data(user, since, until, top_tracks, "track")
 
+    discovery_dates, discovery_counts = await get_discovery_timeline_data(
+        user, since, until, "track"
+    )
+
+    discovery_chart = generate_chartjs_line_graph(
+        discovery_dates,
+        [
+            {
+                "label": "Tracks Discovered",
+                "data": discovery_counts,
+                "color": "#1DB954",
+            }
+        ],
+        x_label,
+    )
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -865,6 +916,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
+        "discovery_chart": discovery_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -956,6 +1008,24 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
 
     stats_boxes = await get_stats_boxes_data(user, since, until, top_genres, "genre")
 
+    discovery_dates, discovery_counts = await get_discovery_timeline_data(
+        user, since, until, "genre"
+    )
+    logger.critical(f"discovery_dates: {discovery_dates}")
+    logger.critical(f"discovery_counts: {discovery_counts}")
+
+    discovery_chart = generate_chartjs_line_graph(
+        discovery_dates,
+        [
+            {
+                "label": "Genres Discovered",
+                "data": discovery_counts,
+                "color": "#1DB954",
+            }
+        ],
+        x_label,
+    )
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -970,6 +1040,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
+        "discovery_chart": discovery_chart,
     }
     return render(request, "music/genre_stats.html", context)
 

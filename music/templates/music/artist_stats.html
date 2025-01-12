@@ -24,7 +24,9 @@
               
               
               
+              
             first
+
 
 
 
@@ -56,7 +58,9 @@
               
               
               
+              
             second
+
 
 
 
@@ -88,7 +92,9 @@
               
               
               
+              
             third
+
 
 
 
@@ -180,5 +186,14 @@
   {% if bubble_chart %}
     <script id="bubble-chart" type="application/json" data-chartdata="{{ bubble_chart|json_script:'bubble_chart' }}"></script>
     <canvas id="statsBubbleChart"></canvas>
+  {% endif %}
+{% endblock %}
+
+{% block discovery_timeline %}
+  {% if discovery_chart %}
+    <script id="discovery-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ discovery_chart|json_script:'discovery_chart' }}"></script>
+    <canvas id="discoveryTimelineChart"></canvas>
+  {% else %}
+    <p class="text-warning">Discovery timeline data is unavailable.</p>
   {% endif %}
 {% endblock %}

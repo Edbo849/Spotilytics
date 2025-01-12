@@ -34,6 +34,7 @@ def generate_chartjs_line_graph(date_labels, datasets, x_label="Date"):
                 "borderWidth": 2,
                 "pointRadius": 4,
                 "pointHoverRadius": 6,
+                "tension": 0.4,
             }
         )
 

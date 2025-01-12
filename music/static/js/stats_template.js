@@ -198,4 +198,59 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  const discoveryCtx = document.getElementById("discoveryTimelineChart");
+  if (discoveryCtx) {
+    const discoveryData = document.getElementById("discovery-chart");
+    if (discoveryData) {
+      try {
+        let chartData = JSON.parse(discoveryData.textContent.trim());
+        if (typeof chartData === "string") {
+          chartData = JSON.parse(chartData);
+        }
+
+        console.log("Discovery Chart Data:", chartData);
+
+        new Chart(discoveryCtx, {
+          type: "line",
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                grid: {
+                  color: "rgba(255,255,255,0.1)",
+                },
+                ticks: {
+                  color: "#9e9e9e",
+                },
+              },
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: "rgba(255,255,255,0.1)",
+                },
+                ticks: {
+                  color: "#9e9e9e",
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#9e9e9e",
+                },
+              },
+              datalabels: {
+                display: false,
+              },
+            },
+          },
+        });
+      } catch (error) {
+        console.error("Error creating discovery timeline chart:", error);
+      }
+    }
+  }
 });

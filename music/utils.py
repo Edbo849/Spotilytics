@@ -1079,6 +1079,85 @@ async def get_bubble_chart_data(user, since, until, items, item_type):
     return await get_data()
 
 
+async def get_discovery_timeline_data(user, since, until, item_type):
+    """Get cumulative discovery data showing when new items were first encountered."""
+    total_duration = (until - since).days if since and until else None
+
+    # Set time grouping based on duration
+    if total_duration:
+        if total_duration <= 7:
+            truncate_func = TruncDay("played_at")
+            date_format = "%m-%d"
+        elif total_duration <= 28:
+            truncate_func = TruncDay("played_at")
+            date_format = "%b %d"
+        elif total_duration <= 182:
+            truncate_func = TruncWeek("played_at")
+            date_format = "%b %d"
+        else:
+            truncate_func = TruncMonth("played_at")
+            date_format = "%b %Y"
+    else:
+        truncate_func = TruncMonth("played_at")
+        date_format = "%b %Y"
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        periods = (
+            base_query.annotate(period=truncate_func)
+            .values("period")
+            .distinct()
+            .order_by("period")
+        )
+
+        dates = []
+        counts = []
+
+        for period_data in periods:
+            period = period_data["period"]
+
+            if item_type == "artist":
+                items = (
+                    base_query.filter(played_at__lte=period)
+                    .values("artist_name")
+                    .distinct()
+                )
+                current_items = {item["artist_name"] for item in items}
+            elif item_type == "track":
+                items = (
+                    base_query.filter(played_at__lte=period)
+                    .values("track_id")
+                    .distinct()
+                )
+                current_items = {item["track_id"] for item in items}
+            elif item_type == "album":
+                items = (
+                    base_query.filter(played_at__lte=period)
+                    .values("album_id")
+                    .distinct()
+                )
+                current_items = {item["album_id"] for item in items}
+            elif item_type == "genre":
+                items = base_query.filter(played_at__lte=period).exclude(genres=[])
+                current_items = set()
+                for item in items:
+                    current_items.update(item.genres)
+
+            if current_items:
+                dates.append(period.strftime(date_format))
+                counts.append(len(current_items))
+
+        return dates, counts
+
+    return await get_data()
+
+
 async def get_date_range(
     time_range: str, start_date: str | None = None, end_date: str | None = None
 ) -> tuple[datetime, datetime]:

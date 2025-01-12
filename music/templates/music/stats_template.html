@@ -136,7 +136,7 @@
               <div class="card-body">
                 <div class="numbers">
                   <p>
-                    You have listened to<span style="color: #1DB954">{{ stats_boxes.total_items }}</span> different {{ stats_title }} in this time.
+                    You have listened to <span style="color: #1DB954">{{ stats_boxes.total_items }}</span> different {{ stats_title }} in this time.
                   </p>
                 </div>
               </div>
@@ -210,6 +210,22 @@
               <div class="card-body scrollable">
                 <div class="chart-area" style="height: 300px; wdith:500px;">
                   {% block bubble_chart %}
+
+                  {% endblock %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card card-chart">
+              <div class="card-header">
+                <h3 class="card-title"><i class="tim-icons icon-chart-bar-32 text-primary"></i>{{ stats_title }} Discovery Timeline</h3>
+              </div>
+              <div class="card-body scrollable">
+                <div class="chart-area" style="height: 300px;">
+                  {% block discovery_timeline %}
 
                   {% endblock %}
                 </div>
