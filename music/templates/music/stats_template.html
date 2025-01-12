@@ -130,6 +130,54 @@
         </div>
 
         <div class="row">
+          <!-- Stats Boxes -->
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="numbers">
+                  <p>
+                    You have listened to<span style="color: #1DB954">{{ stats_boxes.total_items }}</span> different {{ stats_title }} in this time.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="numbers">
+                  <p>
+                    Your Top 3 {{ stats_title }} account for <span style="color: #1DB954">{{ stats_boxes.top_3_plays|floatformat:1 }}%</span> of your total plays.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="numbers">
+                  <p>
+                    You've spent <span style="color: #1DB954">{{ stats_boxes.top_3_minutes|floatformat:0 }}</span> minutes listening to your Top 3 {{ stats_title }}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="numbers">
+                  <p>
+                    You listened to these {{ stats_title }} on <span style="color: #1DB954">{{ stats_boxes.coverage_percentage|floatformat:1 }}%</span> of days.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
           <!-- Radar Chart Card -->
           <div class="col-lg-6 col-md-12">
             <div class="card card-chart">

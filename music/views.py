@@ -32,12 +32,14 @@ from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
 from music.utils import (
     get_bubble_chart_data,
+    get_dashboard_stats,
     get_date_range,
     get_doughnut_chart_data,
     get_hourly_listening_data,
     get_listening_stats,
     get_radar_chart_data,
     get_recently_played,
+    get_stats_boxes_data,
     get_streaming_trend_data,
     get_top_albums,
     get_top_artists,
@@ -156,7 +158,6 @@ async def home(request: HttpRequest) -> HttpResponse:
             [],
         )
 
-    # Ensure stats is a dictionary
     stats = stats or {}
 
     listening_dates = stats.get("dates", [])
@@ -175,6 +176,8 @@ async def home(request: HttpRequest) -> HttpResponse:
         else []
     )
 
+    written_stats = await get_dashboard_stats(user, since, until)
+
     chart_data = (
         generate_chartjs_line_graph(listening_dates, datasets, x_label)
         if listening_dates
@@ -191,6 +194,7 @@ async def home(request: HttpRequest) -> HttpResponse:
         "chart_data": json.dumps(chart_data) if chart_data else None,
         "top_genres": json.dumps(genre_chart_data) if genre_chart_data else None,
         "listening_stats": stats,
+        "stats": written_stats,
         "top_tracks": top_tracks,
         "top_artists": top_artists,
         "top_albums": top_albums,
@@ -634,6 +638,8 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     bubble_data = await get_bubble_chart_data(user, since, until, top_artists, "artist")
     bubble_chart = generate_chartjs_bubble_chart(bubble_data)
 
+    stats_boxes = await get_stats_boxes_data(user, since, until, top_artists, "artist")
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -645,6 +651,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
     }
@@ -739,6 +746,8 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
     bubble_data = await get_bubble_chart_data(user, since, until, top_albums, "album")
     bubble_chart = generate_chartjs_bubble_chart(bubble_data)
 
+    stats_boxes = await get_stats_boxes_data(user, since, until, top_albums, "album")
+
     context = {
         "segment": "album-stats",
         "time_range": time_range,
@@ -750,6 +759,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
     }
@@ -839,6 +849,8 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
     bubble_data = await get_bubble_chart_data(user, since, until, top_tracks, "track")
     bubble_chart = generate_chartjs_bubble_chart(bubble_data)
 
+    stats_boxes = await get_stats_boxes_data(user, since, until, top_tracks, "track")
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -850,6 +862,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
     }
@@ -941,6 +954,8 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     bubble_data = await get_bubble_chart_data(user, since, until, top_genres, "genre")
     bubble_chart = generate_chartjs_bubble_chart(bubble_data)
 
+    stats_boxes = await get_stats_boxes_data(user, since, until, top_genres, "genre")
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -952,6 +967,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "trends_chart": trends_chart,
         "radar_chart": radar_chart,
         "doughnut_chart": doughnut_chart,
+        "stats_boxes": stats_boxes,
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
     }

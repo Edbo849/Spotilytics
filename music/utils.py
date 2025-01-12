@@ -7,6 +7,7 @@ from django.db.models import Avg, Count, Max, Min, Sum
 from django.db.models.functions import (
     ExtractHour,
     ExtractWeekDay,
+    TruncDate,
     TruncDay,
     TruncHour,
     TruncMonth,
@@ -632,6 +633,205 @@ async def get_streaming_trend_data(user, since, until, items, item_type, limit=5
         )
 
     return display_dates, trends
+
+
+def format_day_suffix(day):
+    if 4 <= day <= 20 or 24 <= day <= 30:
+        suffix = "th"
+    else:
+        suffix = ["st", "nd", "rd"][day % 10 - 1]
+    return suffix
+
+
+def format_date(date):
+    suffix = format_day_suffix(date.day)
+    return date.strftime(f"%A {date.day}{suffix} %B %Y")
+
+
+def get_longest_streak(user, start_date, end_date):
+    played_tracks = (
+        PlayedTrack.objects.filter(
+            user=user, played_at__gte=start_date, played_at__lte=end_date
+        )
+        .annotate(played_day=TruncDate("played_at"))
+        .values("played_day")
+        .distinct()
+        .order_by("played_day")
+    )
+
+    if not played_tracks:
+        return 0, None, None
+
+    longest_streak = 1
+    current_streak = 1
+    current_streak_start = played_tracks[0]["played_day"]
+    longest_streak_start = current_streak_start
+    longest_streak_end = current_streak_start
+    previous_date = played_tracks[0]["played_day"]
+
+    for i in range(1, len(played_tracks)):
+        current_date = played_tracks[i]["played_day"]
+
+        if current_date == previous_date + timedelta(days=1):
+            current_streak += 1
+        else:
+            current_streak = 1
+            current_streak_start = current_date
+
+        if current_streak > longest_streak:
+            longest_streak = current_streak
+            longest_streak_start = current_streak_start
+            longest_streak_end = current_date
+
+        previous_date = current_date
+
+    longest_streak_start_formatted = format_date(longest_streak_start)
+    longest_streak_end_formatted = format_date(longest_streak_end)
+
+    return longest_streak, longest_streak_start_formatted, longest_streak_end_formatted
+
+
+async def get_dashboard_stats(user, since, until):
+    """Get dashboard statistics."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        total_days = (until - since).days + 1
+        days_with_music = base_query.dates("played_at", "day").count()
+        coverage_percentage = (
+            (days_with_music / total_days * 100) if total_days > 0 else 0
+        )
+
+        dates = list(
+            base_query.dates("played_at", "day").order_by("played_at").distinct()
+        )
+        if not dates:
+            return {
+                "days_with_music": 0,
+                "total_days": total_days,
+                "coverage_percentage": 0,
+                "streak_days": 0,
+                "streak_start": None,
+                "streak_end": None,
+                "top_artist_name": "No artist",
+                "top_artist_percentage": 0,
+                "repeat_percentage": 0,
+            }
+
+        streak, streak_start, streak_end = get_longest_streak(user, since, until)
+
+        artist_counts = (
+            base_query.values("artist_name")
+            .annotate(count=Count("stream_id"))
+            .order_by("-count")
+        )
+        total_plays = base_query.count()
+        top_artist = artist_counts.first()
+        top_artist_name = top_artist["artist_name"] if top_artist else "No artist"
+        top_artist_percentage = (
+            (top_artist["count"] / total_plays * 100)
+            if top_artist and total_plays > 0
+            else 0
+        )
+
+        total_tracks = base_query.values("track_id").distinct().count()
+        repeat_tracks = (
+            base_query.values("track_id")
+            .annotate(play_count=Count("stream_id"))
+            .filter(play_count__gt=1)
+            .count()
+        )
+        repeat_percentage = (
+            (repeat_tracks / total_tracks * 100) if total_tracks > 0 else 0
+        )
+
+        return {
+            "days_with_music": days_with_music,
+            "total_days": total_days,
+            "coverage_percentage": coverage_percentage,
+            "streak_days": streak,
+            "streak_start": streak_start,
+            "streak_end": streak_end,
+            "top_artist_name": top_artist_name,
+            "top_artist_percentage": top_artist_percentage,
+            "repeat_percentage": repeat_percentage,
+        }
+
+    return await get_data()
+
+
+async def get_stats_boxes_data(user, since, until, items, item_type):
+    """Get stats box data that works across all item types."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        total_all_plays = base_query.count()
+
+        if item_type == "artist":
+            total_items = base_query.values("artist_name").distinct().count()
+        elif item_type == "genre":
+            genres = base_query.values_list("genres", flat=True)
+            unique_genres = set()
+            for genre_list in genres:
+                if genre_list:
+                    unique_genres.update(genre_list)
+            total_items = len(unique_genres)
+        elif item_type == "track":
+            total_items = base_query.values("track_id").distinct().count()
+        elif item_type == "album":
+            total_items = base_query.values("album_id").distinct().count()
+
+        total_plays = 0
+        total_minutes = 0
+        days_with_plays = set()
+
+        for item in items[:3]:
+            if item_type == "artist":
+                query = base_query.filter(artist_name=item["artist_name"])
+            elif item_type == "genre":
+                query = base_query.filter(genres__contains=[item["genre"]])
+            elif item_type == "track":
+                query = base_query.filter(track_id=item["track_id"])
+            elif item_type == "album":
+                query = base_query.filter(album_id=item["album_id"])
+
+            plays = query.count()
+            total_plays += plays
+            minutes = (
+                query.aggregate(total_time=Sum("duration_ms"))["total_time"] or 0
+            ) / 60000
+            total_minutes += minutes
+            days_with_plays.update(query.dates("played_at", "day"))
+
+        total_days = (until - since).days + 1
+        coverage_percentage = (
+            (len(days_with_plays) / total_days) * 100 if total_days > 0 else 0
+        )
+        play_percentage = (
+            (total_plays / total_all_plays * 100) if total_all_plays > 0 else 0
+        )
+
+        return {
+            "total_items": total_items,
+            "top_3_plays": play_percentage,
+            "top_3_minutes": total_minutes,
+            "coverage_percentage": coverage_percentage,
+        }
+
+    return await get_data()
 
 
 async def get_radar_chart_data(user, since, until, items, item_type, limit=5):

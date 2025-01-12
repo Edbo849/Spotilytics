@@ -58,6 +58,7 @@ def generate_chartjs_pie_chart(labels, values):
                     "borderColor": "black",
                     "borderWidth": 0.1,
                     "spacing": 3,
+                    "borderRadius": 10,
                 }
             ],
         },
@@ -74,7 +75,11 @@ def generate_chartjs_pie_chart(labels, values):
                         "callback": "function(value) { return value.toFixed(3); }",
                     },
                     "grid": {"display": True, "color": "#333"},
-                    "angleLines": {"display": False},
+                    "angleLines": {
+                        "display": True,
+                        "color": "rgba(255, 255, 255, 0.1)",
+                        "lineWidth": 0.5,
+                    },
                     "pointLabels": {
                         "display": True,
                         "centerPointLabels": True,
@@ -264,8 +269,11 @@ def generate_chartjs_bubble_chart(data):
     ]
 
     max_minutes = max(d["y"] for d in data)
+    min_minutes = min(d["y"] for d in data)
     max_radius = max(d["r"] for d in data)
-    y_axis_max = math.ceil(max_minutes / 100) * 100 * 1.1
+
+    base_min = math.floor(min_minutes / 100) * 100
+    base_max = math.ceil(max_minutes / 100) * 100
 
     scaled_data = []
     for point in data:
@@ -318,8 +326,8 @@ def generate_chartjs_bubble_chart(data):
                         "text": "Minutes Played",
                         "color": "#9e9e9e",
                     },
-                    "min": 0,
-                    "max": y_axis_max,
+                    "min": base_min,
+                    "max": base_max,
                     "grid": {"color": "rgba(255, 255, 255, 0.1)", "drawBorder": False},
                     "ticks": {
                         "color": "#9e9e9e",
@@ -333,6 +341,7 @@ def generate_chartjs_bubble_chart(data):
                     "position": "top",
                     "labels": {
                         "color": "#9e9e9e",
+                        "font": {"size": 10},
                     },
                 },
                 "datalabels": {

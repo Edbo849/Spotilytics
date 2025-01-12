@@ -59,91 +59,90 @@
             {% endif %}
           </form>
         </div>
-        <div class="card">
-          <div class="card-header">
-            <div class="row">
-              <div class="col-sm-6 text-left">
-                <h2 class="card-title">Your Listening Stats</h2>
-              </div>
-              <div class="col-12">
-                <div class="card-body">
-                  {% if listening_stats %}
-                    <div class="listening-stats container">
-                      <div class="stats-row">
-                        <div class="stat-item">
-                          <p>
-                            Total Minutes Streamed: <span class="number">{{ listening_stats.total_minutes_streamed|floatformat:'0'|intcomma }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Different Tracks: <span class="number">{{ listening_stats.different_tracks|intcomma }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Different Artists: <span class="number">{{ listening_stats.different_artists|intcomma }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Different Albums: <span class="number">{{ listening_stats.different_albums|intcomma }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Total Days Streamed: <span class="number">{{ listening_stats.days_streamed }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Average Listening Time per Day: <span class="number">{{ listening_stats.average_listening_time_per_day|floatformat:'0'|intcomma }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Most Played Genre: <span class="number">{{ listening_stats.most_played_genre }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Top Listening Hour: <span class="number">{{ listening_stats.top_listening_hour }}</span>
-                          </p>
-                        </div>
-                        <div class="stat-item">
-                          <p>
-                            Most Popular Day: <span class="number">{{ listening_stats.most_popular_day }}</span>
-                          </p>
-                        </div>
-                      </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card card-chart">
+            <div class="card-header">
+              <h3 class="card-title"><i class="tim-icons icon-single-02 text-info"></i>Your Listening Stats</h3>
+            </div>
+            <div class="card-body">
+              {% if listening_stats %}
+                <div class="listening-stats container">
+                  <div class="stats-row">
+                    <div class="stat-item">
+                      <p>
+                        Total Minutes Streamed: <span class="number">{{ listening_stats.total_minutes_streamed|floatformat:'0'|intcomma }}</span>
+                      </p>
                     </div>
-                  {% else %}
-                    <div class="message">
-                      <p>Your listening stats will appear here after you import your listening history.</p>
+                    <div class="stat-item">
+                      <p>
+                        Unique Tracks: <span class="number">{{ listening_stats.different_tracks|intcomma }}</span>
+                      </p>
                     </div>
-                    <div class="listening-stats blurred">
-                      <p>Total Minutes Streamed: --</p>
-                      <p>Different Tracks: --</p>
-                      <p>Different Artists: --</p>
-                      <p>Different Albums: --</p>
-                      <p>Total Days Streamed: --</p>
-                      <p>Average Listening Time per Day: -- minutes</p>
+                    <div class="stat-item">
+                      <p>
+                        Unique Artists: <span class="number">{{ listening_stats.different_artists|intcomma }}</span>
+                      </p>
                     </div>
-                  {% endif %}
+                    <div class="stat-item">
+                      <p>
+                        Unique Albums: <span class="number">{{ listening_stats.different_albums|intcomma }}</span>
+                      </p>
+                    </div>
+                    <div class="stat-item">
+                      <p>
+                        Total Days Streamed: <span class="number">{{ listening_stats.days_streamed }}</span>
+                      </p>
+                    </div>
+                    <div class="stat-item">
+                      <p>
+                        Average Listening Time per Day: <span class="number">{{ listening_stats.average_listening_time_per_day|floatformat:'0'|intcomma }}</span>
+                      </p>
+                    </div>
+                    <div class="stat-item">
+                      <p>
+                        Most Played Genre: <span class="number">{{ listening_stats.most_played_genre }}</span>
+                      </p>
+                    </div>
+                    <div class="stat-item">
+                      <p>
+                        Top Listening Hour: <span class="number">{{ listening_stats.top_listening_hour }}</span>
+                      </p>
+                    </div>
+                    <div class="stat-item">
+                      <p>
+                        Most Popular Day: <span class="number">{{ listening_stats.most_popular_day }}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              {% else %}
+                <div class="message">
+                  <p>Your listening stats will appear here after you import your listening history.</p>
+                </div>
+                <div class="listening-stats blurred">
+                  <p>Total Minutes Streamed: --</p>
+                  <p>Different Tracks: --</p>
+                  <p>Different Artists: --</p>
+                  <p>Different Albums: --</p>
+                  <p>Total Days Streamed: --</p>
+                  <p>Average Listening Time per Day: -- minutes</p>
+                </div>
+              {% endif %}
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Listening History Line Graph -->
+    <!-- Listening History Line Graph -->
+    <div class="row">
+      <div class="col-12">
         <div class="card card-chart">
           <div class="card-header">
-            <div class="row">
-              <div class="col-sm-6 text-left">
-                <h2 class="card-title">Listening History</h2>
-              </div>
-            </div>
+            <h3 class="card-title"><i class="tim-icons icon-sound-wave text-warning"></i>Listening History</h3>
           </div>
           <div class="card-body">
             <div class="chart-area">
@@ -158,11 +157,63 @@
         </div>
       </div>
     </div>
+
+    <div class="row">
+      <!-- Stats Boxes -->
+      <div class="col-lg-3 col-md-6">
+        <div class="card card-stats" style=" height: 120px;">
+          <div class="card-body">
+            <div class="numbers">
+              <p>
+                You listened to music on <span style="color: #1DB954">{{ stats.days_with_music }}</span> out of <span style="color: #1DB954">{{ stats.total_days }}</span> days, which is <span style="color: #1DB954">{{ stats.coverage_percentage|floatformat:1 }}%</span>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <div class="card card-stats" style=" height: 120px;">
+          <div class="card-body">
+            <div class="numbers">
+              <p>
+                Your longest listening streak was <span style="color: #1DB954">{{ stats.streak_days }}</span> days from <span style="color: #1DB954">{{ stats.streak_start }}</span> to <span style="color: #1DB954">{{ stats.streak_end }}</span>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <div class="card card-stats" style=" height: 120px;">
+          <div class="card-body">
+            <div class="numbers">
+              <p>
+                Your top artist <span style="color: #1DB954">{{ stats.top_artist_name }}</span> accounts for <span style="color: #1DB954">{{ stats.top_artist_percentage|floatformat:1 }}%</span> of your total plays.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <div class="card card-stats" style=" height: 120px;">
+          <div class="card-body">
+            <div class="numbers">
+              <p>
+                <span style="color: #1DB954">{{ stats.repeat_percentage|floatformat:1 }}%</span> of your tracks were played more than once.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-lg-4">
         <div class="card card-list">
           <div class="card-header">
-            <h3 class="card-title"><i class="tim-icons icon-single-02 text-primary"></i>Top Artists</h3>
+            <h3 class="card-title"><i class="tim-icons icon-single-02 text-danger"></i>Top Artists</h3>
           </div>
           <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
@@ -210,7 +261,7 @@
       <div class="col-lg-4">
         <div class="card card-list">
           <div class="card-header">
-            <h3 class="card-title"><i class="tim-icons icon-sound-wave text-info"></i>Top Tracks</h3>
+            <h3 class="card-title"><i class="tim-icons icon-sound-wave text-success"></i>Top Tracks</h3>
           </div>
           <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
@@ -237,7 +288,7 @@
       <div class="col-lg-6 col-md-12">
         <div class="card card-list">
           <div class="card-header">
-            <h3 class="card-title"><i class="tim-icons icon-notes text-success"></i>Recently Played</h3>
+            <h3 class="card-title"><i class="tim-icons icon-notes text-warning"></i>Recently Played</h3>
           </div>
           <div class="card-body scrollable" style="height: 440px;">
             <ul class="list-group list-group-flush">
@@ -264,7 +315,7 @@
           <div class="card-header">
             <div class="row">
               <div class="col-sm-6 text-left">
-                <h2 class="card-title">Top Genres</h2>
+                <h3 class="card-title"><i class="tim-icons icon-world text-info"></i>Top Genres</h3>
               </div>
             </div>
           </div>
