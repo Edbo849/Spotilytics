@@ -27,6 +27,7 @@ from music.graphs import (
     generate_chartjs_pie_chart,
     generate_chartjs_polar_area_chart,
     generate_chartjs_radar_chart,
+    generate_chartjs_stacked_bar_chart,
 )
 from music.models import PlayedTrack, SpotifyUser
 from music.SpotifyClient import SpotifyClient
@@ -42,6 +43,7 @@ from music.utils import (
     get_recently_played,
     get_stats_boxes_data,
     get_streaming_trend_data,
+    get_time_period_distribution,
     get_top_albums,
     get_top_artists,
     get_top_genres,
@@ -655,7 +657,13 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
             }
         ],
         x_label,
+        fill_area=True,
     )
+
+    time_labels, time_datasets = await get_time_period_distribution(
+        user, since, until, top_artists, "artist"
+    )
+    stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
     context = {
         "segment": "artist-stats",
@@ -672,6 +680,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
+        "stacked_chart": stacked_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -780,7 +789,13 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
             }
         ],
         x_label,
+        fill_area=True,
     )
+
+    time_labels, time_datasets = await get_time_period_distribution(
+        user, since, until, top_albums, "album"
+    )
+    stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
     context = {
         "segment": "album-stats",
@@ -797,6 +812,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
+        "stacked_chart": stacked_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -900,7 +916,13 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
             }
         ],
         x_label,
+        fill_area=True,
     )
+
+    time_labels, time_datasets = await get_time_period_distribution(
+        user, since, until, top_tracks, "track"
+    )
+    stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
     context = {
         "segment": "track-stats",
@@ -917,6 +939,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
+        "stacked_chart": stacked_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -1011,8 +1034,6 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     discovery_dates, discovery_counts = await get_discovery_timeline_data(
         user, since, until, "genre"
     )
-    logger.critical(f"discovery_dates: {discovery_dates}")
-    logger.critical(f"discovery_counts: {discovery_counts}")
 
     discovery_chart = generate_chartjs_line_graph(
         discovery_dates,
@@ -1024,7 +1045,13 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
             }
         ],
         x_label,
+        fill_area=True,
     )
+
+    time_labels, time_datasets = await get_time_period_distribution(
+        user, since, until, top_genres, "genre"
+    )
+    stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
     context = {
         "segment": "genre-stats",
@@ -1041,6 +1068,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "polar_area_chart": polar_area_chart,
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
+        "stacked_chart": stacked_chart,
     }
     return render(request, "music/genre_stats.html", context)
 

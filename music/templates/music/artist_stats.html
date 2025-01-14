@@ -25,7 +25,9 @@
               
               
               
+              
             first
+
 
 
 
@@ -59,7 +61,9 @@
               
               
               
+              
             second
+
 
 
 
@@ -93,7 +97,9 @@
               
               
               
+              
             third
+
 
 
 
@@ -195,5 +201,14 @@
     <canvas id="discoveryTimelineChart"></canvas>
   {% else %}
     <p class="text-warning">Discovery timeline data is unavailable.</p>
+  {% endif %}
+{% endblock %}
+
+{% block stacked_barchart %}
+  {% if stacked_chart %}
+    <script id="stacked-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ stacked_chart|json_script:'stacked_chart' }}"></script>
+    <canvas id="stackedBarChart"></canvas>
+  {% else %}
+    <p class="text-warning">Stacked bar chart data is unavailable.</p>
   {% endif %}
 {% endblock %}

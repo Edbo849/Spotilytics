@@ -253,4 +253,24 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  const stackedCtx = document.getElementById("stackedBarChart");
+  if (stackedCtx) {
+    const stackedDataElement = document.getElementById("stacked-chart");
+    if (stackedDataElement) {
+      try {
+        let stackedData = JSON.parse(stackedDataElement.textContent.trim());
+        console.log("Raw stacked data:", stackedDataElement.textContent);
+        console.log("Parsed stacked data:", stackedData);
+        if (typeof stackedData === "string") {
+          stackedData = JSON.parse(stackedData);
+        }
+        if (typeof stackedData === "object") {
+          new Chart(stackedCtx, stackedData);
+        }
+      } catch (error) {
+        console.error("Error creating stacked bar chart:", error);
+      }
+    }
+  }
 });

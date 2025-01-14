@@ -4,7 +4,7 @@ import math
 logger = logging.getLogger(__name__)
 
 
-def generate_chartjs_line_graph(date_labels, datasets, x_label="Date"):
+def generate_chartjs_line_graph(date_labels, datasets, x_label="Date", fill_area=False):
     """
     Generates data for a Chart.js line graph with multiple datasets.
 
@@ -20,11 +20,20 @@ def generate_chartjs_line_graph(date_labels, datasets, x_label="Date"):
 
     chart_datasets = []
     for dataset in datasets:
+        fill_gradient = (
+            {
+                "target": "origin",
+                "above": "rgba(29, 185, 84, 0.2)",
+                "below": "rgba(29, 185, 84, 0.0)",
+            }
+            if fill_area
+            else False
+        )
         chart_datasets.append(
             {
                 "label": dataset["label"],
                 "data": dataset["data"],
-                "fill": False,
+                "fill": fill_gradient,
                 "borderColor": dataset.get("color", "#1DB954"),
                 "backgroundColor": dataset.get("color", "#1DB954"),
                 "pointBackgroundColor": dataset.get("color", "#1DB954"),
@@ -348,6 +357,52 @@ def generate_chartjs_bubble_chart(data):
                 "datalabels": {
                     "display": False,
                 },
+            },
+        },
+    }
+
+
+def generate_chartjs_stacked_bar_chart(labels, datasets):
+    """Generate Chart.js data structure for a stacked bar chart."""
+
+    color_palette = [
+        "rgba(29, 185, 84, 0.8)",
+        "rgba(255, 99, 132, 0.8)",
+        "rgba(54, 162, 235, 0.8)",
+        "rgba(255, 206, 86, 0.8)",
+        "rgba(153, 102, 255, 0.8)",
+        "rgba(75, 192, 192, 0.8)",
+        "rgba(255, 159, 64, 0.8)",
+        "rgba(231, 233, 237, 0.8)",
+        "rgba(169, 50, 38, 0.8)",
+        "rgba(82, 190, 128, 0.8)",
+    ]
+
+    for i, dataset in enumerate(datasets):
+        dataset["backgroundColor"] = color_palette[i % len(color_palette)]
+
+    return {
+        "type": "bar",
+        "data": {"labels": labels, "datasets": datasets},
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "scales": {
+                "x": {
+                    "stacked": True,
+                    "grid": {"color": "rgba(255,255,255,0.1)"},
+                    "ticks": {"color": "#9e9e9e"},
+                },
+                "y": {
+                    "stacked": True,
+                    "grid": {"color": "rgba(255,255,255,0.1)"},
+                    "ticks": {"color": "#9e9e9e"},
+                    "title": {"display": True, "text": "Streams", "color": "#9e9e9e"},
+                },
+            },
+            "plugins": {
+                "legend": {"labels": {"color": "#9e9e9e", "font": {"size": 10}}},
+                "datalabels": {"display": False},
             },
         },
     }

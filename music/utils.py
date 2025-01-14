@@ -1158,6 +1158,66 @@ async def get_discovery_timeline_data(user, since, until, item_type):
     return await get_data()
 
 
+async def get_time_period_distribution(user, since, until, items, item_type):
+    """Get listening distribution across different time periods."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        periods = {
+            "Morning (6-12)": (6, 12),
+            "Afternoon (12-18)": (12, 18),
+            "Evening (18-24)": (18, 24),
+            "Night (0-6)": (0, 6),
+        }
+
+        datasets = []
+        for item in items[:5]:
+            period_data = []
+
+            if item_type == "artist":
+                item_query = base_query.filter(artist_name=item["artist_name"])
+                label = item["artist_name"]
+            elif item_type == "genre":
+                item_query = base_query.filter(genres__contains=[item["genre"]])
+                label = item["genre"]
+            elif item_type == "track":
+                item_query = base_query.filter(track_id=item["track_id"])
+                label = item["track_name"]
+            elif item_type == "album":
+                item_query = base_query.filter(album_id=item["album_id"])
+                label = item["album_name"]
+
+            for period_name, (start_hour, end_hour) in periods.items():
+                if start_hour < end_hour:
+                    count = item_query.filter(
+                        played_at__hour__gte=start_hour, played_at__hour__lt=end_hour
+                    ).count()
+                else:
+                    count = (
+                        item_query.filter(played_at__hour__gte=start_hour).count()
+                        + item_query.filter(played_at__hour__lt=end_hour).count()
+                    )
+                period_data.append(count)
+
+            datasets.append(
+                {
+                    "label": label,
+                    "data": period_data,
+                    "backgroundColor": f"rgba(29, 185, 84, {0.8 - (len(datasets) * 0.1)})",
+                }
+            )
+
+        return list(periods.keys()), datasets
+
+    return await get_data()
+
+
 async def get_date_range(
     time_range: str, start_date: str | None = None, end_date: str | None = None
 ) -> tuple[datetime, datetime]:

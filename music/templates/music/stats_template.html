@@ -186,13 +186,8 @@
               </div>
               <div class="card-body scrollable">
                 <div class="chart-area" style="height: 300px;">
-                  {% block polar_chart %}
-                    {% if polar_area_chart %}
-                      <script id="polar-area-chart" type="application/json" data-chartdata="{{ polar_area_chart|json_script:'polar_area_chart' }}"></script>
-                      <canvas id="statsHourlyChart"></canvas>
-                    {% else %}
-                      <p class="text-warning">Hourly distribution data is unavailable.</p>
-                    {% endif %}
+                  {% block polar_area_chart %}
+
                   {% endblock %}
                 </div>
               </div>
@@ -226,6 +221,41 @@
               <div class="card-body scrollable">
                 <div class="chart-area" style="height: 300px;">
                   {% block discovery_timeline %}
+
+                  {% endblock %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <!-- Stacked Barchart Card -->
+          <div class="col-lg-6 col-md-12">
+            <div class="card card-chart">
+              <div class="card-header">
+                <h3 class="card-title"><i class="tim-icons icon-chart-bar-32 text-warning"></i>{{ stats_title }} Time Distribution</h3>
+              </div>
+              <div class="card-body scrollable">
+                <div class="chart-area" style="height: 300px;">
+                  {% block stacked_barchart %}
+
+                  {% endblock %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 col-md-12">
+            <div class="card card-chart">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="tim-icons icon-chart-pie-36 text-info"></i>
+                  {{ stats_title }}
+                </h3>
+              </div>
+              <div class="card-body scrollable">
+                <div class="chart-area" style="height: 300px; wdith:500px;">
+                  {% block undefined %}
 
                   {% endblock %}
                 </div>
