@@ -37,7 +37,9 @@
               
               
               
+              
             first
+
 
 
 
@@ -93,7 +95,9 @@
               
               
               
+              
             second
+
 
 
 
@@ -149,7 +153,9 @@
               
               
               
+              
             third
+
 
 
 
@@ -271,5 +277,14 @@
     <canvas id="stackedBarChart"></canvas>
   {% else %}
     <p class="text-warning">Stacked bar chart data is unavailable.</p>
+  {% endif %}
+{% endblock %}
+
+{% block barchart %}
+  {% if bar_chart %}
+    <script id="bar-chart" type="application/json" data-chartdata="{{ bar_chart|json_script:'bar_chart' }}"></script>
+    <canvas id="statsBarChart"></canvas>
+  {% else %}
+    <p class="text-warning">Bar chart data is unavailable.</p>
   {% endif %}
 {% endblock %}

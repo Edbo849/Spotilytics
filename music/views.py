@@ -21,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.vary import vary_on_cookie
 
 from music.graphs import (
+    generate_chartjs_bar_chart,
     generate_chartjs_bubble_chart,
     generate_chartjs_doughnut_chart,
     generate_chartjs_line_graph,
@@ -41,6 +42,7 @@ from music.utils import (
     get_listening_stats,
     get_radar_chart_data,
     get_recently_played,
+    get_replay_gaps,
     get_stats_boxes_data,
     get_streaming_trend_data,
     get_time_period_distribution,
@@ -665,6 +667,13 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     )
     stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
+    replay_labels, replay_values = await get_replay_gaps(
+        user, since, until, top_artists, "artist"
+    )
+    bar_chart = generate_chartjs_bar_chart(
+        replay_labels, replay_values, y_label="Hours Between Plays"
+    )
+
     context = {
         "segment": "artist-stats",
         "time_range": time_range,
@@ -681,6 +690,7 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
         "stacked_chart": stacked_chart,
+        "bar_chart": bar_chart,
     }
 
     return render(request, "music/artist_stats.html", context)
@@ -797,6 +807,13 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
     )
     stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
+    replay_labels, replay_values = await get_replay_gaps(
+        user, since, until, top_albums, "album"
+    )
+    bar_chart = generate_chartjs_bar_chart(
+        replay_labels, replay_values, y_label="Hours Between Plays"
+    )
+
     context = {
         "segment": "album-stats",
         "time_range": time_range,
@@ -813,6 +830,7 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
         "stacked_chart": stacked_chart,
+        "bar_chart": bar_chart,
     }
 
     return render(request, "music/album_stats.html", context)
@@ -924,6 +942,13 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
     )
     stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
+    replay_labels, replay_values = await get_replay_gaps(
+        user, since, until, top_tracks, "track"
+    )
+    bar_chart = generate_chartjs_bar_chart(
+        replay_labels, replay_values, y_label="Hours Between Plays"
+    )
+
     context = {
         "segment": "track-stats",
         "time_range": time_range,
@@ -940,6 +965,7 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
         "stacked_chart": stacked_chart,
+        "bar_chart": bar_chart,
     }
 
     return render(request, "music/track_stats.html", context)
@@ -1053,6 +1079,13 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
     )
     stacked_chart = generate_chartjs_stacked_bar_chart(time_labels, time_datasets)
 
+    replay_labels, replay_values = await get_replay_gaps(
+        user, since, until, top_genres, "genre"
+    )
+    bar_chart = generate_chartjs_bar_chart(
+        replay_labels, replay_values, y_label="Hours Between Plays"
+    )
+
     context = {
         "segment": "genre-stats",
         "time_range": time_range,
@@ -1069,6 +1102,7 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "bubble_chart": bubble_chart,
         "discovery_chart": discovery_chart,
         "stacked_chart": stacked_chart,
+        "bar_chart": bar_chart,
     }
     return render(request, "music/genre_stats.html", context)
 

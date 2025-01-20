@@ -273,4 +273,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  const barCtx = document.getElementById("statsBarChart");
+  if (barCtx) {
+    const barDataElement = document.getElementById("bar-chart");
+    if (barDataElement) {
+      try {
+        let barData = JSON.parse(barDataElement.textContent.trim());
+        if (typeof barData === "string") {
+          barData = JSON.parse(barData);
+        }
+        if (typeof barData === "object") {
+          new Chart(barCtx, barData);
+        }
+      } catch (error) {
+        console.error("Error creating bar chart:", error);
+      }
+    }
+  }
 });

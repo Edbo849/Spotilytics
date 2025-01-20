@@ -406,3 +406,46 @@ def generate_chartjs_stacked_bar_chart(labels, datasets):
             },
         },
     }
+
+
+def generate_chartjs_bar_chart(labels, values, y_label="Hours"):
+    """Generate Chart.js bar chart for replay gaps."""
+    return {
+        "type": "bar",
+        "data": {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Average Hours Between Replays",
+                    "data": values,
+                    "backgroundColor": "rgba(29, 185, 84, 0.8)",
+                    "borderColor": "rgba(29, 185, 84, 1.0)",
+                    "borderWidth": 1,
+                }
+            ],
+        },
+        "options": {
+            "responsive": True,
+            "maintainAspectRatio": False,
+            "scales": {
+                "y": {
+                    "beginAtZero": True,
+                    "title": {"display": True, "text": y_label, "color": "#9e9e9e"},
+                    "grid": {"color": "rgba(255,255,255,0.1)"},
+                    "ticks": {"color": "#9e9e9e"},
+                },
+                "x": {
+                    "grid": {"color": "rgba(255,255,255,0.1)"},
+                    "ticks": {
+                        "color": "#9e9e9e",
+                        "maxRotation": 45,
+                        "minRotation": 45,
+                        "font": {"size": 10},
+                    },
+                },
+            },
+            "plugins": {
+                "legend": {"labels": {"color": "#9e9e9e", "font": {"size": 10}}}
+            },
+        },
+    }

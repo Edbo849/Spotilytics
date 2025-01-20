@@ -953,6 +953,9 @@ async def get_doughnut_chart_data(user, since, until, items, item_type):
         )
         total_minutes = total_minutes / 60000
 
+        if len(label) > 25:
+            label = f"{label[:22]}..."
+
         return {
             "label": label,
             "total_minutes": total_minutes,
@@ -1214,6 +1217,59 @@ async def get_time_period_distribution(user, since, until, items, item_type):
             )
 
         return list(periods.keys()), datasets
+
+    return await get_data()
+
+
+async def get_replay_gaps(user, since, until, items, item_type):
+    """Calculate average time between repeated listens."""
+
+    @sync_to_async
+    def get_data():
+        gaps = []
+        labels = []
+
+        for item in items[:10]:
+            query = PlayedTrack.objects.filter(user=user)
+            if since:
+                query = query.filter(played_at__gte=since)
+            if until:
+                query = query.filter(played_at__lte=until)
+
+            if item_type == "artist":
+                query = query.filter(artist_name=item["artist_name"])
+                label = item["artist_name"]
+            elif item_type == "track":
+                query = query.filter(track_id=item["track_id"])
+                label = item["track_name"]
+            elif item_type == "album":
+                query = query.filter(album_id=item["album_id"])
+                label = item["album_name"]
+            elif item_type == "genre":
+                query = query.filter(genres__contains=[item["genre"]])
+                label = item["genre"]
+
+            plays = query.order_by("played_at").values_list("played_at", flat=True)
+            if len(plays) < 2:
+                continue
+
+            total_gap = 0
+            play_count = 0
+
+            for i in range(1, len(plays)):
+                gap = (plays[i] - plays[i - 1]).total_seconds() / 3600
+                if gap <= 168:
+                    total_gap += gap
+                    play_count += 1
+
+            if play_count > 0:
+                avg_gap = total_gap / play_count
+                gaps.append(round(avg_gap, 1))
+                if len(label) > 20:
+                    label = f"{label[:17]}..."
+                labels.append(label)
+
+        return labels, gaps
 
     return await get_data()
 

@@ -249,13 +249,13 @@
             <div class="card card-chart">
               <div class="card-header">
                 <h3 class="card-title">
-                  <i class="tim-icons icon-chart-pie-36 text-info"></i>
-                  {{ stats_title }}
+                  <i class="tim-icons icon-refresh-02 text-info"></i>
+                  {{ stats_title }} Replay Patterns
                 </h3>
               </div>
               <div class="card-body scrollable">
                 <div class="chart-area" style="height: 300px; wdith:500px;">
-                  {% block undefined %}
+                  {% block barchart %}
 
                   {% endblock %}
                 </div>
