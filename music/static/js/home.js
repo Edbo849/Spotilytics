@@ -30,79 +30,54 @@ $(document).ready(function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Existing line chart code
-  const ctx = document.getElementById("listeningStatsChart");
-  if (ctx) {
-    const chartDataElement = document.getElementById("chart-data");
-    if (chartDataElement) {
+  // Listening Stats Chart
+  const listeningCtx = document.getElementById("listeningStatsChart");
+  if (listeningCtx) {
+    const chartData = document.getElementById("chart_data");
+    if (chartData) {
       try {
-        let chartData = JSON.parse(chartDataElement.textContent.trim());
-        if (typeof chartData === "string") {
-          chartData = JSON.parse(chartData);
-        }
-        if (
-          typeof chartData === "object" &&
-          chartData.datasets &&
-          chartData.labels
-        ) {
-          new Chart(ctx, {
-            type: "line",
-            data: chartData,
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  title: {
-                    display: true,
-                    text: chartDataElement.dataset.xlabel,
-                  },
-                  grid: {
-                    color: "rgba(255,255,255,0.1)",
-                  },
-                  ticks: {
-                    color: "#9e9e9e",
-                  },
-                },
-                y: {
-                  title: {
-                    display: true,
-                    text: "Number of Songs",
-                  },
-                  grid: {
-                    color: "rgba(255,255,255,0.1)",
-                  },
-                  ticks: {
-                    color: "#9e9e9e",
-                  },
-                },
+        // Parse the JSON data once
+        const data = JSON.parse(chartData.textContent);
+
+        // Create chart with parsed data
+        new Chart(listeningCtx, {
+          type: "line",
+          data: data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                grid: { color: "rgba(255,255,255,0.1)" },
+                ticks: { color: "#9e9e9e" },
+              },
+              y: {
+                grid: { color: "rgba(255,255,255,0.1)" },
+                ticks: { color: "#9e9e9e" },
               },
             },
-          });
-        }
+            plugins: {
+              datalabels: { display: false },
+            },
+          },
+        });
       } catch (error) {
-        console.error("Error creating line chart:", error);
+        console.error("Error creating listening stats chart:", error);
       }
     }
   }
 
-  // New genre pie chart code
+  // Genre Chart
   const genreCtx = document.getElementById("genreChart");
   if (genreCtx) {
-    const genreDataElement = document.getElementById("genre-data");
-    if (genreDataElement) {
+    const genreData = document.getElementById("genre_data");
+    if (genreData) {
       try {
-        let genreData = JSON.parse(genreDataElement.textContent.trim());
-        if (typeof genreData === "string") {
-          genreData = JSON.parse(genreData);
-        }
-        if (typeof genreData === "object") {
-          new Chart(genreCtx, {
-            type: genreData.type,
-            data: genreData.data,
-            options: genreData.options,
-          });
-        }
+        // Parse the JSON data once
+        const data = JSON.parse(genreData.textContent);
+
+        // Create chart with parsed data directly
+        new Chart(genreCtx, data);
       } catch (error) {
         console.error("Error creating genre chart:", error);
       }

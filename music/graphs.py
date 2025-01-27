@@ -445,7 +445,8 @@ def generate_chartjs_bar_chart(labels, values, y_label="Hours"):
                 },
             },
             "plugins": {
-                "legend": {"labels": {"color": "#9e9e9e", "font": {"size": 10}}}
+                "legend": {"labels": {"color": "#9e9e9e", "font": {"size": 10}}},
+                "datalabels": {"display": False},
             },
         },
     }

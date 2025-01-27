@@ -12,175 +12,19 @@
           <div class="podium__rank {% if forloop.counter == 1 %}
               
               
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
             first
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             {% elif forloop.counter == 2 %}
               
               
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
             second
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             {% else %}
               
               
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
             third
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             {% endif %}">
@@ -201,7 +45,7 @@
   <div class="card-header">
     <h3 class="card-title"><i class="tim-icons icon-sound-wave text-info"></i>Tracks You Might Like</h3>
   </div>
-  <div class="card-body scrollable">
+  <div class="card-body scrollable" style="height: 378px;">
     <ul class="list-group list-group-flush">
       {% for track in similar_tracks %}
         <li class="list-group-item d-flex align-items-center justify-content-between">
@@ -221,7 +65,7 @@
 
 {% block streaming_trend %}
   {% if trends_chart %}
-    <script id="trends-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ trends_chart|json_script:'trends_data' }}"></script>
+    {{ trends_chart|json_script:'trends_data' }}
     <canvas id="streamingTrendChart"></canvas>
   {% else %}
     <p class="text-warning">Line graph data is unavailable.</p>
@@ -230,16 +74,16 @@
 
 {% block radar_chart %}
   {% if radar_chart %}
-    <script id="radar-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ radar_chart|json_script:'radar_chart' }}"></script>
+    {{ radar_chart|json_script:'radar_chart' }}
     <canvas id="statsRadarChart"></canvas>
   {% else %}
-    <p class="text-warning">Radar chart data is unavailable.</p>
+    <p class="text-warning">Line graph data is unavailable.</p>
   {% endif %}
 {% endblock %}
 
 {% block doughnut_chart %}
   {% if doughnut_chart %}
-    <script id="doughnut-chart" type="application/json" data-chartdata="{{ doughnut_chart|json_script:'doughnut_chart' }}"></script>
+    {{ doughnut_chart|json_script:'doughnut_chart' }}
     <canvas id="statsDoughnutChart"></canvas>
   {% else %}
     <p class="text-warning">Doughnut chart data is unavailable.</p>
@@ -248,7 +92,7 @@
 
 {% block polar_area_chart %}
   {% if polar_area_chart %}
-    <script id="polar-area-chart" type="application/json" data-chartdata="{{ polar_area_chart|json_script:'polar_area_chart' }}"></script>
+    {{ polar_area_chart|json_script:'polar_area_chart' }}
     <canvas id="statsHourlyChart"></canvas>
   {% else %}
     <p class="text-warning">Hourly distribution data is unavailable.</p>
@@ -257,14 +101,14 @@
 
 {% block bubble_chart %}
   {% if bubble_chart %}
-    <script id="bubble-chart" type="application/json" data-chartdata="{{ bubble_chart|json_script:'bubble_chart' }}"></script>
+    {{ bubble_chart|json_script:'bubble_chart' }}
     <canvas id="statsBubbleChart"></canvas>
   {% endif %}
 {% endblock %}
 
 {% block discovery_timeline %}
   {% if discovery_chart %}
-    <script id="discovery-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ discovery_chart|json_script:'discovery_chart' }}"></script>
+    {{ discovery_chart|json_script:'discovery_chart' }}
     <canvas id="discoveryTimelineChart"></canvas>
   {% else %}
     <p class="text-warning">Discovery timeline data is unavailable.</p>
@@ -273,7 +117,7 @@
 
 {% block stacked_barchart %}
   {% if stacked_chart %}
-    <script id="stacked-chart" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ stacked_chart|json_script:'stacked_chart' }}"></script>
+    {{ stacked_chart|json_script:'stacked_chart' }}
     <canvas id="stackedBarChart"></canvas>
   {% else %}
     <p class="text-warning">Stacked bar chart data is unavailable.</p>
@@ -282,7 +126,7 @@
 
 {% block barchart %}
   {% if bar_chart %}
-    <script id="bar-chart" type="application/json" data-chartdata="{{ bar_chart|json_script:'bar_chart' }}"></script>
+    {{ bar_chart|json_script:'bar_chart' }}
     <canvas id="statsBarChart"></canvas>
   {% else %}
     <p class="text-warning">Bar chart data is unavailable.</p>

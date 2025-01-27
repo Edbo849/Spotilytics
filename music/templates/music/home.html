@@ -147,7 +147,7 @@
           <div class="card-body">
             <div class="chart-area">
               {% if chart_data %}
-                <script id="chart-data" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ chart_data|json_script:'chartData' }}"></script>
+                {{ chart_data|json_script:'chart_data' }}
                 <canvas id="listeningStatsChart"></canvas>
               {% else %}
                 <p class="text-warning">Line graph data is unavailable.</p>
@@ -290,7 +290,7 @@
           <div class="card-header">
             <h3 class="card-title"><i class="tim-icons icon-notes text-warning"></i>Recently Played</h3>
           </div>
-          <div class="card-body scrollable" style="height: 440px;">
+          <div class="card-body scrollable">
             <ul class="list-group list-group-flush">
               {% for track in recently_played %}
                 <li class="list-group-item d-flex align-items-center">
@@ -319,10 +319,10 @@
               </div>
             </div>
           </div>
-          <div class="card-body">
-            <div class="chart-area" style="height: 400px;">
-              {% if top_genres %}
-                <script id="genre-data" type="application/json" data-xlabel="{{ x_label }}" data-chartdata="{{ top_genres|json_script:'genreChart' }}"></script>
+          <div class="card-body scrollable" style="height: 420px;">
+            <div class="chart-area">
+              {% if genre_data %}
+                {{ genre_data|json_script:'genre_data' }}
                 <canvas id="genreChart"></canvas>
               {% else %}
                 <p class="text-warning">Line graph data is unavailable.</p>

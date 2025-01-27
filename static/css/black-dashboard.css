@@ -13118,9 +13118,9 @@ Copyright (c) 2015 Daniel Eden
   .card label {
     color: rgba(255, 255, 255, 0.6); }
   .card .card-title {
-    margin-bottom: .75rem; }
+    margin-bottom: 0rem; }
   .card .card-body {
-    padding: 15px; }
+    padding: 10px; }
     .card .card-body.table-full-width {
       padding-left: 0;
       padding-right: 0; }
@@ -13306,7 +13306,6 @@ Copyright (c) 2015 Daniel Eden
     margin-top: 30px;
     padding: 0 10px; }
   .card-chart .chart-area {
-    height: 220px;
     width: 100%; }
   .card-chart .card-footer {
     margin-top: 15px; }

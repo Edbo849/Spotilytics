@@ -85,8 +85,8 @@ async def search(request: HttpRequest) -> HttpResponse:
     return render(request, "music/search_results.html", {"results": results})
 
 
-@vary_on_cookie
-@cache_page(60 * 30)
+# @vary_on_cookie
+# @cache_page(60 * 30)
 async def home(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -196,8 +196,8 @@ async def home(request: HttpRequest) -> HttpResponse:
 
     context = {
         "segment": "home",
-        "chart_data": json.dumps(chart_data) if chart_data else None,
-        "top_genres": json.dumps(genre_chart_data) if genre_chart_data else None,
+        "chart_data": chart_data if chart_data else None,
+        "genre_data": genre_chart_data if genre_chart_data else None,
         "listening_stats": stats,
         "stats": written_stats,
         "top_tracks": top_tracks,
