@@ -148,7 +148,7 @@
             <div class="chart-area">
               {% if chart_data %}
                 {{ chart_data|json_script:'chart_data' }}
-                <canvas id="listeningStatsChart"></canvas>
+                <canvas id="listeningStatsChart" style="height: 250px;"></canvas>
               {% else %}
                 <p class="text-warning">Line graph data is unavailable.</p>
               {% endif %}

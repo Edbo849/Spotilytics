@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  New Releases
+{% endblock %}
+
+{% block content %}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/new_releases.css' %}" />
+
+  <div class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <h1 class="text-white mb-4">New Releases</h1>
+        </div>
+      </div>
+
+      <div class="row">
+        {% for album in albums %}
+          <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card card-chart">
+              <div class="card-header">
+                <a href="{% url 'music:album' album.id %}">
+                  {% if album.images %}
+                    <img src="{{ album.images.0.url }}" class="img-fluid album-cover" alt="{{ album.name }}" />
+                  {% endif %}
+                </a>
+              </div>
+              <div class="card-body">
+                <h4 class="card-title"><a href="{% url 'music:album' album.id %}">{{ album.name }}</a></h4>
+                <p class="card-text">
+                  <a href="{% url 'music:artist' album.artists.0.id %}">{{ album.artists.0.name }}</a>
+                </p>
+                <p class="card-text">
+                  <small class="text-muted">{{ album.release_date }}</small>
+                  <span class="badge badge-primary">{{ album.album_type|title }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

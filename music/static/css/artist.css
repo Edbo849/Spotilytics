@@ -1,6 +1,6 @@
 /* Main Container */
 .container {
-    background-color: #282828;
+    background-color: #27293d;
     padding: 2rem;
     margin-top: 75px;
     margin-left: 270px;
@@ -213,6 +213,53 @@ audio {
     margin: 0 1rem;
 }
 
+/* Header styling */
+h2, h5 {
+    position: relative;
+    display: block;
+    margin-bottom: 2rem;
+    color: #fff;
+    font-size: 2rem;
+    width: 100%;
+}
+
+h2::after, h5::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(to right, 
+        #1DB954 0%,
+        rgba(29, 185, 84, 0.8) 20%,
+        rgba(29, 185, 84, 0.6) 40%,
+        rgba(29, 185, 84, 0.4) 60%,
+        rgba(29, 185, 84, 0.2) 80%,
+        rgba(29, 185, 84, 0) 100%
+    );
+}
+
+/* Adjust specific header sizes */
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h5 {
+    font-size: 1.5rem;
+}
+
+/* Remove underline for headers inside cards/components */
+.track-details h5::after,
+.album-info h5::after,
+.artist-info h5::after,
+.genres-section h5::after {  /* Added this selector */
+    content: none;
+}
 /* Scrollbar Styling */
 .albums-scroll-container::-webkit-scrollbar,
 .similar-artists-scroll-container::-webkit-scrollbar {

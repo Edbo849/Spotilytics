@@ -62,6 +62,7 @@
     border-bottom: none;
     border-radius: 10px 10px 0 0;
     padding: 1rem;
+    padding-bottom: 0rem;
 }
 
 .card-list .card-title {

@@ -1,6 +1,6 @@
 /* Container styling */
 .container {
-    background-color: #282828;
+    background-color: #27293d;
     padding: 2rem;
     margin-top: 75px;
     margin-left: 270px;
@@ -107,6 +107,32 @@
 
 .search-card a:hover .card-title {
     color: #1DB954;
+}
+
+.search-section h3 {
+    position: relative;
+    display: block; 
+    margin-bottom: 2rem;
+    color: #fff;
+    font-size: 2rem;
+    width: 100%;
+}
+
+.search-section h3::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(to right, 
+        #1DB954 0%,
+        rgba(29, 185, 84, 0.8) 20%,
+        rgba(29, 185, 84, 0.6) 40%,
+        rgba(29, 185, 84, 0.4) 60%,
+        rgba(29, 185, 84, 0.2) 80%,
+        rgba(29, 185, 84, 0) 100%
+    );
 }
 
 /* Responsive adjustments */

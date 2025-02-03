@@ -264,6 +264,16 @@ class SpotifyClient:
         response = await self.make_spotify_request(endpoint, params)
         return response.get("items", [])
 
+    async def get_new_releases(self, country: str = "US", limit: int = 50) -> dict:
+        """Get new releases from Spotify"""
+        try:
+            params = {"country": country, "limit": limit}
+            response = await self.make_spotify_request("browse/new-releases", params)
+            return response
+        except Exception as e:
+            logger.error(f"Error fetching new releases: {e}")
+            return {"albums": {"items": []}}
+
     async def get_artist_albums(
         self, artist_id: str, include_groups: list[str] | None = None
     ) -> list[dict[str, Any]]:

@@ -11,6 +11,9 @@
           <p>Dashboard</p>
         </a>
       </li>
+      <li class="{% if 'new-releases' in segment %} active {% endif %}">
+        <a href="{% url 'music:new_releases' %}"><i class="tim-icons icon-sound-wave"></i><p>New Releases</p></a>
+      </li>
       <li class="{% if 'artist-stats' in segment %} active {% endif %}">
         <a href="{% url 'music:artist_stats' %}">
           <i class="tim-icons icon-single-02"></i>

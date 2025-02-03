@@ -18,6 +18,7 @@ urlpatterns = [
     path("delete-history/", views.delete_history, name="delete_history"),
     path("genre/<str:genre_name>/", views.genre, name="genre"),
     path("chat/", views.chat, name="chat"),
+    path("new-releases/", views.new_releases, name="new_releases"),
     path("chat-api/", views.ChatAPI.as_view(), name="chat_api"),
     path("artist-stats/", views.artist_stats, name="artist_stats"),
     path("album-stats/", views.album_stats, name="album_stats"),

@@ -46,3 +46,9 @@ spotify/credentials.py
 *.DS_Store
 .AppleDouble
 .LSOverride
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+celery.log
+*.rdb
