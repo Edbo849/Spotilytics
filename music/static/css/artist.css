@@ -217,7 +217,6 @@ audio {
 h2, h5 {
     position: relative;
     display: block;
-    margin-bottom: 2rem;
     color: #fff;
     font-size: 2rem;
     width: 100%;
@@ -247,6 +246,7 @@ h1 {
 
 h2 {
     font-size: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 h5 {
@@ -290,7 +290,10 @@ h5 {
 
 .btn-group .btn-simple {
     color: #ffffff;
-    border-color: #1DB954;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: transparent;
+    transition: all 0.3s ease;
+
 }
 
 .btn-group .btn-simple.active {
