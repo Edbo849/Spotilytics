@@ -85,8 +85,8 @@ async def search(request: HttpRequest) -> HttpResponse:
     return render(request, "music/search_results.html", {"results": results})
 
 
-@vary_on_cookie
-@cache_page(60 * 30)
+# @vary_on_cookie
+# @cache_page(60 * 30)
 async def home(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -213,8 +213,8 @@ async def home(request: HttpRequest) -> HttpResponse:
     return render(request, "music/home.html", context)
 
 
-# @vary_on_cookie
-# @cache_page(60 * 60 * 24)
+@vary_on_cookie
+@cache_page(60 * 60 * 24)
 async def new_releases(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(

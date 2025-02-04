@@ -63,7 +63,7 @@
 
       <div class="row">
         <div class="col-12">
-          <div class="card card-chart">
+          <div class="card">
             <div class="card-header">
               <h3 class="card-title"><i class="tim-icons icon-single-02 text-info"></i>Your Listening Stats</h3>
             </div>
@@ -103,7 +103,7 @@
                     </div>
                     <div class="stat-item">
                       <p>
-                        Most Played Genre: <span class="number">{{ listening_stats.most_played_genre }}</span>
+                        Most Played Genre: <span class="number"><a href="{% url 'music:genre' listening_stats.most_played_genre %}">{{ listening_stats.most_played_genre }}</a></span>
                       </p>
                     </div>
                     <div class="stat-item">

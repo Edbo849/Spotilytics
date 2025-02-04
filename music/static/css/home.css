@@ -8,27 +8,57 @@
 }
 
 .listening-stats {
-    max-height: 150px;
+    max-height: none;
+    padding: 1rem;
+    width: 100%;
 }
 
 .chart-area {
     position: relative;
     width: 100%;
     height: 100%;
-    /* transform: translateY(-10px); */
     max-height: 500px;
 }
 
 .stats-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
+    width: 100%;
 }
 
 .stat-item {
-    flex: 1 1 calc(33.333% - 1rem);
-    box-sizing: border-box;
+    flex: none;
+    width: 100%;
+    padding: 0.5rem;
+}
+
+.stat-item p {
+    margin: 0;
+    white-space: normal;  
+    font-size: 1.0rem;
+    line-height: 1.4;
+}
+
+.stat-item .number {
+    color: #1DB954;
+    font-weight: 500;
+}
+
+/* Card body padding adjustment */
+.card-body {
+    padding: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-item {
+        padding: 0.25rem;
+    }
 }
 
 /* Styles for Top Artists card */
@@ -129,6 +159,34 @@
 
 .card-list .ms-3 small a:hover {
     color: #1DB954;
+}
+
+/* Stats boxes styling */
+.card-stats {
+    height: 120px;
+    display: flex;
+    align-items: center;
+}
+
+.card-stats .card-body {
+    width: 100%;
+    padding: 1rem;
+}
+
+.card-stats .numbers {
+    width: 100%;
+}
+
+.card-stats .numbers p {
+    margin: 0;
+    font-size: 1rem;  
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 100%;
 }
 
 /* DateRangePicker Dark Theme Styling */
@@ -280,32 +338,32 @@
 
 .podium__info {
     background-color: rgba(255, 255, 255, 0.05);
-    padding: 16px;  /* Reduced from 16px */
+    padding: 16px; 
     border-radius: 0 0 8px 8px;
     width: 100%;
     text-align: center;
-    height: 165px;  /* Reduced from 250px */
+    height: 165px; 
 }
 
 /* Update image size */
 .podium__image {
-    width: 40px;  /* Reduced from 80px */
-    height: 40px;  /* Reduced from 80px */
+    width: 40px;  
+    height: 40px; 
     border-radius: 50%;
-    margin-bottom: 4px;  /* Reduced from 8px */
+    margin-bottom: 4px;  
 }
 
 /* Update text sizes */
 .podium__name {
     color: #fff;
     font-weight: 600;
-    margin: 5px 0;  /* Reduced from 8px */
-    font-size: 0.8rem;  /* Reduced from 1.1rem */
+    margin: 5px 0; 
+    font-size: 0.8rem; 
 }
 
 .podium__stats {
     color: #1DB954;
-    font-size: 0.7rem;  /* Reduced from 0.9rem */
+    font-size: 0.7rem;
     margin: 0;
 }
 
@@ -343,7 +401,7 @@
 }
 
 .rank-number {
-    font-size: 1.5rem;  /* Reduced from 2rem */
+    font-size: 1.5rem;
     font-weight: bold;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
@@ -396,5 +454,13 @@
     .stat-item {
         flex: 0 0 80%;
         margin-bottom: 1rem;
+    }
+
+    .card-stats {
+        margin-bottom: 1rem;
+    }
+    
+    .card-stats .numbers p {
+        font-size: 0.85rem; 
     }
 }
