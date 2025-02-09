@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import logging
 import re
 import ssl
@@ -9,6 +10,7 @@ import aiohttp
 import certifi
 from asgiref.sync import sync_to_async
 from decouple import config
+from django.core.cache import cache
 
 from music.models import SpotifyUser
 from spotify.util import refresh_spotify_token
@@ -196,6 +198,11 @@ class SpotifyClient:
             return tracks[0].get("id")
         return None
 
+    def sanitize_cache_key(self, key: str) -> str:
+        """Sanitize cache key to be safe for memcached"""
+        # Convert the key to base64 to make it safe
+        return base64.b64encode(key.encode()).decode()
+
     async def get_track_details(
         self, track_id: str, preview: bool = True
     ) -> dict[str, Any]:
@@ -203,9 +210,18 @@ class SpotifyClient:
         if not track.get("preview_url"):
             song_name = track.get("name")
             if song_name and preview:
-                preview_url = await self.get_deezer_preview(
-                    song_name, track["artists"][0]["name"]
+                cache_key = self.sanitize_cache_key(
+                    f"deezer_preview_{song_name}_{track['artists'][0]['name']}"
                 )
+                preview_url = cache.get(cache_key)
+
+                if preview_url is None:
+                    preview_url = await self.get_deezer_preview(
+                        song_name, track["artists"][0]["name"]
+                    )
+                    if preview_url:
+                        cache.set(cache_key, preview_url, timeout=None)
+
                 track["preview_url"] = preview_url
         return track
 
@@ -462,22 +478,55 @@ class SpotifyClient:
         :param limit: Number of similar tracks to retrieve.
         :return: A list of similar track dictionaries.
         """
-        track = await self.get_track_details(track_id, True)
-        artist_name = track["artists"][0]["name"]
+        cache_key = self.sanitize_cache_key(f"track_details_true_{track_id}")
+        track = cache.get(cache_key)
 
-        similar_artists = await self.get_similar_artists(artist_name, limit=10)
+        if track is None:
+            track = await self.get_track_details(track_id, True)
+            if track:
+                cache.set(cache_key, track, timeout=None)
+                artist_name = track["artists"][0]["name"]
+
+        similar_artists_key = f"similar_artists_10_{artist_name}"
+        similar_artists = cache.get(similar_artists_key)
+
+        if similar_artists is None:
+            similar_artists = await self.get_similar_artists(artist_name, limit=10)
+            if similar_artists:
+                cache.set(similar_artists_key, similar_artists, timeout=2592000)
+
         similar_tracks = []
 
         for artist in similar_artists:
-            artist_top_tracks = await self.get_artist_top_tracks(1, artist["id"])
+            top_tracks_key = f"artist_top_tracks_1_{artist['id']}"
+            artist_top_tracks = cache.get(top_tracks_key)
+
+            if artist_top_tracks is None:
+                artist_top_tracks = await self.get_artist_top_tracks(1, artist["id"])
+                if artist_top_tracks:
+                    cache.set(top_tracks_key, artist_top_tracks, timeout=604800)
+
             for artist_track in artist_top_tracks:
                 if get_preview:
-                    track_details = await self.get_track_details(artist_track["id"])
-                    similar_tracks.append(track_details)
+                    details_key = f"track_details_true_{artist_track['id']}"
+                    track_details = cache.get(details_key)
+
+                    if track_details is None:
+                        track_details = await self.get_track_details(artist_track["id"])
+                        if track_details:
+                            cache.set(details_key, track_details, timeout=None)
                 else:
-                    track_details = await self.get_track_details(
-                        artist_track["id"], False
-                    )
+                    details_key = f"track_details_false_{artist_track['id']}"
+                    track_details = cache.get(details_key)
+
+                    if track_details is None:
+                        track_details = await self.get_track_details(
+                            artist_track["id"], False
+                        )
+                        if track_details:
+                            cache.set(details_key, track_details, timeout=None)
+
+                if track_details:
                     similar_tracks.append(track_details)
         similar_tracks = sorted(
             similar_tracks, key=lambda x: x["popularity"], reverse=True

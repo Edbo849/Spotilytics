@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import openai
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
 from django.db.models import Count
@@ -210,7 +211,7 @@ async def home(request: HttpRequest) -> HttpResponse:
 
 
 @vary_on_cookie
-@cache_page(60 * 5)
+@cache_page(60 * 15)
 async def recently_played_section(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
 
@@ -247,8 +248,6 @@ async def new_releases(request: HttpRequest) -> HttpResponse:
         logger.error(f"Error fetching new releases: {e}")
         albums = []
 
-    logger.critical(albums)
-
     context = {"segment": "new-releases", "albums": albums}
     return render(request, "music/new_releases.html", context)
 
@@ -268,23 +267,51 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
             if not artist:
                 raise ValueError("Artist not found")
 
-            similar_artists_spotify = await client.get_similar_artists(artist["name"])
+            cache_key = client.sanitize_cache_key(f"similar_artists_{artist_id}")
+            similar_artists = cache.get(cache_key)
+            if similar_artists is None:
+                similar_artists = await client.get_similar_artists(artist["name"])
+                if similar_artists:
+                    cache.set(cache_key, similar_artists, timeout=None)
+
+            similar_artists_spotify = similar_artists if similar_artists else []
             similar_artists_spotify = [
                 similar
                 for similar in similar_artists_spotify
                 if similar.get("id") != artist_id
             ]
 
-            albums = await client.get_artist_albums(artist_id, include_groups=None)
+            cache_key = client.sanitize_cache_key(f"artist_albums_all_{artist_id}")
+            albums = cache.get(cache_key)
+            if albums is None:
+                albums = await client.get_artist_albums(artist_id, include_groups=None)
+                if albums:
+                    cache.set(cache_key, albums, timeout=604800)
 
             compilations = [
                 album for album in albums if album.get("album_type") == "compilation"
             ]
 
-            top_tracks = await client.get_artist_top_tracks(5, artist_id)
+            cache_key = client.sanitize_cache_key(f"artist_top_tracks_{artist_id}_5")
+            top_tracks = cache.get(cache_key)
+
+            if top_tracks is None:
+                top_tracks = await client.get_artist_top_tracks(5, artist_id)
+                if top_tracks:
+                    cache.set(cache_key, top_tracks, timeout=604800)
+
             for track in top_tracks:
                 if track and track.get("id"):
-                    track_details = await client.get_track_details(track["id"])
+                    cache_key = client.sanitize_cache_key(
+                        f"track_details_{track['id']}"
+                    )
+                    track_details = cache.get(cache_key)
+
+                    if track_details is None:
+                        track_details = await client.get_track_details(track["id"])
+                        if track_details:
+                            cache.set(cache_key, track_details, timeout=None)
+
                     track["preview_url"] = track_details.get("preview_url")
                     track["album"] = track_details.get("album")
 
@@ -319,19 +346,47 @@ async def album(request: HttpRequest, album_id: str) -> HttpResponse:
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
-            album = await client.get_album(album_id)
+            cache_key = client.sanitize_cache_key(f"album_details_{album_id}")
+            album = cache.get(cache_key)
+
+            if album is None:
+                album = await client.get_album(album_id)
+                if album:
+                    cache.set(cache_key, album, timeout=None)
+                else:
+                    raise ValueError("Album not found")
+
             tracks = album["tracks"]["items"]
 
             artist_id = album["artists"][0]["id"]
-            artist_details = await client.get_artist(artist_id)
-            genres = artist_details.get("genres", [])
+            cache_key = client.sanitize_cache_key(f"artist_details_{artist_id}")
+            artist_details = cache.get(cache_key)
+
+            if artist_details is None:
+                artist_details = await client.get_artist(artist_id)
+                if artist_details:
+                    cache.set(cache_key, artist_details, timeout=604800)
+
+            genres = artist_details.get("genres", []) if artist_details else []
 
             for track in tracks:
-                track_details = await client.get_track_details(track["id"])
+                cache_key = client.sanitize_cache_key(f"track_details_{track['id']}")
+                track_details = cache.get(cache_key)
+
+                if track_details is None:
+                    track_details = await client.get_track_details(track["id"])
+                    if track_details:
+                        cache.set(cache_key, track_details, timeout=None)
+
                 duration_ms = track["duration_ms"]
                 track["duration"] = client.get_duration_ms(duration_ms)
-                track["preview_url"] = track_details.get("preview_url", None)
-                track["popularity"] = track_details.get("popularity", "N/A")
+                track["preview_url"] = (
+                    track_details.get("preview_url") if track_details else None
+                )
+                track["popularity"] = (
+                    track_details.get("popularity", "N/A") if track_details else "N/A"
+                )
+
     except Exception as e:
         logger.critical(f"Error fetching album data from Spotify: {e}")
         album, tracks, genres = None, [], []
@@ -361,9 +416,17 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
-            track = await client.get_track_details(track_id)
-            if not track:
-                raise ValueError("Track details not found.")
+            cache_key = client.sanitize_cache_key(f"track_details_{track_id}")
+            track_details = cache.get(cache_key)
+
+            if track_details is None:
+                track_details = await client.get_track_details(track_id)
+                if track_details:
+                    cache.set(cache_key, track_details, timeout=None)
+                else:
+                    raise ValueError("Track details not found.")
+
+            track = track_details
 
             duration_ms = track.get("duration_ms")
             track["duration"] = (
@@ -372,11 +435,17 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
                 else "N/A"
             )
 
-            album = (
-                await client.get_album(track["album"]["id"])
-                if track.get("album")
-                else None
-            )
+            if track.get("album"):
+                album_id = track["album"]["id"]
+                cache_key = client.sanitize_cache_key(f"album_details_{album_id}")
+                album = cache.get(cache_key)
+
+                if album is None:
+                    album = await client.get_album(album_id)
+                    if album:
+                        cache.set(cache_key, album, timeout=None)
+            else:
+                album = None
 
             artist_id = (
                 track["artists"][0]["id"]
@@ -387,23 +456,57 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
             if not artist_id:
                 artist = None
             else:
-                artist = await client.get_artist(artist_id)
+                cache_key = client.sanitize_cache_key(f"artist_details_{artist_id}")
+                artist = cache.get(cache_key)
+
+                if artist is None:
+                    artist = await client.get_artist(artist_id)
+                    if artist:
+                        cache.set(cache_key, artist, timeout=604800)
 
             if track.get("artists") and len(track["artists"]) > 0:
-                lastfm_similar = await client.get_lastfm_similar_tracks(
-                    track["artists"][0]["name"], track["name"], limit=6
+                cache_key = client.sanitize_cache_key(
+                    f"lastfm_similar_10_{track['artists'][0]['name']}_{track['name']}"
                 )
+                lastfm_similar = cache.get(cache_key)
+
+                if lastfm_similar is None:
+                    lastfm_similar = await client.get_lastfm_similar_tracks(
+                        track["artists"][0]["name"], track["name"], limit=10
+                    )
+                    if lastfm_similar:
+                        cache.set(cache_key, lastfm_similar, timeout=None)
 
                 for similar in lastfm_similar:
                     identifier = (similar["name"], similar["artist"]["name"])
                     if identifier not in seen_tracks:
-                        similar_track_id = await client.get_spotify_track_id(
-                            similar["name"], similar["artist"]["name"]
+                        id_cache_key = client.sanitize_cache_key(
+                            f"spotify_track_id_{similar['name']}_{similar['artist']['name']}"
                         )
-                        if similar_track_id:
-                            track_details = await client.get_track_details(
-                                similar_track_id, preview=False
+                        similar_track_id = cache.get(id_cache_key)
+
+                        if similar_track_id is None:
+                            similar_track_id = await client.get_spotify_track_id(
+                                similar["name"], similar["artist"]["name"]
                             )
+                            if similar_track_id:
+                                cache.set(id_cache_key, similar_track_id, timeout=None)
+
+                        if similar_track_id:
+                            details_cache_key = client.sanitize_cache_key(
+                                f"track_details_false_{similar_track_id}"
+                            )
+                            track_details = cache.get(details_cache_key)
+
+                            if track_details is None:
+                                track_details = await client.get_track_details(
+                                    similar_track_id, preview=False
+                                )
+                                if track_details:
+                                    cache.set(
+                                        details_cache_key, track_details, timeout=None
+                                    )
+
                             if track_details:
                                 seen_tracks.add(identifier)
                                 similar_tracks.append(track_details)
@@ -431,7 +534,12 @@ async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
-            artists, tracks = await client.get_items_by_genre(genre_name)
+            cache_key = client.sanitize_cache_key(f"genre_items_{genre_name}")
+            genre_items = cache.get(cache_key)
+            if genre_items is None:
+                artists, tracks = await client.get_items_by_genre(genre_name)
+                genre_items = {"artists": artists, "tracks": tracks}
+                cache.set(cache_key, genre_items, timeout=None)
     except Exception as e:
         logger.error(f"Error fetching items for genre {genre_name}: {e}")
         artists, tracks = [], []
@@ -457,13 +565,27 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
     try:
         async with SpotifyClient(spotify_user_id) as client:
             artist = await client.get_artist(artist_id)
-            albums = await client.get_artist_albums(
-                artist_id, include_groups=["album", "single", "compilation"]
-            )
+
+            cache_key = client.sanitize_cache_key(f"artist_albums_{artist_id}")
+            artist_albums = cache.get(cache_key)
+
+            if artist_albums is None:
+                albums = await client.get_artist_albums(
+                    artist_id, include_groups=["album", "single", "compilation"]
+                )
+                if artist_albums:
+                    cache.set(cache_key, artist_albums, timeout=None)
 
             track_ids_set: set[str] = set()
             for album in albums:
-                album_data = await client.get_album(album["id"])
+                cache_key = client.sanitize_cache_key(f"album_details_{album['id']}")
+                album_data = cache.get(cache_key)
+
+                if album_data is None:
+                    album_data = await client.get_album(album["id"])
+                    if album_data:
+                        cache.set(cache_key, album_data, timeout=None)
+
                 album_tracks = album_data.get("tracks", {}).get("items", [])
                 for track in album_tracks:
                     track_id = track.get("id")
@@ -492,7 +614,15 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
 
             tracks = []
             for album in albums:
-                album_data = await client.get_album(album["id"])
+                # Create cache key for album data
+                cache_key = client.sanitize_cache_key(f"album_details_{album['id']}")
+                album_data = cache.get(cache_key)
+
+                if album_data is None:
+                    album_data = await client.get_album(album["id"])
+                    if album_data:
+                        cache.set(cache_key, album_data, timeout=None)  # Cache forever
+
                 album_tracks = album_data.get("tracks", {}).get("items", [])
                 for track in album_tracks:
                     track_id = track.get("id")
@@ -632,9 +762,18 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
     try:
         async with SpotifyClient(spotify_user_id) as client:
             for artist in top_artists:
-                similar = await client.get_similar_artists(
-                    artist["artist_name"], limit=1
+                cache_key = client.sanitize_cache_key(
+                    f"similar_artists_1_{artist['artist_name']}"
                 )
+                similar = cache.get(cache_key)
+
+                if similar is None:
+                    similar = await client.get_similar_artists(
+                        artist["artist_name"], limit=1
+                    )
+                    if similar:
+                        cache.set(cache_key, similar, timeout=2592000)
+
                 for s in similar:
                     if s["id"] not in seen_artist_ids:
                         similar_artists.append(s)
@@ -761,16 +900,33 @@ async def album_stats(request: HttpRequest) -> HttpResponse:
     try:
         async with SpotifyClient(spotify_user_id) as client:
             for album in top_albums:
-                similar_artists = await client.get_similar_artists(
-                    album["artist_name"], limit=10
+                cache_key = client.sanitize_cache_key(
+                    f"similar_artists_10_{album['artist_name']}"
                 )
+                similar_artists = cache.get(cache_key)
+
+                if similar_artists is None:
+                    similar_artists = await client.get_similar_artists(
+                        album["artist_name"], limit=10
+                    )
+                    if similar_artists:
+                        cache.set(cache_key, similar_artists, timeout=2592000)
 
                 for artist in similar_artists:
                     if artist["id"] in seen_album_ids:
                         continue
-                    artist_top_albums = await client.get_artist_top_albums(
-                        artist["id"], limit=1
+
+                    cache_key = client.sanitize_cache_key(
+                        f"artist_top_albums_1_{artist['id']}"
                     )
+                    artist_top_albums = cache.get(cache_key)
+
+                    if artist_top_albums is None:
+                        artist_top_albums = await client.get_artist_top_albums(
+                            artist["id"], limit=1
+                        )
+                        if artist_top_albums:
+                            cache.set(cache_key, artist_top_albums, timeout=2592000)
 
                     for similar_album in artist_top_albums:
                         album_id = similar_album["id"]
@@ -902,20 +1058,50 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         async with SpotifyClient(spotify_user_id) as client:
             for track in top_tracks:
                 try:
-                    lastfm_similar = await client.get_lastfm_similar_tracks(
-                        track["artist_name"], track["track_name"], limit=1
+                    cache_key = client.sanitize_cache_key(
+                        f"lastfm_similar_1_{track['artist_name']}_{track['track_name']}"
                     )
+                    lastfm_similar = cache.get(cache_key)
+
+                    if lastfm_similar is None:
+                        lastfm_similar = await client.get_lastfm_similar_tracks(
+                            track["artist_name"], track["track_name"], limit=1
+                        )
+                        if lastfm_similar:
+                            cache.set(cache_key, lastfm_similar, timeout=None)
 
                     for similar in lastfm_similar:
                         identifier = (similar["name"], similar["artist"]["name"])
                         if identifier not in seen_tracks:
-                            track_id = await client.get_spotify_track_id(
-                                similar["name"], similar["artist"]["name"]
+                            id_cache_key = client.sanitize_cache_key(
+                                f"spotify_track_id_{similar['name']}_{similar['artist']['name']}"
                             )
-                            if track_id:
-                                track_details = await client.get_track_details(
-                                    track_id, False
+                            track_id = cache.get(id_cache_key)
+
+                            if track_id is None:
+                                track_id = await client.get_spotify_track_id(
+                                    similar["name"], similar["artist"]["name"]
                                 )
+                                if track_id:
+                                    cache.set(id_cache_key, track_id, timeout=None)
+
+                            if track_id:
+                                details_cache_key = client.sanitize_cache_key(
+                                    f"track_details_false_{track_id}"
+                                )
+                                track_details = cache.get(details_cache_key)
+
+                                if track_details is None:
+                                    track_details = await client.get_track_details(
+                                        track_id, False
+                                    )
+                                    if track_details:
+                                        cache.set(
+                                            details_cache_key,
+                                            track_details,
+                                            timeout=None,
+                                        )
+
                                 if track_details:
                                     seen_tracks.add(identifier)
                                     similar_tracks.append(track_details)
@@ -1038,9 +1224,18 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
                 artists, _ = await client.get_items_by_genre(genre["genre"])
 
                 for artist in artists[:3]:
-                    similar_artists = await client.get_similar_artists(
-                        artist["name"], limit=1
+                    cache_key = client.sanitize_cache_key(
+                        f"similar_artists_1_{artist['name']}"
                     )
+                    similar_artists = cache.get(cache_key)
+
+                    if similar_artists is None:
+                        similar_artists = await client.get_similar_artists(
+                            artist["name"], limit=1
+                        )
+                        if similar_artists:
+                            cache.set(cache_key, similar_artists, timeout=2592000)
+
                     for similar_artist in similar_artists:
                         artist_genres = similar_artist.get("genres", [])
                         for artist_genre in artist_genres:
@@ -1360,9 +1555,17 @@ async def get_preview_urls(request: HttpRequest) -> JsonResponse:
         async with SpotifyClient(spotify_user_id) as client:
             preview_urls = {}
             for track_id in track_ids:
-                track = await client.get_track_details(track_id, preview=True)
+                cache_key = client.sanitize_cache_key(f"track_details_true_{track_id}")
+                track = cache.get(cache_key)
+
+                if track is None:
+                    track = await client.get_track_details(track_id, preview=True)
+                    if track:
+                        cache.set(cache_key, track, timeout=None)
+
                 if track and track.get("preview_url"):
                     preview_urls[track_id] = track["preview_url"]
+
             return JsonResponse(preview_urls)
     except Exception as e:
         logger.error(f"Error fetching preview URLs: {e}")
@@ -1391,7 +1594,7 @@ async def get_artist_releases(request: HttpRequest, artist_id: str) -> JsonRespo
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatAPI(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
+    def post(client, request: HttpRequest) -> JsonResponse:
         try:
             data = json.loads(request.body)
             user_message = data.get("message")
@@ -1402,9 +1605,9 @@ class ChatAPI(View):
             if not spotify_user_id or not is_spotify_authenticated(spotify_user_id):
                 return JsonResponse({"error": "User not authenticated."}, status=401)
 
-            listening_data = self.get_listening_data(spotify_user_id)
-            prompt = self.create_prompt(user_message, listening_data)
-            ai_response = self.get_ai_response(prompt)
+            listening_data = client.get_listening_data(spotify_user_id)
+            prompt = client.create_prompt(user_message, listening_data)
+            ai_response = client.get_ai_response(prompt)
 
             return JsonResponse({"reply": ai_response})
 
@@ -1412,7 +1615,7 @@ class ChatAPI(View):
             logger.error(f"Error in ChatAPI: {e}")
             return JsonResponse({"error": "Internal server error."}, status=500)
 
-    def get_listening_data(self, spotify_user_id: str) -> str:
+    def get_listening_data(client, spotify_user_id: str) -> str:
         top_artists = (
             PlayedTrack.objects.filter(user_id=spotify_user_id)
             .values("artist_name")
@@ -1438,14 +1641,14 @@ class ChatAPI(View):
 
         return f"Top artists: {artists}. Top tracks: {tracks}. Top albums: {albums}."
 
-    def create_prompt(self, user_message: str, listening_data: str) -> str:
+    def create_prompt(client, user_message: str, listening_data: str) -> str:
         return (
             f"User's listening data: {listening_data}\n"
             f"User's question: {user_message}\n"
             f"AI response:"
         )
 
-    def get_ai_response(self, prompt: str) -> str:
+    def get_ai_response(client, prompt: str) -> str:
         openai.api_key = settings.OPENAI_API_KEY
         try:
             response = openai.ChatCompletion.create(

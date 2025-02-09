@@ -415,9 +415,19 @@ async def get_top_artists(user, since=None, until=None, limit=10):
     try:
         async with SpotifyClient(user.spotify_user_id) as client:
             for artist in top_artists:
-                artist_details = await client.get_artist(artist["artist_id"])
-                artist["image"] = artist_details.get("images", [])
+                cache_key = f"artist_details_{artist['artist_id']}"
+                artist_details = cache.get(cache_key)
+
+                if artist_details is None:
+                    artist_details = await client.get_artist(artist["artist_id"])
+                    if artist_details:
+                        cache.set(cache_key, artist_details, timeout=None)
+
+                artist["image"] = (
+                    artist_details.get("images", []) if artist_details else []
+                )
                 artist["name"] = artist["artist_name"]
+
     except Exception as e:
         logger.error(f"Error fetching artist details: {e}")
     return top_artists
@@ -452,10 +462,18 @@ async def get_recently_played(user, since=None, until=None, limit=10):
     try:
         async with SpotifyClient(user.spotify_user_id) as client:
             for track in recently_played:
-                album = await client.get_album(track["album_id"])
-                track["album_image"] = (
-                    album.get("images", [{}])[0].get("url") if album else None
-                )
+                cache_key = f"album_image_{track['album_id']}"
+                album_image = cache.get(cache_key)
+
+                if album_image is None:
+                    album = await client.get_album(track["album_id"])
+                    album_image = (
+                        album.get("images", [{}])[0].get("url") if album else None
+                    )
+                    if album_image:
+                        cache.set(cache_key, album_image, timeout=None)
+
+                track["album_image"] = album_image
     except Exception as e:
         logger.error(f"Error fetching album details: {e}")
 
@@ -517,10 +535,19 @@ async def get_top_albums(user, since=None, until=None, limit=10):
     try:
         async with SpotifyClient(user.spotify_user_id) as client:
             for album in top_albums:
-                album_details = await client.get_album(album["album_id"])
-                album["image"] = album_details.get("images", [])
-                album["release_date"] = album_details.get("release_date")
-                album["total_tracks"] = album_details.get("total_tracks")
+                cache_key = f"album_details_{album['album_id']}"
+                album_details = cache.get(cache_key)
+
+                if album_details is None:
+                    album_details = await client.get_album(album["album_id"])
+                    if album_details:
+                        cache.set(cache_key, album_details, timeout=None)
+
+                if album_details:
+                    album["image"] = album_details.get("images", [])
+                    album["release_date"] = album_details.get("release_date")
+                    album["total_tracks"] = album_details.get("total_tracks")
+
     except Exception as e:
         logger.error(f"Error fetching album details: {e}")
 
