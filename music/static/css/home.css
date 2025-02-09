@@ -425,7 +425,22 @@
     color: rgb(192, 192, 192); 
 }
 
+.loading-spinner {
+    width: 100%;
+    text-align: center;
+    padding: 2rem;
+}
 
+.spinner {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    color: #1DB954;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 @media (max-width: 768px) {
     .podium {

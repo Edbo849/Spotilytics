@@ -39,6 +39,14 @@ class PlayedTrack(models.Model):
 
     class Meta:
         unique_together = ("user", "stream_id", "played_at")
+        indexes = [
+            models.Index(fields=["user", "played_at"]),
+            models.Index(fields=["user", "artist_name"]),
+            models.Index(fields=["user", "track_id"]),
+            models.Index(fields=["user", "album_id"]),
+            models.Index(fields=["user", "duration_ms"]),
+            models.Index(fields=["user", "genres"]),
+        ]
 
     def __str__(self):
         return f"{self.track_name} by {self.artist_name}"

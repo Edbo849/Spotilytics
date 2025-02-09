@@ -85,8 +85,8 @@ async def search(request: HttpRequest) -> HttpResponse:
     return render(request, "music/search_results.html", {"results": results})
 
 
-# @vary_on_cookie
-# @cache_page(60 * 30)
+@vary_on_cookie
+@cache_page(60 * 60 * 24)
 async def home(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -141,22 +141,19 @@ async def home(request: HttpRequest) -> HttpResponse:
 
             top_tracks = await get_top_tracks(user, since, until, 10)
             top_artists = await get_top_artists(user, since, until, 10)
-            recently_played = await get_recently_played(user, since, until, 20)
             top_genres = await get_top_genres(user, since, until, 10)
             top_albums = await get_top_albums(user, since, until, 10)
 
         except ValueError as e:
             error_message = str(e)
-            top_tracks, top_artists, top_genres, recently_played, top_albums = (
-                [],
+            top_tracks, top_artists, top_genres, top_albums = (
                 [],
                 [],
                 [],
                 [],
             )
     else:
-        top_tracks, top_artists, top_genres, recently_played, top_albums = (
-            [],
+        top_tracks, top_artists, top_genres, top_albums = (
             [],
             [],
             [],
@@ -203,7 +200,6 @@ async def home(request: HttpRequest) -> HttpResponse:
         "top_tracks": top_tracks,
         "top_artists": top_artists,
         "top_albums": top_albums,
-        "recently_played": recently_played,
         "time_range": time_range,
         "start_date": start_date,
         "end_date": end_date,
@@ -211,6 +207,27 @@ async def home(request: HttpRequest) -> HttpResponse:
     }
 
     return render(request, "music/home.html", context)
+
+
+@vary_on_cookie
+@cache_page(60 * 5)
+async def recently_played_section(request: HttpRequest) -> HttpResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+
+    try:
+        user = await sync_to_async(SpotifyUser.objects.get)(
+            spotify_user_id=spotify_user_id
+        )
+        recently_played = await get_recently_played(user, None, None, 20)
+    except Exception as e:
+        logger.error(f"Error fetching recently played: {e}")
+        recently_played = []
+
+    return render(
+        request,
+        "music/partials/recently_played.html",
+        {"recently_played": recently_played},
+    )
 
 
 @vary_on_cookie

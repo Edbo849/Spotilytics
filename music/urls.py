@@ -30,4 +30,5 @@ urlpatterns = [
         views.get_artist_releases,
         name="artist_releases",
     ),
+    path("recently-played/", views.recently_played_section, name="recently-played"),
 ]

@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 import ssl
+import time
 from typing import Any
 
 import aiohttp
@@ -15,6 +16,33 @@ from spotify.util import refresh_spotify_token
 logger = logging.getLogger(__name__)
 
 
+class RateLimiter:
+    """Token bucket rate limiter for Spotify API"""
+
+    def __init__(self, rate_limit: int, time_window: float):
+        self.rate_limit = rate_limit
+        self.time_window = time_window
+        self.tokens = rate_limit
+        self.last_update = time.time()
+
+    async def acquire(self):
+        """Acquire a token, waiting if necessary"""
+        while self.tokens <= 0:
+            now = time.time()
+            time_passed = now - self.last_update
+            self.tokens = min(
+                self.rate_limit,
+                self.tokens + (time_passed * self.rate_limit / self.time_window),
+            )
+            self.last_update = now
+
+            if self.tokens <= 0:
+                await asyncio.sleep(0.1)
+
+        self.tokens -= 1
+        return True
+
+
 class SpotifyClient:
     SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
     LASTFM_API_BASE_URL = "https://ws.audioscrobbler.com/2.0"
@@ -25,6 +53,8 @@ class SpotifyClient:
         self._session: aiohttp.ClientSession | None = None
         self.ssl_context = self._create_ssl_context()
         self.access_token: str | None = None
+        self.general_limiter = RateLimiter(rate_limit=50, time_window=30)
+        self.player_limiter = RateLimiter(rate_limit=10, time_window=30)
 
     async def __aenter__(self):
         """Async context manager enter."""
@@ -82,21 +112,61 @@ class SpotifyClient:
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
     ) -> Any:
         """
-        Perform an asynchronous GET request and return the JSON response.
+        Perform an asynchronous GET request with rate limiting and retries
         """
-        session = await self._get_session()
-        try:
-            async with session.get(
-                url, headers=headers, params=params, ssl=self.ssl_context
-            ) as response:
-                response.raise_for_status()
-                return await response.json()
-        except aiohttp.ClientResponseError as e:
-            logger.error(f"HTTP error while fetching {url}: {e.status} {e.message}")
-        except Exception as e:
-            logger.error(f"Unexpected error while fetching {url}: {e}")
+        if "/player/" in url:
+            limiter = self.player_limiter
+        else:
+            limiter = self.general_limiter
+
+        for attempt in range(max_retries):
+            try:
+                await limiter.acquire()
+                session = await self._get_session()
+
+                async with session.get(
+                    url, headers=headers, params=params, ssl=self.ssl_context
+                ) as response:
+                    if response.status == 429:
+                        retry_after = int(response.headers.get("Retry-After", 1))
+                        logger.warning(f"Rate limited. Waiting {retry_after} seconds")
+                        await asyncio.sleep(retry_after)
+                        continue
+
+                    response.raise_for_status()
+                    return await response.json()
+
+            except aiohttp.ClientConnectorError as e:
+                if "Connection reset by peer" in str(e):
+                    if attempt < max_retries - 1:
+                        wait_time = retry_delay * (attempt + 1)
+                        logger.warning(
+                            f"Connection reset, retrying in {wait_time} seconds. Attempt {attempt + 1}/{max_retries}"
+                        )
+                        await asyncio.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error(
+                            f"Connection reset after {max_retries} retries: {e}"
+                        )
+                else:
+                    logger.error(f"Connection error while fetching {url}: {e}")
+            except aiohttp.ClientResponseError as e:
+                logger.error(f"HTTP error while fetching {url}: {e.status} {e.message}")
+            except Exception as e:
+                logger.error(f"Unexpected error while fetching {url}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = retry_delay * (attempt + 1)
+                    logger.warning(
+                        f"Retrying in {wait_time} seconds. Attempt {attempt + 1}/{max_retries}"
+                    )
+                    await asyncio.sleep(wait_time)
+                    continue
+
         return {}
 
     async def make_spotify_request(

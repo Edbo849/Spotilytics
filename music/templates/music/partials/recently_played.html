@@ -1,0 +1,16 @@
+<ul class="list-group list-group-flush">
+  {% for track in recently_played %}
+    <li class="list-group-item d-flex align-items-center">
+      <a href="{% url 'music:album' track.album_id %}"><img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="album-cover" /></a>
+      <div class="ms-3">
+        <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
+        <br />
+        <small>
+          <a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a>
+          <br />
+          {{ track.played_at|date:'M d, Y H:i' }}
+        </small>
+      </div>
+    </li>
+  {% endfor %}
+</ul>

@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
 from django.db.models import Avg, Count, Max, Min, Sum
 from django.db.models.functions import (
     ExtractHour,
@@ -369,10 +370,18 @@ async def get_top_tracks(user, since=None, until=None, limit=10):
     try:
         async with SpotifyClient(user.spotify_user_id) as client:
             for track in top_tracks:
-                album = await client.get_album(track["album_id"])
-                track["album_image"] = (
-                    album.get("images", [{}])[0].get("url") if album else None
-                )
+                cache_key = f"album_image_{track['album_id']}"
+                album_image = cache.get(cache_key)
+
+                if album_image is None:
+                    album = await client.get_album(track["album_id"])
+                    album_image = (
+                        album.get("images", [{}])[0].get("url") if album else None
+                    )
+                    if album_image:
+                        cache.set(cache_key, album_image, timeout=None)
+
+                track["album_image"] = album_image
     except Exception as e:
         logger.error(f"Error fetching album details: {e}")
 

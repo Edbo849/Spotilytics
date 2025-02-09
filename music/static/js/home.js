@@ -84,3 +84,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  loadRecentlyPlayed();
+  setInterval(loadRecentlyPlayed, 5 * 60 * 1000);
+});
+
+function loadRecentlyPlayed() {
+  const container = document.getElementById("recently-played-container");
+  if (!container) return;
+
+  container.innerHTML =
+    '<div class="loading-spinner"><i class="tim-icons icon-refresh-02 spinner"></i></div>';
+
+  fetch("/recently-played/")
+    .then((response) => response.text())
+    .then((html) => {
+      container.innerHTML = html;
+    })
+    .catch((error) => {
+      console.error("Error loading recently played:", error);
+      container.innerHTML =
+        '<p class="text-warning">Error loading recently played tracks</p>';
+    });
+}

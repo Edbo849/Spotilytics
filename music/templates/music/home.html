@@ -210,6 +210,7 @@
     </div>
 
     <div class="row">
+      <!-- Top Artists Card -->
       <div class="col-lg-4">
         <div class="card card-list">
           <div class="card-header">
@@ -233,6 +234,7 @@
           </div>
         </div>
       </div>
+      <!-- Top Albums Card -->
       <div class="col-lg-4">
         <div class="card card-list">
           <div class="card-header">
@@ -258,6 +260,7 @@
           </div>
         </div>
       </div>
+      <!-- Top Tracks Card -->
       <div class="col-lg-4">
         <div class="card card-list">
           <div class="card-header">
@@ -290,23 +293,8 @@
           <div class="card-header">
             <h3 class="card-title"><i class="tim-icons icon-notes text-warning"></i>Recently Played</h3>
           </div>
-          <div class="card-body scrollable">
-            <ul class="list-group list-group-flush">
-              {% for track in recently_played %}
-                <li class="list-group-item d-flex align-items-center">
-                  <a href="{% url 'music:album' track.album_id %}"><img src="{{ track.album_image }}" alt="{{ track.track_name }}" class="album-cover" /></a>
-                  <div class="ms-3">
-                    <a href="{% url 'music:track' track.track_id %}">{{ track.track_name }}</a>
-                    <br />
-                    <small>
-                      <a href="{% url 'music:artist' track.artist_id %}">{{ track.artist_name }}</a>
-                      <br />
-                      {{ track.played_at|date:'M d, Y H:i' }}
-                    </small>
-                  </div>
-                </li>
-              {% endfor %}
-            </ul>
+          <div class="card-body scrollable" id="recently-played-container">
+            <div class="loading">Loading...</div>
           </div>
         </div>
       </div>
