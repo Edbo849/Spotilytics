@@ -33,6 +33,10 @@
     margin-right: 1rem;
     padding: 1rem;
     transition: transform 0.3s ease, background-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: auto; 
+    min-height: 200px;
 }
 
 .track-card:hover {
@@ -42,6 +46,8 @@
 
 .track-img-container {
     margin-bottom: 0.8rem;
+    width: 100%;
+    aspect-ratio: 1/1;
 }
 
 .track-img {
@@ -53,6 +59,9 @@
 .track-info {
     padding: 0;
     text-align: left;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .track-info .track-name {
@@ -80,13 +89,34 @@
 }
 
 .preview-placeholder {
-    margin-top: 0.5rem;
+    margin-top: auto;
+    min-height: 50px;
 }
 
 .track-card audio {
     width: 100%;
-    margin-top: 0.5rem;
+    max-width: 100%;
+    height: 32px;
 }
+
+/* Audio Player Styling for similar tracks */
+.track-card audio::-webkit-media-controls-timeline,
+.track-card audio::-webkit-media-controls-time-display,
+.track-card audio::-webkit-media-controls-current-time-display,
+.track-card audio::-webkit-media-controls-time-remaining-display {
+    display: none !important;
+}
+
+.track-card audio::-webkit-media-controls-panel {
+    background-color: #353852;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color-scheme: dark;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
 h1, h2, p {
     color: #ffffff;
 }
@@ -98,10 +128,63 @@ a {
 a:hover {
     color: #1ed760;
 }
+/* Audio Player Styling */
 audio {
-    width: 35%;
-    margin-top: 1rem;
+    max-width: 300px;
+    border-radius: 4px;
+    height: 48px;
 
+}
+
+audio:hover::-webkit-media-controls-panel {
+    background-color: #2c2e43;
+}
+
+/* Chrome & Safari */
+audio::-webkit-media-controls-panel {
+    background-color: #353852;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color-scheme: dark;
+}
+
+audio::-webkit-media-controls-play-button {
+    background-color: #1DB954;
+    border-radius: 50%;
+}
+
+audio::-webkit-media-controls-play-button:hover {
+    background-color: #1ed760;
+}
+
+audio::-webkit-media-controls-timeline {
+    display: block !important; 
+    background-color: #353852;
+    border-radius: 4px;
+    height: 4px;
+    margin: 0 10px;
+}
+
+audio::-webkit-media-controls-timeline:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Firefox */
+audio::-moz-range-thumb {
+    background-color: #1DB954;
+    border: none;
+    height: 12px;
+    width: 12px;
+}
+
+audio::-moz-time-display {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+audio::-moz-range-track {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 4px;
 }
 .img-fluid {
     border-radius: 8px;

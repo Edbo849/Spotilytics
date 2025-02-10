@@ -523,8 +523,8 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/track.html", context)
 
 
-# @vary_on_cookie
-# @cache_page(60 * 60 * 24 * 7)
+@vary_on_cookie
+@cache_page(60 * 60 * 24 * 7)
 async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(

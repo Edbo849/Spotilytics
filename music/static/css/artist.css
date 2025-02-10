@@ -208,9 +208,65 @@
     color: #1DB954;
 }
 
+/* Audio Player Styling */
 audio {
-    max-width: 210px;
-    margin: 0 1rem;
+    max-width: 200px;
+    border-radius: 4px;
+    height: 48px;
+
+}
+
+audio:hover::-webkit-media-controls-panel {
+    background-color: #2c2e43;
+}
+
+/* Chrome & Safari */
+audio::-webkit-media-controls-panel {
+    background-color: #27293d;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color-scheme: dark;
+}
+
+audio::-webkit-media-controls-play-button {
+    background-color: #1DB954;
+    border-radius: 50%;
+}
+
+audio::-webkit-media-controls-play-button:hover {
+    background-color: #1ed760;
+}
+
+audio::-webkit-media-controls-timeline {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 4px;
+}
+
+audio::-webkit-media-controls-timeline:hover {
+    background-color: rgba(29, 185, 84, 0.2);
+}
+
+audio::-webkit-media-controls-timeline {
+    display: none;
+}
+
+/* Firefox */
+audio::-moz-range-thumb {
+    background-color: #1DB954;
+    border: none;
+    height: 12px;
+    width: 12px;
+}
+
+audio::-moz-time-display {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+audio::-moz-range-track {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 4px;
 }
 
 /* Header styling */
