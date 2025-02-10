@@ -5,23 +5,47 @@
 {% endblock %}
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/search_results.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <div class="container">
     {% if results %}
       <!-- Artists Section -->
-      <div class="search-section">
-        <h3>Artists</h3>
+      <nav class="section-nav">
+        <ul class="section-nav-list">
+          <li>
+            <a href="#artists" class="section-nav-item active"><i class="fas fa-guitar"></i>Artists</a>
+          </li>
+          <li>
+            <a href="#albums" class="section-nav-item"><i class="fas fa-compact-disc"></i>Albums</a>
+          </li>
+          <li>
+            <a href="#songs" class="section-nav-item"><i class="fas fa-music"></i>Songs</a>
+          </li>
+          <li>
+            <a href="#playlists" class="section-nav-item"><i class="fas fa-list"></i>Playlists</a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="search-section" id="artists">
+        <div class="section-header">
+          <i class="fas fa-guitar header-icon"></i>
+          <h3>Artists</h3>
+        </div>
         <div class="scroll-container">
-          <div class="d-flex flex-row flex-nowrap">
+          <div class="card-grid">
             {% for artist in results.artists.items %}
-              <div class="card search-card">
-                <a href="{% url 'music:artist' artist.id %}">
-                  {% if artist.images %}
-                    <img src="{{ artist.images.0.url }}" class="card-img-top" alt="{{ artist.name }}" />
-                  {% else %}
-                    <img src="{% static 'images/default_artist.png' %}" class="card-img-top" alt="{{ artist.name }}" />
-                  {% endif %}
-                  <div class="card-body">
-                    <h5 class="card-title">{{ artist.name }}</h5>
+              <div class="search-card">
+                <a href="{% url 'music:artist' artist.id %}" class="card-link">
+                  <div class="card-image">
+                    {% if artist.images %}
+                      <img src="{{ artist.images.0.url }}" alt="{{ artist.name }}" />
+                    {% else %}
+                      <img src="{% static 'images/default_artist.png' %}" alt="{{ artist.name }}" />
+                    {% endif %}
+                  </div>
+                  <div class="card-content">
+                    <h4 class="card-title">{{ artist.name }}</h4>
+                    <p class="card-subtext">Artist</p>
                   </div>
                 </a>
               </div>
@@ -31,17 +55,24 @@
       </div>
 
       <!-- Albums Section -->
-      <div class="search-section">
-        <h3>Albums</h3>
+      <div class="search-section" id="albums">
+        <div class="section-header">
+          <i class="fas fa-compact-disc header-icon"></i>
+          <h3>Albums</h3>
+        </div>
         <div class="scroll-container">
-          <div class="d-flex flex-row flex-nowrap">
+          <div class="card-grid">
             {% for album in results.albums.items %}
-              <div class="card search-card">
-                <a href="{% url 'music:album' album.id %}"><img src="{{ album.images.0.url }}" class="card-img-top" alt="{{ album.name }}" /></a>
-                <div class="card-body">
-                  <a href="{% url 'music:album' album.id %}"><h5 class="card-title">{{ album.name }}</h5></a>
-                  <a href="{% url 'music:artist' album.artists.0.id %}" class="artist-link"><p class="card-text">{{ album.artists.0.name }}</p></a>
-                </div>
+              <div class="search-card">
+                <a href="{% url 'music:album' album.id %}" class="card-link">
+                  <div class="card-image">
+                    <img src="{{ album.images.0.url }}" alt="{{ album.name }}" />
+                  </div>
+                  <div class="card-content">
+                    <h4 class="card-title">{{ album.name }}</h4>
+                    <p class="card-subtext">Album • {{ album.artists.0.name }}</p>
+                  </div>
+                </a>
               </div>
             {% endfor %}
           </div>
@@ -49,17 +80,24 @@
       </div>
 
       <!-- Tracks Section -->
-      <div class="search-section">
-        <h3>Songs</h3>
+      <div class="search-section" id="songs">
+        <div class="section-header">
+          <i class="fas fa-music header-icon"></i>
+          <h3>Songs</h3>
+        </div>
         <div class="scroll-container">
-          <div class="d-flex flex-row flex-nowrap">
+          <div class="card-grid">
             {% for track in results.tracks.items %}
-              <div class="card search-card">
-                <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="{{ track.name }}" />
-                <div class="card-body">
-                  <a href="{% url 'music:track' track.id %}" class="track-link"><h5 class="card-title">{{ track.name }}</h5></a>
-                  <a href="{% url 'music:artist' track.artists.0.id %}" class="artist-link"><p class="card-text">{{ track.artists.0.name }}</p></a>
-                </div>
+              <div class="search-card">
+                <a href="{% url 'music:track' track.id %}" class="card-link">
+                  <div class="card-image">
+                    <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" />
+                  </div>
+                  <div class="card-content">
+                    <h4 class="card-title">{{ track.name }}</h4>
+                    <p class="card-subtext">Song • {{ track.artists.0.name }}</p>
+                  </div>
+                </a>
               </div>
             {% endfor %}
           </div>
@@ -67,18 +105,23 @@
       </div>
 
       <!-- Playlists Section -->
-      <div class="search-section">
-        <h3>Playlists</h3>
+      <div class="search-section" id="playlists">
+        <div class="section-header">
+          <i class="fas fa-list header-icon"></i>
+          <h3>Playlists</h3>
+        </div>
         <div class="scroll-container">
-          <div class="d-flex flex-row flex-nowrap">
+          <div class="card-grid">
             {% for playlist in results.playlists.items %}
               {% if playlist %}
-                <div class="card search-card">
-                  <a href="{{ playlist.external_urls.spotify }}" target="_blank">
-                    <img src="{{ playlist.images.0.url }}" class="card-img-top" alt="{{ playlist.name }}" />
-                    <div class="card-body">
-                      <h5 class="card-title">{{ playlist.name }}</h5>
-                      <p class="card-text">{{ playlist.owner.display_name }}</p>
+                <div class="search-card">
+                  <a href="{{ playlist.external_urls.spotify }}" target="_blank" class="card-link">
+                    <div class="card-image">
+                      <img src="{{ playlist.images.0.url }}" alt="{{ playlist.name }}" />
+                    </div>
+                    <div class="card-content">
+                      <h4 class="card-title">{{ playlist.name }}</h4>
+                      <p class="card-subtext">Playlist • {{ playlist.owner.display_name }}</p>
                     </div>
                   </a>
                 </div>
@@ -88,7 +131,14 @@
         </div>
       </div>
     {% else %}
-      <p class="text-white">No results found.</p>
+      <div class="no-results">
+        <i class="fas fa-search-minus no-results-icon"></i>
+        <p class="no-results-text">No results found</p>
+      </div>
     {% endif %}
   </div>
+{% endblock %}
+
+{% block javascripts %}
+  <script src="{% static 'js/search_results.js' %}"></script>
 {% endblock %}
