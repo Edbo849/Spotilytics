@@ -97,7 +97,7 @@ function loadRecentlyPlayed() {
   container.innerHTML =
     '<div class="loading-spinner"><i class="tim-icons icon-refresh-02 spinner"></i></div>';
 
-  fetch("/recently-played/")
+  fetch("/recently-played/", { credentials: "include" })
     .then((response) => response.text())
     .then((html) => {
       container.innerHTML = html;

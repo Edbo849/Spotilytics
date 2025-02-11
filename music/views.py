@@ -553,8 +553,6 @@ async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
         logger.error(f"Error fetching items for genre {genre_name}: {e}")
         artists, tracks = [], []
 
-    logger.critical(f"Genre: {genre_name}, Artists: {artists}, Tracks: {tracks}")
-
     context = {
         "genre_name": genre_name,
         "artists": artists,
