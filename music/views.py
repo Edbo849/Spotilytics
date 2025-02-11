@@ -40,6 +40,7 @@ from music.utils import (
     get_discovery_timeline_data,
     get_doughnut_chart_data,
     get_hourly_listening_data,
+    get_item_stats_util,
     get_listening_stats,
     get_radar_chart_data,
     get_recently_played,
@@ -86,8 +87,8 @@ async def search(request: HttpRequest) -> HttpResponse:
     return render(request, "music/search_results.html", {"results": results})
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24)
 async def home(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -252,8 +253,8 @@ async def new_releases(request: HttpRequest) -> HttpResponse:
     return render(request, "music/new_releases.html", context)
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24 * 7)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24 * 7)
 async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -335,8 +336,8 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/artist.html", context)
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24 * 30)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24 * 30)
 async def album(request: HttpRequest, album_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -401,8 +402,8 @@ async def album(request: HttpRequest, album_id: str) -> HttpResponse:
     return await sync_to_async(render)(request, "music/album.html", context)
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24 * 30)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24 * 30)
 async def track(request: HttpRequest, track_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
@@ -1349,6 +1350,28 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "bar_chart": bar_chart,
     }
     return render(request, "music/genre_stats.html", context)
+
+
+@vary_on_cookie
+async def get_item_stats(
+    request: HttpRequest, item_type: str, item_id: str
+) -> JsonResponse:
+    spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
+    if not spotify_user_id:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    time_range = request.GET.get("time_range", "last_4_weeks")
+    since, until = await get_date_range(time_range)
+
+    try:
+        user = await sync_to_async(SpotifyUser.objects.get)(
+            spotify_user_id=spotify_user_id
+        )
+        stats = await get_item_stats_util(user, item_id, item_type, since, until)
+        return JsonResponse(stats)
+    except Exception as e:
+        logger.error(f"Error fetching stats: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt

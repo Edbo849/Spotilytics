@@ -109,10 +109,15 @@
         </div>
       </div>
     {% endif %}
+    <div class="stats-section" data-item-id="{{ artist.id }}" data-item-type="artist">
+      <h2>Listening Stats</h2>
+      {% include 'music/partials/stats_section.html' with stats=stats time_range=time_range %}
+    </div>
   </div>
 {% endblock %}
 
 {% block javascripts %}
   {{ block.super }}
   <script src="{% static 'js/artist.js' %}"></script>
+  <script src="{% static 'js/item_stats.js' %}"></script>
 {% endblock %}

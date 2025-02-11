@@ -1345,3 +1345,142 @@ async def get_date_range(
         since = until - timedelta(weeks=4)
 
     return since, until
+
+
+def get_peak_position(
+    user, item_id: str, item_type: str, since=None, until=None
+) -> int:
+    """Get the peak (highest) position achieved by an item in its category."""
+    base_query = PlayedTrack.objects.filter(user=user)
+
+    if since:
+        base_query = base_query.filter(played_at__gte=since)
+    if until:
+        base_query = base_query.filter(played_at__lte=until)
+
+    # Get total play count for each item of the given type
+    if item_type == "track":
+        rankings = (
+            base_query.values("track_id", "track_name")
+            .annotate(total_plays=Count("stream_id"))
+            .order_by("-total_plays")
+        )
+        item_field = "track_id"
+    elif item_type == "album":
+        rankings = (
+            base_query.values("album_id", "album_name")
+            .annotate(total_plays=Count("stream_id"))
+            .order_by("-total_plays")
+        )
+        item_field = "album_id"
+    elif item_type == "artist":
+        rankings = (
+            base_query.values("artist_id", "artist_name")
+            .annotate(total_plays=Count("stream_id"))
+            .order_by("-total_plays")
+        )
+        item_field = "artist_id"
+    else:
+        return 0
+
+    # Find position of the target item
+    for position, item in enumerate(rankings, 1):
+        if item[item_field] == item_id:
+            return position
+
+    return 0
+
+
+async def get_item_stats_util(
+    user, item_id: str, item_type: str, since=None, until=None
+):
+    """Get stats for a specific item (track, album, or artist)."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        # Filter based on item type
+        if item_type == "track":
+            query = base_query.filter(track_id=item_id)
+        elif item_type == "album":
+            query = base_query.filter(album_id=item_id)
+        elif item_type == "artist":
+            query = base_query.filter(artist_id=item_id)
+
+        total_plays = query.count()
+        total_minutes = (
+            query.aggregate(total_time=Sum("duration_ms"))["total_time"] or 0
+        )
+
+        # Calculate time gaps between plays
+        plays = list(query.order_by("played_at").values_list("played_at", flat=True))
+        gaps = []
+        for i in range(1, len(plays)):
+            gap = plays[i] - plays[i - 1]
+            gaps.append(gap.total_seconds() / 3600)
+
+        avg_gap = sum(gaps) / len(gaps) if gaps else 0
+
+        # Calculate streak
+        play_dates = {p.date() for p in plays}
+        sorted_dates = sorted(play_dates)
+        longest_streak = 0
+        current_streak = 1
+
+        for i in range(1, len(sorted_dates)):
+            if (sorted_dates[i] - sorted_dates[i - 1]).days == 1:
+                current_streak += 1
+            else:
+                longest_streak = max(longest_streak, current_streak)
+                current_streak = 1
+        longest_streak = max(longest_streak, current_streak)
+
+        # Calculate peak day
+        peak_day = (
+            query.annotate(day=TruncDate("played_at"))
+            .values("day")
+            .annotate(count=Count("stream_id"))
+            .order_by("-count")
+            .first()
+        )
+        peak_day_plays = peak_day["count"] if peak_day else 0
+
+        # Calculate prime time
+        prime_time = (
+            query.annotate(hour=ExtractHour("played_at"))
+            .values("hour")
+            .annotate(count=Count("stream_id"))
+            .order_by("-count")
+            .first()
+        )
+        prime_time_hour = f"{prime_time['hour']:02d}:00" if prime_time else "N/A"
+
+        # Calculate repeat rate
+        days_played = len(play_dates)
+        multiple_play_days = (
+            query.annotate(day=TruncDate("played_at"))
+            .values("day")
+            .annotate(count=Count("stream_id"))
+            .filter(count__gt=1)
+            .count()
+        )
+        repeat_rate = (multiple_play_days / days_played * 100) if days_played else 0
+
+        return {
+            "total_plays": total_plays,
+            "total_minutes": total_minutes / 60000,
+            "avg_gap": avg_gap,
+            "peak_position": get_peak_position(user, item_id, item_type, since, until),
+            "longest_streak": longest_streak,
+            "peak_day_plays": peak_day_plays,
+            "prime_time": prime_time_hour,
+            "repeat_rate": round(repeat_rate, 1),
+        }
+
+    return await get_data()

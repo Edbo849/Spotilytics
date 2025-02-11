@@ -66,6 +66,16 @@
         </table>
       </div>
     </div>
+    <div class="stats-section" data-item-id="{{ album.id }}" data-item-type="album">
+      <h2>Listening Stats</h2>
+      {% include 'music/partials/stats_section.html' with stats=stats time_range=time_range %}
+    </div>
   </div>
+
   <script src="{% static 'js/album.js' %}"></script>
+{% endblock %}
+
+{% block javascripts %}
+  {{ block.super }}
+  <script src="{% static 'js/item_stats.js' %}"></script>
 {% endblock %}

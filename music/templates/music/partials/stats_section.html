@@ -1,0 +1,143 @@
+{% load static %}
+{% load humanize %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/stats_section.css' %}" />
+
+<div class="stats-section mt-4">
+  <!-- Time Range Selector -->
+  <div class="text-center mb-4">
+    <div class="btn-group">
+      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="last_7_days"><span>Last 7 Days</span></button>
+      <button class="btn btn-sm btn-primary btn-simple time-range-btn active" data-range="last_4_weeks"><span>Last 4 Weeks</span></button>
+      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="6_months"><span>6 Months</span></button>
+      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="last_year"><span>Last Year</span></button>
+      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="all_time"><span>All Time</span></button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="row">
+    <!-- Total Plays -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Total Plays</p>
+            <p class="card-category" id="total-plays">{{ stats.total_plays|intcomma }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Minutes -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Total Minutes</p>
+            <p class="card-category" id="total-minutes">{{ stats.total_minutes|floatformat:0|intcomma }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peak Position -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Peak Position</p>
+            <p class="card-category" id="peak-position">#{{ stats.peak_position }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Average Gap -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Average Time Between Plays</p>
+            <p class="card-category" id="avg-gap">{{ stats.avg_gap|floatformat:1 }} hours</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Longest Streak -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Longest Streak</p>
+            <p class="card-category" id="longest-streak">{{ stats.longest_streak }} days</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Peak Day -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Most Plays in One Day</p>
+            <p class="card-category" id="peak-day-plays">{{ stats.peak_day_plays }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prime Time -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Prime Listening Time</p>
+            <p class="card-category" id="prime-time">{{ stats.prime_time }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repeat Rate -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="numbers">
+            <p class="card-title">Multiple Plays Per Day</p>
+            <p class="card-category" id="repeat-rate">{{ stats.repeat_rate }}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mt-4">
+      <!-- Listening Trend -->
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Listening History</h4>
+          </div>
+          <div class="card-body">
+            <div id="listening-trend-chart" style="height: 300px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Distribution -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Time Distribution</h4>
+          </div>
+          <div class="card-body">
+            <div id="time-distribution-chart" style="height: 300px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

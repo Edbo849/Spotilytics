@@ -61,9 +61,14 @@
         {% endif %}
       </div>
     </div>
+    <div class="stats-section" data-item-id="{{ track.id }}" data-item-type="track">
+      <h2>Listening Stats</h2>
+      {% include 'music/partials/stats_section.html' with stats=stats time_range=time_range %}
+    </div>
   </div>
 {% endblock %}
 
 {% block javascripts %}
   <script src="{% static 'js/track.js' %}"></script>
+  <script src="{% static 'js/item_stats.js' %}"></script>
 {% endblock %}

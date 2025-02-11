@@ -31,4 +31,9 @@ urlpatterns = [
         name="artist_releases",
     ),
     path("recently-played/", views.recently_played_section, name="recently-played"),
+    path(
+        "item-stats/<str:item_type>/<str:item_id>/",
+        views.get_item_stats,
+        name="get_item_stats",
+    ),
 ]
