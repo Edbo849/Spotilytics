@@ -1,0 +1,87 @@
+/* Stats Section Styling */
+.stats-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card-stats {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.card-stats:hover {
+  transform: translateY(-5px);
+}
+
+.card-stats .numbers {
+  padding: 1rem;
+  text-align: center;
+}
+
+.card-stats .card-title {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-stats .card-category {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Time Range Selector Styling */
+.text-center.mb-4 {
+  margin-bottom: 2rem;
+}
+
+.btn-group {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 30px;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.time-range-btn {
+  border: none !important;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 20px !important;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+.time-range-btn:hover {
+  color: #fff;
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.time-range-btn.active {
+  background: #1DB954 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3);
+}
+
+.time-range-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .btn-group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .time-range-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+}

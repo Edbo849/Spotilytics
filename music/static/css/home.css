@@ -182,11 +182,64 @@
     font-size: 1rem;  
     line-height: 1.4;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     height: 100%;
+}
+
+/* Time Range Selector Styling */
+.text-center.mb-4 form {
+  margin: 0;
+}
+
+.text-center.mb-4 .btn-group {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 30px;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.btn-group .btn-simple {
+  border: none !important;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 20px !important;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+.btn-group .btn-simple:hover {
+  color: #fff;
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.btn-group .btn-simple.active {
+  background: #1DB954 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3);
+}
+
+.btn-group .btn-simple span {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .btn-group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .btn-group .btn-simple {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
 }
 
 /* DateRangePicker Dark Theme Styling */
