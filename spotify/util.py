@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from requests import post
 
-from music.core.models import SpotifyUser
+from music.models import SpotifyUser
 
 from .credentials import CLIENT_ID, CLIENT_SECRET
 from .models import SpotifyToken

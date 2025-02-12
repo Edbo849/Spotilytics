@@ -4,7 +4,7 @@
   Music Chat
 {% endblock %}
 {% block content %}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/chat.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/pages/chat.css' %}" />
   <div class="container">
     <header class="mb-4">
       <h1 class="text-center text-white">Spotify Chat Bot</h1>
@@ -33,6 +33,6 @@
   <script>
     const CHAT_API_URL = "{% url 'music:chat_api' %}"
   </script>
-  <script src="{% static 'js/chat.js' %}"></script>
-  <script src="{% static 'js/core/jquery.min.js' %}"></script>
+  <script src="{% static 'js/pages/chat.js' %}"></script>
+  <script src="{% static 'js/pages/core/jquery.min.js' %}"></script>
 {% endblock %}

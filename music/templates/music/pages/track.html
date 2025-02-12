@@ -4,7 +4,7 @@
   {{ track.name }} - {{ artist.name }}
 {% endblock %}
 {% block content %}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/track.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/pages/track.css' %}" />
 
   <div class="container">
     <!-- Track Details -->
@@ -69,6 +69,6 @@
 {% endblock %}
 
 {% block javascripts %}
-  <script src="{% static 'js/track.js' %}"></script>
-  <script src="{% static 'js/item_stats.js' %}"></script>
+  <script src="{% static 'js/pages/track.js' %}"></script>
+  <script src="{% static 'js/partials/item_stats.js' %}"></script>
 {% endblock %}

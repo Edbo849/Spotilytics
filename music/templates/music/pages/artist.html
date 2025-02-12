@@ -5,7 +5,7 @@
   {{ artist.name }} - Artist Details
 {% endblock %}
 {% block content %}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/artist.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/pages/artist.css' %}" />
   <div class="container">
     <!-- Artist Details -->
     <div class="row mb-4">
@@ -118,6 +118,6 @@
 
 {% block javascripts %}
   {{ block.super }}
-  <script src="{% static 'js/artist.js' %}"></script>
-  <script src="{% static 'js/item_stats.js' %}"></script>
+  <script src="{% static 'js/pages/artist.js' %}"></script>
+  <script src="{% static 'js/partials/item_stats.js' %}"></script>
 {% endblock %}

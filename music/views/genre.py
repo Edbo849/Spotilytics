@@ -36,4 +36,4 @@ async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
         "artists": artists,
         "tracks": tracks,
     }
-    return await sync_to_async(render)(request, "music/genre.html", context)
+    return await sync_to_async(render)(request, "music/pages/genre.html", context)

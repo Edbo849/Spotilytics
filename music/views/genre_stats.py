@@ -1,4 +1,4 @@
-from utils.imports import *
+from .utils.imports import *
 
 
 @vary_on_cookie
@@ -143,4 +143,4 @@ async def genre_stats(request: HttpRequest) -> HttpResponse:
         "stacked_chart": stacked_chart,
         "bar_chart": bar_chart,
     }
-    return render(request, "music/genre_stats.html", context)
+    return render(request, "music/pages/genre_stats.html", context)

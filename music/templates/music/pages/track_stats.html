@@ -1,4 +1,4 @@
-{% extends 'music/stats_template.html' %}
+{% extends 'music/partials/stats_template.html' %}
 {% load static %}
 {% block title %}
   Track stats
@@ -12,19 +12,25 @@
           <div class="podium__rank {% if forloop.counter == 1 %}
               
               
+              
             first
+
 
 
             {% elif forloop.counter == 2 %}
               
               
+              
             second
+
 
 
             {% else %}
               
               
+              
             third
+
 
 
             {% endif %}">

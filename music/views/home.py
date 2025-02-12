@@ -6,8 +6,8 @@ def index(request: HttpRequest) -> HttpResponse:
     if not spotify_user_id or not is_spotify_authenticated(spotify_user_id):
         if "spotify_user_id" in request.session:
             request.session.flush()
-        return render(request, "music/index.html")
-    return render(request, "music/index.html")
+        return render(request, "music/pages/index.html")
+    return render(request, "music/pages/index.html")
 
 
 @vary_on_cookie
@@ -131,7 +131,7 @@ async def home(request: HttpRequest) -> HttpResponse:
         "error_message": error_message,
     }
 
-    return render(request, "music/home.html", context)
+    return render(request, "music/pages/home.html", context)
 
 
 @vary_on_cookie

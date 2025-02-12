@@ -81,7 +81,7 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
         "compilations": compilations,
         "top_tracks": top_tracks,
     }
-    return await sync_to_async(render)(request, "music/artist.html", context)
+    return await sync_to_async(render)(request, "music/pages/artist.html", context)
 
 
 @vary_on_cookie
@@ -183,7 +183,9 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
         "artist": artist,
         "tracks": tracks,
     }
-    return await sync_to_async(render)(request, "music/artist_tracks.html", context)
+    return await sync_to_async(render)(
+        request, "music/pages/artist_tracks.html", context
+    )
 
 
 @vary_on_cookie

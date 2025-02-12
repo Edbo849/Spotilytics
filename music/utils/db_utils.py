@@ -1,25 +1,23 @@
-import hashlib
-import json
 import logging
-import os
 from collections import Counter
 from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
-from django.conf import settings
 from django.core.cache import cache
-from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
 from django.db.models import Avg, Count, Max, Min, Sum
-from django.db.models.functions import (ExtractHour, ExtractWeekDay, TruncDate,
-                                        TruncDay, TruncHour, TruncMonth,
-                                        TruncWeek)
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect
+from django.db.models.functions import (
+    ExtractHour,
+    ExtractWeekDay,
+    TruncDate,
+    TruncDay,
+    TruncHour,
+    TruncMonth,
+    TruncWeek,
+)
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 
-from music.core.models import PlayedTrack, SpotifyUser
+from music.models import PlayedTrack, SpotifyUser
 from music.services.SpotifyClient import SpotifyClient
 from spotify.util import get_user_tokens
 

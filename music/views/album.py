@@ -64,4 +64,4 @@ async def album(request: HttpRequest, album_id: str) -> HttpResponse:
         "tracks": tracks,
         "genres": genres,
     }
-    return await sync_to_async(render)(request, "music/album.html", context)
+    return await sync_to_async(render)(request, "music/pages/album.html", context)

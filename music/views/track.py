@@ -120,7 +120,7 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
         "artist": artist,
         "similar_tracks": similar_tracks,
     }
-    return await sync_to_async(render)(request, "music/track.html", context)
+    return await sync_to_async(render)(request, "music/pages/track.html", context)
 
 
 @vary_on_cookie

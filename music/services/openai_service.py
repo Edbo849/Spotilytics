@@ -1,12 +1,11 @@
 # music/services/openai_service.py
 import logging
-from typing import Any
 
 import openai
 from django.conf import settings
 from django.db.models import Count
 
-from music.core.models import PlayedTrack
+from music.models import PlayedTrack
 
 logger = logging.getLogger(__name__)
 

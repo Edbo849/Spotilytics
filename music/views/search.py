@@ -9,7 +9,7 @@ async def search(request: HttpRequest) -> HttpResponse:
         return redirect("spotify-auth")
     query = request.GET.get("q")
     if not query:
-        return render(request, "music/search_results.html", {"results": None})
+        return render(request, "music/pages/search_results.html", {"results": None})
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
@@ -18,4 +18,4 @@ async def search(request: HttpRequest) -> HttpResponse:
         logger.critical(f"Error searching Spotify: {e}")
         results = None
 
-    return render(request, "music/search_results.html", {"results": results})
+    return render(request, "music/pages/search_results.html", {"results": results})

@@ -1,4 +1,4 @@
-from utils.imports import *
+from .utils.imports import *
 
 
 @vary_on_cookie

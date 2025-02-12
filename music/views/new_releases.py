@@ -19,4 +19,4 @@ async def new_releases(request: HttpRequest) -> HttpResponse:
         albums = []
 
     context = {"segment": "new-releases", "albums": albums}
-    return render(request, "music/new_releases.html", context)
+    return render(request, "music/pages/new_releases.html", context)

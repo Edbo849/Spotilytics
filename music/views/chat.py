@@ -9,7 +9,7 @@ async def chat(request: HttpRequest) -> HttpResponse:
     ):
         return redirect("spotify-auth")
 
-    return render(request, "music/chat.html", {"segment": "chat"})
+    return render(request, "music/pages/chat.html", {"segment": "chat"})
 
 
 @method_decorator(csrf_exempt, name="dispatch")

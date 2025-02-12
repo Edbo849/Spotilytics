@@ -1,4 +1,4 @@
-from utils.imports import *
+from .utils.imports import *
 
 
 @vary_on_cookie
@@ -163,4 +163,4 @@ async def track_stats(request: HttpRequest) -> HttpResponse:
         "bar_chart": bar_chart,
     }
 
-    return render(request, "music/track_stats.html", context)
+    return render(request, "music/pages/track_stats.html", context)

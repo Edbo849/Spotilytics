@@ -1,4 +1,4 @@
-from utils.imports import *
+from .utils.imports import *
 
 
 @csrf_exempt

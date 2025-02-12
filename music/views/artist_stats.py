@@ -136,4 +136,4 @@ async def artist_stats(request: HttpRequest) -> HttpResponse:
         "bar_chart": bar_chart,
     }
 
-    return render(request, "music/artist_stats.html", context)
+    return render(request, "music/pages/artist_stats.html", context)
