@@ -1,23 +1,26 @@
+import hashlib
+import json
 import logging
+import os
 from collections import Counter
 from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
+from django.conf import settings
 from django.core.cache import cache
+from django.core.files.storage import default_storage
+from django.db import IntegrityError, transaction
 from django.db.models import Avg, Count, Max, Min, Sum
-from django.db.models.functions import (
-    ExtractHour,
-    ExtractWeekDay,
-    TruncDate,
-    TruncDay,
-    TruncHour,
-    TruncMonth,
-    TruncWeek,
-)
+from django.db.models.functions import (ExtractHour, ExtractWeekDay, TruncDate,
+                                        TruncDay, TruncHour, TruncMonth,
+                                        TruncWeek)
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
-from music.models import PlayedTrack, SpotifyUser
-from music.SpotifyClient import SpotifyClient
+from music.core.models import PlayedTrack, SpotifyUser
+from music.services.SpotifyClient import SpotifyClient
 from spotify.util import get_user_tokens
 
 SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
@@ -80,6 +83,66 @@ async def read_full_history(self, *args, **options):
                     f"Error fetching history for user {spotify_user_id}: {e}"
                 )
             )
+
+
+@sync_to_async
+def save_tracks_atomic(user, track_info_list, track_details_dict, artist_details_dict):
+    count = 0
+    with transaction.atomic():
+        for info in track_info_list:
+            track_id = info["track_id"]
+            played_at = info["played_at"]
+            track_name = info["track_name"]
+            artist_name = info["artist_name"]
+            album_name = info["album_name"]
+            duration_ms = info["duration_ms"]
+
+            track_details = track_details_dict.get(track_id, {})
+            popularity = track_details.get("popularity", 0)
+            album_info = track_details.get("album", {})
+            artist_info_list = track_details.get("artists", [])
+
+            genres = []
+
+            album_id = album_info.get("id") if album_info else None
+
+            if artist_info_list:
+                artist_info = artist_info_list[0]
+                artist_id = artist_info.get("id")
+                artist_details = artist_details_dict.get(artist_id, {})
+                genres = artist_details.get("genres", [])
+            else:
+                artist_id = None
+
+            exists = PlayedTrack.objects.filter(
+                user=user, track_id=track_id, played_at=played_at
+            ).exists()
+
+            if exists:
+                logger.info(
+                    f"Duplicate track found: {track_id} at {played_at}. Skipping."
+                )
+                continue
+
+            try:
+                PlayedTrack.objects.create(
+                    user=user,
+                    track_id=track_id,
+                    played_at=played_at,
+                    track_name=track_name,
+                    artist_name=artist_name,
+                    album_name=album_name,
+                    duration_ms=duration_ms,
+                    genres=genres,
+                    popularity=popularity,
+                    artist_id=artist_id,
+                    album_id=album_id,
+                )
+                count += 1
+            except IntegrityError as e:
+                logger.error(f"Database error while adding track {track_id}: {e}")
+                continue
+    return count
 
 
 def get_listening_stats(user, time_range="all_time", start_date=None, end_date=None):

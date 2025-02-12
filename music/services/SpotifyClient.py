@@ -12,7 +12,7 @@ from asgiref.sync import sync_to_async
 from decouple import config
 from django.core.cache import cache
 
-from music.models import SpotifyUser
+from music.core.models import SpotifyUser
 from spotify.util import refresh_spotify_token
 
 logger = logging.getLogger(__name__)

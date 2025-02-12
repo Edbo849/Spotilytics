@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from music.models import SpotifyUser
+from music.core.models import SpotifyUser
 from spotify.models import SpotifyToken
 
 from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
