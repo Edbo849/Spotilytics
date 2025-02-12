@@ -1,3 +1,5 @@
+from music.views.utils.helpers import get_home_visualizations, validate_date_range
+
 from .utils.imports import *
 
 
@@ -33,102 +35,21 @@ async def home(request: HttpRequest) -> HttpResponse:
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
 
-    error_message = None
-
-    if time_range == "custom":
-        if not start_date or not end_date:
-            error_message = (
-                "Both start date and end date are required for a custom range."
-            )
-        else:
-            try:
-                naive_start = datetime.strptime(start_date, "%Y-%m-%d")
-                naive_end = datetime.strptime(end_date, "%Y-%m-%d")
-
-                start = timezone.make_aware(naive_start)
-                end = timezone.make_aware(naive_end) + timedelta(days=1)
-
-                if start > end:
-                    error_message = "Start date cannot be after end date."
-                elif end > timezone.now() or start > timezone.now():
-                    error_message = "Dates cannot be in the future."
-            except ValueError:
-                error_message = "Invalid date format. Please use YYYY-MM-DD."
-
-    stats = None
-    if has_history:
-        try:
-            since, until = await get_date_range(time_range, start_date, end_date)
-
-            stats = await sync_to_async(get_listening_stats)(
-                user, time_range, start_date, end_date
-            )
-
-            top_tracks = await get_top_tracks(user, since, until, 10)
-            top_artists = await get_top_artists(user, since, until, 10)
-            top_genres = await get_top_genres(user, since, until, 10)
-            top_albums = await get_top_albums(user, since, until, 10)
-
-        except ValueError as e:
-            error_message = str(e)
-            top_tracks, top_artists, top_genres, top_albums = (
-                [],
-                [],
-                [],
-                [],
-            )
-    else:
-        top_tracks, top_artists, top_genres, top_albums = (
-            [],
-            [],
-            [],
-            [],
-        )
-
-    stats = stats or {}
-
-    listening_dates = stats.get("dates", [])
-    listening_counts = stats.get("counts", [])
-    x_label = stats.get("x_label", "Date")
-
-    datasets = (
-        [
-            {
-                "label": "Plays",
-                "data": listening_counts,
-                "color": "#1DB954",
-            }
-        ]
-        if listening_counts
-        else []
+    start_date, end_date, error_message = await validate_date_range(
+        time_range, start_date, end_date
     )
 
-    written_stats = await get_dashboard_stats(user, since, until)
-
-    chart_data = (
-        generate_chartjs_line_graph(listening_dates, datasets, x_label)
-        if listening_dates
-        else None
-    )
-    genres = [item["genre"] for item in top_genres] if top_genres else []
-    genre_counts = [item["count"] for item in top_genres] if top_genres else []
-    genre_chart_data = (
-        generate_chartjs_pie_chart(genres, genre_counts) if genres else None
+    data = await get_home_visualizations(
+        user, has_history, time_range, start_date, end_date
     )
 
     context = {
         "segment": "home",
-        "chart_data": chart_data if chart_data else None,
-        "genre_data": genre_chart_data if genre_chart_data else None,
-        "listening_stats": stats,
-        "stats": written_stats,
-        "top_tracks": top_tracks,
-        "top_artists": top_artists,
-        "top_albums": top_albums,
         "time_range": time_range,
         "start_date": start_date,
         "end_date": end_date,
         "error_message": error_message,
+        **data,
     }
 
     return render(request, "music/pages/home.html", context)

@@ -5,6 +5,7 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Tuple
 
 # Third party imports
 import openai
@@ -61,7 +62,6 @@ from music.utils.db_utils import (
     get_top_tracks,
     save_tracks_atomic,
 )
-from music.views.utils.helpers import get_x_label
 from spotify.util import is_spotify_authenticated
 
 # Initialize logger

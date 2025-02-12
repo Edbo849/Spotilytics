@@ -1,3 +1,9 @@
+from music.views.utils.helpers import (
+    enrich_track_details,
+    get_album_details,
+    get_artist_details,
+)
+
 from .utils.imports import *
 
 
@@ -12,46 +18,14 @@ async def album(request: HttpRequest, album_id: str) -> HttpResponse:
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
-            cache_key = client.sanitize_cache_key(f"album_details_{album_id}")
-            album = cache.get(cache_key)
-
-            if album is None:
-                album = await client.get_album(album_id)
-                if album:
-                    cache.set(cache_key, album, timeout=None)
-                else:
-                    raise ValueError("Album not found")
-
+            album = await get_album_details(client, album_id)
             tracks = album["tracks"]["items"]
 
             artist_id = album["artists"][0]["id"]
-            cache_key = client.sanitize_cache_key(f"artist_details_{artist_id}")
-            artist_details = cache.get(cache_key)
-
-            if artist_details is None:
-                artist_details = await client.get_artist(artist_id)
-                if artist_details:
-                    cache.set(cache_key, artist_details, timeout=604800)
-
+            artist_details = await get_artist_details(client, artist_id)
             genres = artist_details.get("genres", []) if artist_details else []
 
-            for track in tracks:
-                cache_key = client.sanitize_cache_key(f"track_details_{track['id']}")
-                track_details = cache.get(cache_key)
-
-                if track_details is None:
-                    track_details = await client.get_track_details(track["id"])
-                    if track_details:
-                        cache.set(cache_key, track_details, timeout=None)
-
-                duration_ms = track["duration_ms"]
-                track["duration"] = client.get_duration_ms(duration_ms)
-                track["preview_url"] = (
-                    track_details.get("preview_url") if track_details else None
-                )
-                track["popularity"] = (
-                    track_details.get("popularity", "N/A") if track_details else "N/A"
-                )
+            tracks = await enrich_track_details(client, tracks)
 
     except Exception as e:
         logger.critical(f"Error fetching album data from Spotify: {e}")

@@ -1,3 +1,5 @@
+from music.views.utils.helpers import get_genre_items
+
 from .utils.imports import *
 
 
@@ -10,30 +12,12 @@ async def genre(request: HttpRequest, genre_name: str) -> HttpResponse:
     ):
         return await sync_to_async(redirect)("spotify-auth")
 
-    artists = []
-    tracks = []
-
-    try:
-        async with SpotifyClient(spotify_user_id) as client:
-            cache_key = client.sanitize_cache_key(f"genre_items_{genre_name}")
-            genre_items = cache.get(cache_key)
-
-            if genre_items is None:
-                artists, tracks = await client.get_items_by_genre(genre_name)
-                if artists or tracks:
-                    genre_items = {"artists": artists, "tracks": tracks}
-                    cache.set(cache_key, genre_items, timeout=None)
-            else:
-                artists = genre_items.get("artists", [])
-                tracks = genre_items.get("tracks", [])
-
-    except Exception as e:
-        logger.error(f"Error fetching items for genre {genre_name}: {e}")
-        artists, tracks = [], []
+    async with SpotifyClient(spotify_user_id) as client:
+        items = await get_genre_items(client, genre_name)
 
     context = {
         "genre_name": genre_name,
-        "artists": artists,
-        "tracks": tracks,
+        "artists": items["artists"],
+        "tracks": items["tracks"],
     }
     return await sync_to_async(render)(request, "music/pages/genre.html", context)

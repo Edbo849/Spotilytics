@@ -1,8 +1,9 @@
-# music/services/openai_service.py
 import logging
 
 import openai
+from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.db import close_old_connections
 from django.db.models import Count
 
 from music.models import PlayedTrack
@@ -13,10 +14,11 @@ logger = logging.getLogger(__name__)
 class OpenAIService:
     def __init__(self):
         self.api_key = settings.OPENAI_API_KEY
-        openai.api_key = self.api_key
 
+    @sync_to_async(thread_sensitive=False)
     def get_listening_data(self, spotify_user_id: str) -> str:
-        """Get user's listening history data formatted for OpenAI prompt"""
+        close_old_connections()
+
         top_artists = (
             PlayedTrack.objects.filter(user_id=spotify_user_id)
             .values("artist_name")
@@ -42,6 +44,7 @@ class OpenAIService:
 
         return f"Top artists: {artists}. Top tracks: {tracks}. Top albums: {albums}."
 
+    @sync_to_async(thread_sensitive=False)
     def create_prompt(self, user_message: str, listening_data: str) -> str:
         """Create prompt for OpenAI API"""
         return (
@@ -50,6 +53,7 @@ class OpenAIService:
             f"AI response:"
         )
 
+    @sync_to_async(thread_sensitive=False)
     def get_ai_response(self, prompt: str) -> str:
         """Get response from OpenAI API"""
         try:
