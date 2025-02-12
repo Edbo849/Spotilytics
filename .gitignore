@@ -52,3 +52,6 @@ celerybeat-schedule
 celerybeat.pid
 celery.log
 *.rdb
+
+# Poetry
+dist/

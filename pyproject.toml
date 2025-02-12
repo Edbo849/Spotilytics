@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "spotilytics"
+version = "0.1.0"
+description = "A Django application for Spotify analytics"
+authors = ["Edbo849 <edborthwick84@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    { include = "Spotilytics" },
+    { include = "music" },
+    { include = "spotify" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.1"
+djangorestframework = "*"
+requests = "*"
+python-decouple = "*"
+redis = "*"
+django-redis = "*"
+celery = "*"
+openai = "*"
+aiohttp = "*"
+pandas = "*"
+django-environ = "*"
+psycopg2-binary = "*"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+mypy = "^1.8.0"
+isort = "^5.13.2"
+ruff = "^0.2.1"
+pre-commit = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
