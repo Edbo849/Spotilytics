@@ -7,8 +7,8 @@ from music.views.utils.helpers import (
 from .utils.imports import *
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24 * 30)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24 * 30)
 async def album(request: HttpRequest, album_id: str) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(

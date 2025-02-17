@@ -69,11 +69,25 @@
     <div class="row mt-4">
       <div class="col-12">
         <h2>Discography</h2>
-        <div class="btn-group mb-3" role="group" aria-label="Release type filter">
-          <button type="button" class="btn btn-primary btn-simple active" data-type="all">All</button>
-          <button type="button" class="btn btn-primary btn-simple" data-type="album">Albums</button>
-          <button type="button" class="btn btn-primary btn-simple" data-type="single">Singles</button>
-          <button type="button" class="btn btn-primary btn-simple" data-type="compilation">Compilations</button>
+        <div class="mb-4">
+          <div class="btn-group release-type-filter" role="group" aria-label="Release type filter">
+            <button type="button" class="btn btn-sm btn-primary btn-simple active" data-type="all">
+              <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">All</span>
+              <span class="d-block d-sm-none"><i class="tim-icons icon-globe"></i></span>
+            </button>
+            <button type="button" class="btn btn-sm btn-primary btn-simple" data-type="album">
+              <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Albums</span>
+              <span class="d-block d-sm-none"><i class="tim-icons icon-album-2"></i></span>
+            </button>
+            <button type="button" class="btn btn-sm btn-primary btn-simple" data-type="single">
+              <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Singles</span>
+              <span class="d-block d-sm-none"><i class="tim-icons icon-note-03"></i></span>
+            </button>
+            <button type="button" class="btn btn-sm btn-primary btn-simple" data-type="compilation">
+              <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Compilations</span>
+              <span class="d-block d-sm-none"><i class="tim-icons icon-components"></i></span>
+            </button>
+          </div>
         </div>
         <div id="releases-container" class="albums-scroll-container d-flex" data-artist-id="{{ artist.id }}">
           <!-- Content will be loaded here -->

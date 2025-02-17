@@ -146,7 +146,32 @@ h1 + p a:hover {
     color: #1DB954;
     font-weight: 500;
 }
+/* Heading styles */
+h2 {
+    position: relative;
+    display: block;
+    margin-bottom: 2rem;
+    color: #fff;
+    font-size: 2rem;
+    width: 100%;
+}
 
+h2::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(to right, 
+        #1DB954 0%,
+        rgba(29, 185, 84, 0.8) 20%,
+        rgba(29, 185, 84, 0.6) 40%,
+        rgba(29, 185, 84, 0.4) 60%,
+        rgba(29, 185, 84, 0.2) 80%,
+        rgba(29, 185, 84, 0) 100%
+    );
+}
 
 /* Audio Player Styling */
 audio {

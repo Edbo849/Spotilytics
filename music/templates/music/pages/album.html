@@ -5,6 +5,7 @@
 {% endblock %}
 {% block content %}
   <link rel="stylesheet" type="text/css" href="{% static 'css/pages/album.css' %}" />
+
   <div class="container">
     <!-- Album Details -->
     <div class="row mb-4">
@@ -78,4 +79,5 @@
 {% block javascripts %}
   {{ block.super }}
   <script src="{% static 'js/pages/item_stats.js' %}"></script>
+  <script src="{% static 'js/partials/item_stats.js' %}"></script>
 {% endblock %}
