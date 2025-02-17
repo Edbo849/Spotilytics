@@ -26,7 +26,7 @@ CELERY_BROKER_URL = config("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
 CELERY_BEAT_SCHEDULE = {
     "update-played-tracks-every-5-minutes": {
-        "task": "music.tasks.update_played_tracks_task",
+        "task": "music.services.tasks.update_played_tracks_task",
         "schedule": 300.0,
     },
 }

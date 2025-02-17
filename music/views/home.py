@@ -42,7 +42,6 @@ async def home(request: HttpRequest) -> HttpResponse:
     stats = await get_home_visualizations(
         user, has_history, time_range, start_date, end_date
     )
-    logger.critical(stats)
 
     context = {
         "segment": "home",
