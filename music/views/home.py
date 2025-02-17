@@ -39,9 +39,10 @@ async def home(request: HttpRequest) -> HttpResponse:
         time_range, start_date, end_date
     )
 
-    data = await get_home_visualizations(
+    stats = await get_home_visualizations(
         user, has_history, time_range, start_date, end_date
     )
+    logger.critical(stats)
 
     context = {
         "segment": "home",
@@ -49,7 +50,7 @@ async def home(request: HttpRequest) -> HttpResponse:
         "start_date": start_date,
         "end_date": end_date,
         "error_message": error_message,
-        **data,
+        **stats,
     }
 
     return render(request, "music/pages/home.html", context)

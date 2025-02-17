@@ -235,7 +235,6 @@ async def get_similar_artists(
                     seen_artist_ids.add(s["id"])
     except Exception as e:
         logger.error(f"Error fetching similar artists: {e}")
-    logger.critical(f"Similar artists: {similar_artists}")
     return similar_artists
 
 
@@ -837,6 +836,11 @@ async def get_home_visualizations(
         # Get written stats
         written_stats = await get_dashboard_stats(user, since, until)
 
+        # Get stats boxes data (for example, based on top tracks)
+        stats_boxes = await get_stats_boxes_data(
+            user, since, until, top_tracks, "track"
+        )
+
         return {
             "stats": stats,
             "chart_data": chart_data,
@@ -847,6 +851,7 @@ async def get_home_visualizations(
             "top_artists": top_artists,
             "top_genres": top_genres,
             "top_albums": top_albums,
+            "stats_boxes": stats_boxes,
             "error_message": None,
         }
 

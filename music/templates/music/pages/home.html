@@ -165,7 +165,7 @@
           <div class="card-body">
             <div class="numbers">
               <p>
-                You listened to music on <span style="color: #1DB954">{{ stats.days_with_music }}</span> out of <span style="color: #1DB954">{{ stats.total_days }}</span> days, which is <span style="color: #1DB954">{{ stats.coverage_percentage|floatformat:1 }}%</span>.
+                You listened to music on <span style="color: #1DB954">{{ written_stats.days_with_music }}</span> out of <span style="color: #1DB954">{{ written_stats.total_days }}</span> days, which is <span style="color: #1DB954">{{ written_stats.coverage_percentage|floatformat:1 }}%</span>.
               </p>
             </div>
           </div>
@@ -177,7 +177,7 @@
           <div class="card-body">
             <div class="numbers">
               <p>
-                Your longest listening streak was <span style="color: #1DB954">{{ stats.streak_days }}</span> days from <span style="color: #1DB954">{{ stats.streak_start }}</span> to <span style="color: #1DB954">{{ stats.streak_end }}</span>.
+                Your longest listening streak was <span style="color: #1DB954">{{ written_stats.streak_days }}</span> days from <span style="color: #1DB954">{{ written_stats.streak_start }}</span> to <span style="color: #1DB954">{{ written_stats.streak_end }}</span>.
               </p>
             </div>
           </div>
@@ -189,7 +189,7 @@
           <div class="card-body">
             <div class="numbers">
               <p>
-                Your top artist <span style="color: #1DB954">{{ stats.top_artist_name }}</span> accounts for <span style="color: #1DB954">{{ stats.top_artist_percentage|floatformat:1 }}%</span> of your total plays.
+                Your top artist <span style="color: #1DB954">{{ written_stats.top_artist_name }}</span> accounts for <span style="color: #1DB954">{{ written_stats.top_artist_percentage|floatformat:1 }}%</span> of your total plays.
               </p>
             </div>
           </div>
@@ -201,7 +201,7 @@
           <div class="card-body">
             <div class="numbers">
               <p>
-                <span style="color: #1DB954">{{ stats.repeat_percentage|floatformat:1 }}%</span> of your tracks were played more than once.
+                <span style="color: #1DB954">{{ written_stats.repeat_percentage|floatformat:1 }}%</span> of your tracks were played more than once.
               </p>
             </div>
           </div>
