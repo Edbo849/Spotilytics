@@ -87,7 +87,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 document.addEventListener("DOMContentLoaded", function () {
   loadRecentlyPlayed();
-  setInterval(loadRecentlyPlayed, 5 * 60 * 1000);
 });
 
 function loadRecentlyPlayed() {

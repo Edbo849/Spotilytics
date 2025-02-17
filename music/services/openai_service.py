@@ -57,6 +57,7 @@ class OpenAIService:
     def get_ai_response(self, prompt: str) -> str:
         """Get response from OpenAI API"""
         try:
+            openai.api_key = self.api_key
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[

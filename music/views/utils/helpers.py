@@ -481,27 +481,26 @@ async def get_tracks_batch(
 
 async def handle_chat_message(
     spotify_user_id: str, user_message: str
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], int]:
     """Handle processing of chat messages and getting AI responses."""
     try:
         if not user_message:
-            return {"error": "No message provided."}
-
+            return {"error": "No message provided."}, 400
         if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
             spotify_user_id
         ):
-            return {"error": "User not authenticated."}
+            return {"error": "User not authenticated."}, 401
 
         openai_service = OpenAIService()
         listening_data = await openai_service.get_listening_data(spotify_user_id)
         prompt = await openai_service.create_prompt(user_message, listening_data)
         ai_response = await openai_service.get_ai_response(prompt)
 
-        return {"reply": ai_response}
+        return {"reply": ai_response}, 200
 
     except Exception as e:
         logger.error(f"Error processing chat message: {e}")
-        return {"error": "Internal server error."}
+        return {"error": "Internal server error."}, 500
 
 
 ## Genre Stats Helpers

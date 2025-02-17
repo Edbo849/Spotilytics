@@ -20,7 +20,9 @@ class ChatAPI(View):
         try:
             data = json.loads(request.body)
             user_message = data.get("message")
-            spotify_user_id = request.session.get("spotify_user_id")
+            spotify_user_id = await sync_to_async(request.session.get)(
+                "spotify_user_id"
+            )
 
             response, status_code = await handle_chat_message(
                 spotify_user_id, user_message
