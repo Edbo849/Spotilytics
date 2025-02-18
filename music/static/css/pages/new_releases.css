@@ -1,3 +1,77 @@
+/* Card Styling */
+.col-md-3 {
+  width: 100%;
+}
+
+.card {
+  background: #232434;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease;
+  position: relative;
+  height: 100%;
+}
+
+.card-header {
+  background: #232434 !important;
+
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Image */
+.card-img-top {
+  position: relative;
+  aspect-ratio: 1/1;
+  width: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+/* Card Content */
+.card-body {
+  padding: 1rem;
+  background-color: #232434;
+}
+
+.card-title {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0 0 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-text {
+  color: #b3b3b3;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.text-muted {
+  color: #b3b3b3 !important;
+  font-size: 0.875rem;
+}
+
+.badge-primary {
+  background-color: #1DB954;
+  color: #ffffff;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+}
+
 .album-cover {
     width: 100%;
     border-radius: 4px;
@@ -44,12 +118,12 @@
 
 h1 {
     position: relative;
-    display: block;  /* Changed to block to take full container width */
+    display: block; 
     color: #ffffff;
     margin-bottom: 2rem;
     font-size: 2.5rem;
     font-weight: 500;
-    width: 100%;  /* Take full width of container */
+    width: 100%; 
 }
 
 h1::after {
