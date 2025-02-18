@@ -230,7 +230,7 @@ async def get_top_tracks(user, since=None, until=None, limit=10):
                         album.get("images", [{}])[0].get("url") if album else None
                     )
                     if album_image:
-                        cache.set(cache_key, album_image, timeout=None)
+                        cache.set(cache_key, album_image, timeout=client.CACHE_TIMEOUT)
 
                 track["album_image"] = album_image
     except Exception as e:
@@ -272,7 +272,11 @@ async def get_top_artists(user, since=None, until=None, limit=10):
                 if artist_details is None:
                     artist_details = await client.get_artist(artist["artist_id"])
                     if artist_details:
-                        cache.set(cache_key, artist_details, timeout=None)
+                        cache.set(
+                            cache_key,
+                            artist_details,
+                            timeout=client.CACHE_TIMEOUT,
+                        )
 
                 artist["image"] = (
                     artist_details.get("images", []) if artist_details else []
@@ -322,7 +326,7 @@ async def get_recently_played(user, since=None, until=None, limit=10):
                         album.get("images", [{}])[0].get("url") if album else None
                     )
                     if album_image:
-                        cache.set(cache_key, album_image, timeout=None)
+                        cache.set(cache_key, album_image, timeout=client.CACHE_TIMEOUT)
 
                 track["album_image"] = album_image
     except Exception as e:
@@ -392,7 +396,9 @@ async def get_top_albums(user, since=None, until=None, limit=10):
                 if album_details is None:
                     album_details = await client.get_album(album["album_id"])
                     if album_details:
-                        cache.set(cache_key, album_details, timeout=None)
+                        cache.set(
+                            cache_key, album_details, timeout=client.CACHE_TIMEOUT
+                        )
 
                 if album_details:
                     album["image"] = album_details.get("images", [])

@@ -166,7 +166,7 @@ async def get_album_details(client, album_id: str) -> Dict[str, Any]:
     if album is None:
         album = await client.get_album(album_id)
         if album:
-            cache.set(cache_key, album, timeout=None)
+            cache.set(cache_key, album, timeout=client.CACHE_TIMEOUT)
         else:
             raise ValueError("Album not found")
     return album
@@ -193,7 +193,7 @@ async def enrich_track_details(client, tracks: List[Dict]) -> List[Dict]:
         if track_details is None:
             track_details = await client.get_track_details(track["id"])
             if track_details:
-                cache.set(cache_key, track_details, timeout=None)
+                cache.set(cache_key, track_details, timeout=client.CACHE_TIMEOUT)
 
         duration_ms = track["duration_ms"]
         track["duration"] = client.get_duration_ms(duration_ms)
@@ -343,7 +343,7 @@ async def get_artist_page_data(client, artist_id: str) -> Dict[str, Any]:
         if similar_artists is None:
             similar_artists = await client.get_similar_artists(artist["name"])
             if similar_artists:
-                cache.set(cache_key, similar_artists, timeout=None)
+                cache.set(cache_key, similar_artists, timeout=client.CACHE_TIMEOUT)
 
         similar_artists_spotify = [
             similar
@@ -648,7 +648,7 @@ async def get_genre_items(client, genre_name: str) -> Dict[str, List]:
             artists, tracks = await client.get_items_by_genre(genre_name)
             if artists or tracks:
                 genre_items = {"artists": artists, "tracks": tracks}
-                cache.set(cache_key, genre_items, timeout=None)
+                cache.set(cache_key, genre_items, timeout=client.CACHE_TIMEOUT)
         else:
             artists = genre_items.get("artists", [])
             tracks = genre_items.get("tracks", [])
@@ -927,7 +927,11 @@ async def get_similar_tracks(client, top_tracks: List[Dict]) -> List[Dict]:
                         track["artist_name"], track["track_name"], limit=1
                     )
                     if lastfm_similar:
-                        cache.set(cache_key, lastfm_similar, timeout=None)
+                        cache.set(
+                            cache_key,
+                            lastfm_similar,
+                            timeout=client.CACHE_TIMEOUT,
+                        )
 
                 for similar in lastfm_similar:
                     identifier = (similar["name"], similar["artist"]["name"])
@@ -942,7 +946,11 @@ async def get_similar_tracks(client, top_tracks: List[Dict]) -> List[Dict]:
                                 similar["name"], similar["artist"]["name"]
                             )
                             if track_id:
-                                cache.set(id_cache_key, track_id, timeout=None)
+                                cache.set(
+                                    id_cache_key,
+                                    track_id,
+                                    timeout=client.CACHE_TIMEOUT,
+                                )
 
                         if track_id:
                             details_cache_key = client.sanitize_cache_key(
@@ -956,7 +964,9 @@ async def get_similar_tracks(client, top_tracks: List[Dict]) -> List[Dict]:
                                 )
                                 if track_details:
                                     cache.set(
-                                        details_cache_key, track_details, timeout=None
+                                        details_cache_key,
+                                        track_details,
+                                        timeout=client.CACHE_TIMEOUT,
                                     )
 
                             if track_details:
@@ -1096,7 +1106,7 @@ async def get_track_page_data(client, track_id: str) -> Dict[str, Any]:
             if album is None:
                 album = await client.get_album(album_id)
                 if album:
-                    cache.set(cache_key, album, timeout=None)
+                    cache.set(cache_key, album, timeout=client.CACHE_TIMEOUT)
 
         # Get artist details
         artist = None
@@ -1130,7 +1140,7 @@ async def get_track_page_data(client, track_id: str) -> Dict[str, Any]:
                     track["artists"][0]["name"], track["name"], limit=10
                 )
                 if lastfm_similar:
-                    cache.set(cache_key, lastfm_similar, timeout=None)
+                    cache.set(cache_key, lastfm_similar, timeout=client.CACHE_TIMEOUT)
 
             similar_tracks = await get_similar_track_details(
                 client, lastfm_similar, seen_tracks
@@ -1167,7 +1177,11 @@ async def get_similar_track_details(
                     similar["name"], similar["artist"]["name"]
                 )
                 if similar_track_id:
-                    cache.set(id_cache_key, similar_track_id, timeout=None)
+                    cache.set(
+                        id_cache_key,
+                        similar_track_id,
+                        timeout=client.CACHE_TIMEOUT,
+                    )
 
             if similar_track_id:
                 details_cache_key = client.sanitize_cache_key(
@@ -1180,7 +1194,11 @@ async def get_similar_track_details(
                         similar_track_id, preview=False
                     )
                     if track_details:
-                        cache.set(details_cache_key, track_details, timeout=None)
+                        cache.set(
+                            details_cache_key,
+                            track_details,
+                            timeout=client.CACHE_TIMEOUT,
+                        )
 
                 if track_details:
                     seen_tracks.add(identifier)
@@ -1193,15 +1211,20 @@ async def get_preview_urls_batch(client, track_ids: List[str]) -> Dict[str, str]
     """Get preview URLs for a batch of tracks."""
     preview_urls = {}
     for track_id in track_ids:
-        cache_key = client.sanitize_cache_key(f"track_details_true_{track_id}")
-        track = cache.get(cache_key)
+        preview_cache_key = client.sanitize_cache_key(f"preview_url_{track_id}")
+        preview_url = cache.get(preview_cache_key)
 
-        if track is None:
-            track = await client.get_track_details(track_id, preview=True)
-            if track:
-                cache.set(cache_key, track, timeout=None)
+        if preview_url:
+            preview_urls[track_id] = preview_url
+            continue
 
+        track = await client.get_track_details(track_id, preview=True)
         if track and track.get("preview_url"):
             preview_urls[track_id] = track["preview_url"]
+            cache.set(
+                preview_cache_key,
+                track["preview_url"],
+                timeout=client.CACHE_TIMEOUT,
+            )
 
     return preview_urls

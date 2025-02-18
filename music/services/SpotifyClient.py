@@ -49,6 +49,8 @@ class SpotifyClient:
     SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
     LASTFM_API_BASE_URL = "https://ws.audioscrobbler.com/2.0"
     LASTFM_TOKEN = config("LASTFM_TOKEN")
+    DEEZER_PREVIEW_CACHE_TIMEOUT = 60 * 60 * 24 * 7
+    CACHE_TIMEOUT = 60 * 60 * 24 * 30
 
     def __init__(self, spotify_user_id: str):
         self.spotify_user_id = spotify_user_id
@@ -220,7 +222,11 @@ class SpotifyClient:
                         song_name, track["artists"][0]["name"]
                     )
                     if preview_url:
-                        cache.set(cache_key, preview_url, timeout=None)
+                        cache.set(
+                            cache_key,
+                            preview_url,
+                            timeout=self.DEEZER_PREVIEW_CACHE_TIMEOUT,
+                        )
 
                 track["preview_url"] = preview_url
         return track
@@ -471,22 +477,19 @@ class SpotifyClient:
     async def get_similar_tracks(
         self, track_id: str, get_preview: bool = True, limit: int = 5
     ) -> list[dict[str, Any]]:
-        """
-        Get similar tracks based on a seed track using artist similarity and track popularity.
-
-        :param track_id: The Spotify track ID to base recommendations on.
-        :param limit: Number of similar tracks to retrieve.
-        :return: A list of similar track dictionaries.
-        """
-        cache_key = self.sanitize_cache_key(f"track_details_true_{track_id}")
+        """Get similar tracks based on a seed track using artist similarity and track popularity."""
+        cache_key = self.sanitize_cache_key(f"track_details_{track_id}")
         track = cache.get(cache_key)
 
         if track is None:
-            track = await self.get_track_details(track_id, True)
+            track = await self.get_track_details(track_id, preview=False)
             if track:
-                cache.set(cache_key, track, timeout=None)
-                artist_name = track["artists"][0]["name"]
+                cache.set(cache_key, track, timeout=self.CACHE_TIMEOUT)
 
+        if not track:
+            return []
+
+        artist_name = track["artists"][0]["name"]
         similar_artists_key = f"similar_artists_10_{artist_name}"
         similar_artists = cache.get(similar_artists_key)
 
@@ -507,27 +510,44 @@ class SpotifyClient:
                     cache.set(top_tracks_key, artist_top_tracks, timeout=604800)
 
             for artist_track in artist_top_tracks:
-                if get_preview:
-                    details_key = f"track_details_true_{artist_track['id']}"
-                    track_details = cache.get(details_key)
+                details_key = self.sanitize_cache_key(
+                    f"track_details_{artist_track['id']}"
+                )
+                track_details = cache.get(details_key)
 
-                    if track_details is None:
-                        track_details = await self.get_track_details(artist_track["id"])
-                        if track_details:
-                            cache.set(details_key, track_details, timeout=None)
-                else:
-                    details_key = f"track_details_false_{artist_track['id']}"
-                    track_details = cache.get(details_key)
-
-                    if track_details is None:
-                        track_details = await self.get_track_details(
-                            artist_track["id"], False
+                if track_details is None:
+                    track_details = await self.get_track_details(
+                        artist_track["id"], preview=False
+                    )
+                    if track_details:
+                        cache.set(
+                            details_key, track_details, timeout=self.CACHE_TIMEOUT
                         )
-                        if track_details:
-                            cache.set(details_key, track_details, timeout=None)
 
                 if track_details:
+                    if get_preview:
+                        preview_key = self.sanitize_cache_key(
+                            f"preview_url_{artist_track['id']}"
+                        )
+                        preview_url = cache.get(preview_key)
+
+                        if preview_url is None:
+                            preview_url = await self.get_deezer_preview(
+                                track_details["name"],
+                                track_details["artists"][0]["name"],
+                            )
+                            if preview_url:
+                                cache.set(
+                                    preview_key,
+                                    preview_url,
+                                    timeout=self.DEEZER_PREVIEW_CACHE_TIMEOUT,
+                                )
+
+                        if preview_url:
+                            track_details["preview_url"] = preview_url
+
                     similar_tracks.append(track_details)
+
         similar_tracks = sorted(
             similar_tracks, key=lambda x: x["popularity"], reverse=True
         )[:limit]
