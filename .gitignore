@@ -48,10 +48,11 @@ spotify/credentials.py
 .LSOverride
 
 # Celery
-celerybeat-schedule
+celerybeat-schedule.db
 celerybeat.pid
 celery.log
 *.rdb
 
 # Poetry
 dist/
+

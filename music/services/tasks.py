@@ -2,17 +2,17 @@ import datetime
 import logging
 
 from asgiref.sync import async_to_sync, sync_to_async
-from celery import shared_task
 from django.db import IntegrityError
 
 from music.models import PlayedTrack, SpotifyUser
 from music.services.SpotifyClient import SpotifyClient
 from spotify.util import is_spotify_authenticated
+from Spotilytics.celery import app
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@app.task(name="music.services.tasks.update_played_tracks_task")
 def update_played_tracks_task():
     async_to_sync(update_played_tracks)()
 
