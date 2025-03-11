@@ -1,4 +1,9 @@
-from music.views.utils.helpers import get_preview_urls_batch, get_track_page_data
+from music.views.utils.helpers import (
+    get_item_stats,
+    get_item_stats_graphs,
+    get_preview_urls_batch,
+    get_track_page_data,
+)
 
 from .utils.imports import *
 
@@ -12,12 +17,47 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
     ):
         return redirect("spotify-auth")
 
+    time_range = request.GET.get("time_range", "last_4_weeks")
+
     try:
         async with SpotifyClient(spotify_user_id) as client:
+            # Get track data
             data = await get_track_page_data(client, track_id)
 
+            # Get user for stats
+            user = await sync_to_async(SpotifyUser.objects.get)(
+                spotify_user_id=spotify_user_id
+            )
+
+            # Create item dict with track data
+            item = {
+                "name": data["track"]["name"],
+                "track_id": track_id,
+                "artist_name": (
+                    data["track"]["artists"][0]["name"]
+                    if data["track"]["artists"]
+                    else None
+                ),
+                "artist_id": (
+                    data["track"]["artists"][0]["id"]
+                    if data["track"]["artists"]
+                    else None
+                ),
+            }
+
+            # Get stats data with the track info
+            stats_data = await get_item_stats(user, item, "track", time_range)
+
+            # Get graph data for the stats section
+            graph_data = await get_item_stats_graphs(user, item, "track", time_range)
+
+            # Combine all data
+            data.update(stats_data)
+            data.update(graph_data)
+
         return await sync_to_async(render)(request, "music/pages/track.html", data)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error in track view: {e}")
         return HttpResponse("Error fetching track details", status=500)
 
 

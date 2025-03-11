@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.models import Count, Max, Min, Sum
 from django.db.models.functions import (
@@ -16,6 +17,7 @@ from django.db.models.functions import (
 from django.utils import timezone
 
 from music.models import PlayedTrack, SpotifyUser
+from music.services.spotify_data_helpers import get_artist_all_songs_data
 from music.services.SpotifyClient import SpotifyClient
 
 logger = logging.getLogger(__name__)
@@ -389,3 +391,30 @@ def determine_truncate_func_and_formats(total_duration):
         date_format = "%b %Y"
         chart_format = "%Y-%m-%d"
     return truncate_func, date_format, chart_format
+
+
+async def get_artist_track_count_helper(user, artist_id):
+    """Helper function to get accurate track count for an artist using SpotifyClient."""
+    cache_key = f"artist_total_tracks_{artist_id}"
+    cached_count = cache.get(cache_key)
+
+    if cached_count:
+        return cached_count
+
+    try:
+        # Get total track count from SpotifyClient
+        async with SpotifyClient(user.spotify_user_id) as client:
+            # Use the function that gets all songs data for an artist
+            data = await get_artist_all_songs_data(client, artist_id)
+            tracks = data.get("tracks", [])
+            total_tracks = len(tracks)
+
+            # Cache the result for future use
+            if total_tracks > 0:
+                cache.set(cache_key, total_tracks, 604800)
+
+            return total_tracks
+
+    except Exception as e:
+        logger.error(f"Error getting artist track count from Spotify: {e}")
+        return 0

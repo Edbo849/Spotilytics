@@ -6,13 +6,42 @@
 <div class="stats-section mt-4">
   <!-- Time Range Selector -->
   <div class="text-center mb-4">
-    <div class="btn-group">
-      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="last_7_days"><span>Last 7 Days</span></button>
-      <button class="btn btn-sm btn-primary btn-simple time-range-btn active" data-range="last_4_weeks"><span>Last 4 Weeks</span></button>
-      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="6_months"><span>6 Months</span></button>
-      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="last_year"><span>Last Year</span></button>
-      <button class="btn btn-sm btn-primary btn-simple time-range-btn" data-range="all_time"><span>All Time</span></button>
-    </div>
+    <form method="GET" id="timeRangeForm">
+      <div class="btn-group">
+        <button type="submit" name="time_range" value="last_7_days" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_7_days' %}active{% endif %}">
+          <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last 7 Days</span>
+          <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+        </button>
+        <button type="submit" name="time_range" value="last_4_weeks" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_4_weeks' %}active{% endif %}">
+          <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last 4 Weeks</span>
+          <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+        </button>
+        <button type="submit" name="time_range" value="6_months" class="btn btn-sm btn-primary btn-simple {% if time_range == '6_months' %}active{% endif %}">
+          <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">6 Months</span>
+          <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+        </button>
+        <button type="submit" name="time_range" value="last_year" class="btn btn-sm btn-primary btn-simple {% if time_range == 'last_year' %}active{% endif %}">
+          <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">Last Year</span>
+          <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+        </button>
+        <button type="submit" name="time_range" value="all_time" class="btn btn-sm btn-primary btn-simple {% if time_range == 'all_time' %}active{% endif %}">
+          <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">All Time</span>
+          <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
+        </button>
+        <button type="button" class="btn btn-sm btn-primary btn-simple" id="customRangeBtn">Custom</button>
+      </div>
+
+      <!-- Custom Date Range Inputs -->
+      <div class="custom-date-inputs mt-3" style="display: none;">
+        <div class="input-group">
+          <label for="start_date" class="input-group-text">Start Date</label>
+          <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}" />
+          <label for="end_date" class="input-group-text">End Date</label>
+          <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}" />
+          <button type="submit" name="time_range" value="custom" class="btn btn-outline-success">Apply</button>
+        </div>
+      </div>
+    </form>
   </div>
 
   <!-- Stats Grid -->
@@ -23,7 +52,13 @@
         <div class="card-body">
           <div class="numbers">
             <p class="card-title">Total Plays</p>
-            <p class="card-category" id="total-plays">{{ stats.total_plays|intcomma }}</p>
+            <p class="card-category" id="total-plays">
+              {% if stats.total_plays %}
+                {{ stats.total_plays|intcomma }}
+              {% else %}
+                0
+              {% endif %}
+            </p>
           </div>
         </div>
       </div>
@@ -112,32 +147,184 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Charts Row -->
-    <div class="row mt-4">
-      <!-- Listening Trend -->
-      <div class="col-lg-8">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="card-title">Listening History</h4>
-          </div>
-          <div class="card-body">
-            <div id="listening-trend-chart" style="height: 300px;"></div>
-          </div>
+  <!-- Charts Section -->
+  <div class="row mt-4">
+    <!-- Streaming Trend Chart -->
+    <div class="col-lg-12">
+      <div class="card card-chart">
+        <div class="card-header">
+          <h3 class="card-title"><i class="tim-icons icon-chart-bar-32 text-primary"></i> Listening History</h3>
         </div>
-      </div>
-
-      <!-- Time Distribution -->
-      <div class="col-lg-4">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="card-title">Time Distribution</h4>
-          </div>
-          <div class="card-body">
-            <div id="time-distribution-chart" style="height: 300px;"></div>
+        <div class="card-body">
+          <div class="chart-area" style="height: 300px;">
+            {% if listening_trend_chart %}
+              {{ listening_trend_chart|json_script:'trends_data' }}
+              <canvas id="streamingTrendChart"></canvas>
+            {% else %}
+              <p class="text-warning">Line graph data is unavailable.</p>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Listening Context Bar Chart -->
+    <div class="col-lg-6 col-md-12">
+      <div class="card card-chart">
+        <div class="card-header">
+          <h3 class="card-title"><i class="tim-icons icon-clock text-success"></i> Listening Context</h3>
+        </div>
+        <div class="card-body">
+          <div class="chart-area" style="height: 300px;">
+            {% if listening_context_chart %}
+              {{ listening_context_chart|json_script:'context_data' }}
+              <canvas id="listeningContextChart"></canvas>
+            {% else %}
+              <p class="text-warning">Listening context data is unavailable.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hourly Distribution Chart -->
+    <div class="col-lg-6 col-md-12">
+      <div class="card card-chart">
+        <div class="card-header">
+          <h3 class="card-title"><i class="tim-icons icon-time-alarm text-danger"></i> Hourly Distribution</h3>
+        </div>
+        <div class="card-body">
+          <div class="chart-area" style="height: 300px;">
+            {% if hourly_distribution_chart %}
+              {{ hourly_distribution_chart|json_script:'hourly_distribution_chart' }}
+              <canvas id="hourlyDistributionChart"></canvas>
+            {% else %}
+              <p class="text-warning">Hourly distribution data is unavailable.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item-specific charts -->
+    {% if duration_comparison_chart %}
+      <!-- Track-specific chart -->
+      <div class="col-lg-6 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-settings text-success"></i> Duration Comparison</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height: 300px;">
+              {{ duration_comparison_chart|json_script:'duration_comparison_chart' }}
+              <canvas id="durationComparisonChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if artist_tracks_chart %}
+      <!-- Artist tracks coverage chart for track view -->
+      <div class="col-lg-6 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-warning"></i> Artist's Tracks Coverage</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height: 300px;">
+              {{ artist_tracks_chart|json_script:'artist_tracks_chart' }}
+              <canvas id="artistTracksChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if genre_distribution_chart %}
+      <!-- Artist-specific chart -->
+      <div class="col-lg-6 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-vector text-primary"></i> Genre Distribution</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height: 300px;">
+              {{ genre_distribution_chart|json_script:'genre_distribution_chart' }}
+              <canvas id="genreDistributionChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if discography_coverage_chart %}
+      <!-- Artist-specific chart -->
+      <div class="col-lg-6 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-warning"></i> Discography Coverage</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height: 300px;">
+              {{ discography_coverage_chart|json_script:'discography_coverage_chart' }}
+              <canvas id="discographyCoverageChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if album_tracks_chart %}
+      <!-- Album-specific chart -->
+      <div class="col-lg-8 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-align-left-2 text-primary"></i> Track Plays</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height: 300px;">
+              {{ album_tracks_chart|json_script:'album_tracks_chart' }}
+              <canvas id="albumTracksChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if album_coverage_chart %}
+      <!-- Album-specific chart -->
+      <div class="col-lg-4 col-md-12">
+        <div class="card card-chart">
+          <div class="card-header">
+            <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-warning"></i> Album Coverage</h3>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height: 300px;">
+              {{ album_coverage_chart|json_script:'album_coverage_chart' }}
+              <canvas id="albumCoverageChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-gauge@0.3.0/dist/chartjs-gauge.min.js"></script>
+<script>
+  Chart.register(ChartDataLabels)
+  // Register the gauge plugin
+  if (typeof window.ChartGauge !== 'undefined') {
+    try {
+      Chart.register(window.ChartGauge)
+    } catch (e) {
+      console.warn('Failed to register gauge chart plugin:', e)
+    }
+  }
+</script>
+<script src="{% static 'js/partials/item_stats.js' %}"></script>

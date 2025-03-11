@@ -1,23 +1,22 @@
+import asyncio
 import logging
 from collections import Counter
 from datetime import datetime, timedelta
 
 from asgiref.sync import sync_to_async
 from django.core.cache import cache
-from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, Max, Min, Sum
+from django.db import transaction
+from django.db.models import Avg, Count, Sum
 from django.db.models.functions import (
     ExtractHour,
-    ExtractWeekDay,
     TruncDate,
     TruncDay,
-    TruncHour,
     TruncMonth,
     TruncWeek,
 )
 from django.utils import timezone
 
-from music.models import PlayedTrack, SpotifyUser
+from music.models import PlayedTrack
 from music.services.SpotifyClient import SpotifyClient
 from music.utils.utils.helpers import (
     calculate_aggregate_statistics,
@@ -31,6 +30,7 @@ from music.utils.utils.helpers import (
     fetch_recently_played_tracks,
     fetch_spotify_users,
     generate_all_periods,
+    get_artist_track_count_helper,
     get_latest_track_timestamp,
     get_track_details,
     get_trend_data,
@@ -425,6 +425,9 @@ async def get_streaming_trend_data(user, since, until, items, item_type, limit=5
     all_dates = set()
     trend_data = []
 
+    if not isinstance(items, list):
+        items = [items]
+
     for idx, item in enumerate(items[:limit]):
         dates, counts, raw_dates, label = await get_trend_data(
             user,
@@ -685,6 +688,9 @@ async def get_radar_chart_data(user, since, until, items, item_type, limit=5):
     ]
     border_colors = ["#1DB954", "#FF6B6B", "#4A90E2", "#F7B731", "#A463F2"]
 
+    if not isinstance(items, list):
+        items = [items]
+
     @sync_to_async
     def calculate_metrics(item):
         base_query = PlayedTrack.objects.filter(user=user)
@@ -765,6 +771,9 @@ async def get_doughnut_chart_data(user, since, until, items, item_type):
         "#4BC0C0",
         "#9966FF",
     ]
+
+    if not isinstance(items, list):
+        items = [items]
 
     @sync_to_async
     def calculate_total_minutes(item):
@@ -873,6 +882,9 @@ async def get_hourly_listening_data(user, since, until, item_type, item=None):
 
 async def get_bubble_chart_data(user, since, until, items, item_type):
     """Get bubble chart data showing play patterns."""
+
+    if not isinstance(items, list):
+        items = [items]
 
     @sync_to_async
     def get_data():
@@ -1003,6 +1015,9 @@ async def get_discovery_timeline_data(user, since, until, item_type):
 async def get_time_period_distribution(user, since, until, items, item_type):
     """Get listening distribution across different time periods."""
 
+    if not isinstance(items, list):
+        items = [items]
+
     @sync_to_async
     def get_data():
         base_query = PlayedTrack.objects.filter(user=user)
@@ -1062,6 +1077,9 @@ async def get_time_period_distribution(user, since, until, items, item_type):
 
 async def get_replay_gaps(user, since, until, items, item_type):
     """Calculate average time between repeated listens."""
+
+    if not isinstance(items, list):
+        items = [items]
 
     @sync_to_async
     def get_data():
@@ -1275,6 +1293,18 @@ async def get_item_stats_util(
         )
         repeat_rate = (multiple_play_days / days_played * 100) if days_played else 0
 
+        if query.count() == 0:
+            return {
+                "total_plays": 0,
+                "total_minutes": 0,
+                "avg_gap": 0,
+                "peak_position": 0,
+                "longest_streak": 0,
+                "peak_day_plays": 0,
+                "prime_time": "N/A",
+                "repeat_rate": 0,
+            }
+
         return {
             "total_plays": total_plays,
             "total_minutes": total_minutes / 60000,
@@ -1287,3 +1317,553 @@ async def get_item_stats_util(
         }
 
     return await get_data()
+
+
+## Stats Section
+
+
+async def get_listening_history_data(user, item, item_type, since, until):
+    """Get line graph data showing listening over time."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        # Filter based on item type
+        if item_type == "artist":
+            query = base_query.filter(artist_id=item["artist_id"])
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+
+        # Group plays by day
+        plays_by_date = {}
+        for track in query:
+            date_key = track.played_at.date().isoformat()
+            plays_by_date[date_key] = plays_by_date.get(date_key, 0) + 1
+
+        # Generate full date range including days with zero plays
+        dates = []
+        plays = []
+
+        if query.exists():
+            current_date = (
+                since.date() if since else query.earliest("played_at").played_at.date()
+            )
+            end_date = (
+                until.date() if until else query.latest("played_at").played_at.date()
+            )
+
+            while current_date <= end_date:
+                date_str = current_date.isoformat()
+                dates.append(date_str)
+                plays.append(plays_by_date.get(date_str, 0))
+                current_date += timedelta(days=1)
+
+        return {"labels": dates, "values": plays}
+
+    result = await get_data()
+    return result
+
+
+async def get_listening_context_data(user, item, item_type, since, until):
+    """Get data showing when an item is typically played throughout the day."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        # Filter based on item type
+        if item_type == "artist":
+            query = base_query.filter(artist_id=item["artist_id"])
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+
+        # Define time categories
+        time_categories = {
+            "Night (12am-6am)": (0, 6),
+            "Morning (6am-12pm)": (6, 12),
+            "Afternoon (12pm-6pm)": (12, 18),
+            "Evening (6pm-12am)": (18, 24),
+        }
+
+        # Count plays in each time category
+        counts = {category: 0 for category in time_categories}
+
+        for track in query:
+            hour = track.played_at.hour
+            for category, (start, end) in time_categories.items():
+                if start <= hour < end:
+                    counts[category] += 1
+                    break
+
+        # Calculate percentage for each category
+        total = sum(counts.values())
+        percentages = {}
+        for category, count in counts.items():
+            percentages[category] = round((count / total * 100) if total > 0 else 0, 1)
+
+        # Prepare data for the chart
+        labels = list(time_categories.keys())
+        values = [counts[category] for category in labels]
+        percentages_list = [percentages[category] for category in labels]
+
+        # Add context descriptions
+        contexts = {
+            "Night (12am-6am)": "Late night listening",
+            "Morning (6am-12pm)": "Morning routine & commute",
+            "Afternoon (12pm-6pm)": "Work & daytime activities",
+            "Evening (6pm-12am)": "Evening relaxation & social",
+        }
+
+        context_descriptions = [contexts[category] for category in labels]
+
+        return {
+            "labels": labels,
+            "values": values,
+            "percentages": percentages_list,
+            "contexts": context_descriptions,
+            "total_plays": total,
+        }
+
+    result = await get_data()
+    return result
+
+
+async def get_repeat_listen_histogram_data(user, item, item_type, since, until):
+    """Get histogram data showing time between repeat listens."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        # Filter based on item type
+        if item_type == "artist":
+            query = base_query.filter(artist_id=item["artist_id"])
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+
+        # Sort plays chronologically
+        plays = list(query.order_by("played_at"))
+
+        intervals = []
+        for i in range(1, len(plays)):
+            interval_seconds = (
+                plays[i].played_at - plays[i - 1].played_at
+            ).total_seconds()
+            # Only count intervals less than 30 days
+            if interval_seconds < 30 * 24 * 60 * 60:
+                intervals.append(interval_seconds / 3600)  # Convert to hours
+
+        # Create histogram bins
+        bins = [0, 1, 3, 6, 12, 24, 48, 72, 168, 336, 720]  # hours
+        bin_labels = [
+            "<1h",
+            "1-3h",
+            "3-6h",
+            "6-12h",
+            "12-24h",
+            "1-2d",
+            "2-3d",
+            "3-7d",
+            "1-2w",
+            "2-4w",
+        ]
+        counts = [0] * len(bin_labels)
+
+        for interval in intervals:
+            for i, upper_bound in enumerate(bins[1:]):
+                if interval < upper_bound:
+                    counts[i] += 1
+                    break
+
+        return {"labels": bin_labels, "values": counts}
+
+    result = await get_data()
+    return result
+
+
+async def get_listening_time_distribution_data(user, item, item_type, since, until):
+    """Get polar area chart data showing times of day listening to item."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        # Filter based on item type
+        if item_type == "artist":
+            query = base_query.filter(artist_id=item["artist_id"])
+        elif item_type == "album":
+            query = base_query.filter(album_id=item["album_id"])
+        elif item_type == "track":
+            query = base_query.filter(track_id=item["track_id"])
+
+        # Group by 3-hour periods
+        time_periods = [
+            "12am-3am",
+            "3am-6am",
+            "6am-9am",
+            "9am-12pm",
+            "12pm-3pm",
+            "3pm-6pm",
+            "6pm-9pm",
+            "9pm-12am",
+        ]
+        counts = [0] * 8
+
+        for track in query:
+            hour = track.played_at.hour
+            period_index = hour // 3
+            counts[period_index] += 1
+
+        return {"labels": time_periods, "values": counts}
+
+    result = await get_data()
+    return result
+
+
+async def get_artist_genre_distribution(user, since, until, item):
+    """Get genre distribution for an artist's tracks."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        query = base_query.filter(artist_id=item["artist_id"])
+
+        # Collect all genres from the tracks
+        genre_counts = Counter()
+        for track in query:
+            if track.genres:
+                genre_counts.update(track.genres)
+
+        top_genres = genre_counts.most_common(10)
+
+        return {
+            "labels": [g[0] for g in top_genres],
+            "values": [g[1] for g in top_genres],
+        }
+
+    result = await get_data()
+    return result
+
+
+async def get_artist_discography_coverage(user, artist_id):
+    """Get percentage of artist's discography played by the user."""
+
+    @sync_to_async
+    def get_played_tracks_count():
+        # Get all tracks from this artist that the user has played
+        return (
+            PlayedTrack.objects.filter(user=user, artist_id=artist_id)
+            .values_list("track_id", flat=True)
+            .distinct()
+            .count()
+        )
+
+    # Get the number of distinct tracks played by this user
+    played_count = await get_played_tracks_count()
+
+    # Use the helper function to get total track count
+    total_tracks = await get_artist_track_count_helper(user, artist_id)
+
+    # Fall back to database query if the helper function returns 0
+    if total_tracks == 0:
+
+        @sync_to_async
+        def get_all_artist_tracks_count():
+            return (
+                PlayedTrack.objects.filter(artist_id=artist_id)
+                .values_list("track_id", flat=True)
+                .distinct()
+                .count()
+            )
+
+        total_tracks = await get_all_artist_tracks_count()
+
+        # If that's still too small, use a conservative estimate
+        if total_tracks < played_count or total_tracks < 10:
+            total_tracks = max(played_count * 3, 10)
+
+    # Avoid division by zero
+    if total_tracks == 0:
+        total_tracks = played_count or 1
+
+    percentage = (played_count / total_tracks * 100) if total_tracks > 0 else 0
+
+    result = {
+        "played_count": played_count,
+        "total_count": total_tracks,
+        "percentage": percentage,
+    }
+
+    return result
+
+
+async def get_track_duration_comparison(user, since, until, item):
+    """Compare average listening duration to track's full duration."""
+
+    @sync_to_async
+    def get_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        query = base_query.filter(track_id=item["track_id"])
+
+        # Calculate average listening duration from user history
+        total_duration = 0
+        count = 0
+
+        for played in query:
+            if hasattr(played, "duration_ms") and played.duration_ms:
+                total_duration += played.duration_ms / 1000
+                count += 1
+        if count == 0:
+            average_duration = 0
+        else:
+            average_duration = total_duration / count
+
+        return {
+            "average_duration": average_duration,
+            "count": count,
+            "track_id": item["track_id"],
+        }
+
+    result = await get_data()
+
+    # Fetch actual track duration from Spotify API
+    async with SpotifyClient(user.spotify_user_id) as client:
+        track_details = await client.get_track_details(result["track_id"])
+
+    # Get official track duration from Spotify
+    if track_details and "duration_ms" in track_details:
+        track_duration = track_details["duration_ms"] / 1000
+    else:
+        # Fallback if we can't get the official duration
+        track_duration = 180  # Default to 3 minutes
+
+    # Calculate percentage with accurate track duration
+    percentage = (
+        min(result["average_duration"] / track_duration, 1.0)
+        if track_duration > 0 and result["count"] > 0
+        else 0
+    )
+
+    return {
+        "average_duration": result["average_duration"],
+        "track_duration": track_duration,
+        "percentage": percentage,
+    }
+
+
+async def get_artist_tracks_coverage(user, artist_id):
+    """Get percentage of artist's tracks played by the user."""
+
+    @sync_to_async
+    def get_played_tracks_count():
+        # Get all tracks from this artist that the user has played
+        return (
+            PlayedTrack.objects.filter(user=user, artist_id=artist_id)
+            .values_list("track_id", flat=True)
+            .distinct()
+            .count()
+        )
+
+    # Get the number of distinct tracks played by this user
+    played_count = await get_played_tracks_count()
+
+    # Use the helper function to get total track count
+
+    total_tracks = await get_artist_track_count_helper(user, artist_id)
+
+    # Fall back to database query if the helper function returns 0
+    if total_tracks == 0:
+
+        @sync_to_async
+        def get_all_artist_tracks_count():
+            return (
+                PlayedTrack.objects.filter(artist_id=artist_id)
+                .values_list("track_id", flat=True)
+                .distinct()
+                .count()
+            )
+
+        total_tracks = await get_all_artist_tracks_count()
+
+        # If that's still too small, use a conservative estimate
+        if total_tracks < played_count or total_tracks < 10:
+            total_tracks = max(played_count * 2, 10)
+
+    # Avoid division by zero
+    if total_tracks == 0:
+        total_tracks = played_count or 1
+
+    percentage = (played_count / total_tracks * 100) if total_tracks > 0 else 0
+
+    result = {
+        "played_count": played_count,
+        "total_count": total_tracks,
+        "percentage": percentage,
+    }
+
+    return result
+
+
+async def get_album_track_plays(user, since, until, item):
+    """Get play counts for each track in an album."""
+
+    @sync_to_async
+    def get_base_data():
+        base_query = PlayedTrack.objects.filter(user=user)
+        if since:
+            base_query = base_query.filter(played_at__gte=since)
+        if until:
+            base_query = base_query.filter(played_at__lte=until)
+
+        # Get tracks from this album
+        album_tracks = base_query.filter(album_id=item["album_id"])
+
+        # Count plays per track
+        track_plays = (
+            album_tracks.values("track_name", "track_id")
+            .annotate(play_count=Count("stream_id"))
+            .order_by("track_name")  # Default to alphabetical order
+        )
+
+        # Convert QuerySet to list to use outside of the database context
+        return list(track_plays)
+
+    # Get the base data first
+    track_plays = await get_base_data()
+
+    # Create mapping of track IDs to play counts
+    track_id_to_plays = {t["track_id"]: t["play_count"] for t in track_plays}
+
+    # Use Spotify API to get proper track order and ensure all tracks are included
+    try:
+        # This is now in the async function, not inside the sync_to_async function
+        async with SpotifyClient(user.spotify_user_id) as client:
+            album_details = await client.get_album(item["album_id"])
+
+            if (
+                album_details
+                and "tracks" in album_details
+                and "items" in album_details["tracks"]
+            ):
+                album_tracks = album_details["tracks"]["items"]
+
+                ordered_labels = []
+                ordered_values = []
+
+                def truncate_name(name):
+                    if len(name) > 20:
+                        return name[:20] + "..."
+                    return name
+
+                # Add all tracks in album order, including unplayed tracks
+                for track in album_tracks:
+                    track_id = track["id"]
+                    track_name = truncate_name(track["name"])
+
+                    # Get play count (default to 0 if not played)
+                    play_count = track_id_to_plays.get(track_id, 0)
+
+                    ordered_labels.append(track_name)
+                    ordered_values.append(play_count)
+
+                # Add any tracks found in DB but not in Spotify API response
+                for track in track_plays:
+                    if track["track_id"] not in [t["id"] for t in album_tracks]:
+                        track_name = truncate_name(track["track_name"])
+                        ordered_labels.append(track_name)
+                        ordered_values.append(track["play_count"])
+
+                return {"labels": ordered_labels, "values": ordered_values}
+    except Exception as e:
+        logger.error(f"Error ordering album tracks: {e}")
+
+    # Fallback to alphabetical order with truncated names
+    return {
+        "labels": [
+            (t["track_name"][:10] + ("..." if len(t["track_name"]) > 10 else ""))
+            for t in track_plays
+        ],
+        "values": [t["play_count"] for t in track_plays],
+    }
+
+
+async def get_album_tracks_coverage(user, album_id):
+    """Get percentage of album tracks played by the user."""
+
+    @sync_to_async
+    def get_played_tracks_count():
+        # Get all tracks from this album that the user has played
+        played_tracks = (
+            PlayedTrack.objects.filter(user=user, album_id=album_id)
+            .values_list("track_id", flat=True)
+            .distinct()
+        )
+        return len(played_tracks)
+
+    # Get played tracks count from the database
+    played_count = await get_played_tracks_count()
+
+    # Get the actual total track count from Spotify API
+    try:
+        async with SpotifyClient(user.spotify_user_id) as client:
+            album_details = await client.get_album(album_id)
+
+            if album_details and "total_tracks" in album_details:
+                total_tracks = album_details["total_tracks"]
+            elif (
+                album_details
+                and "tracks" in album_details
+                and "items" in album_details["tracks"]
+            ):
+                total_tracks = len(album_details["tracks"]["items"])
+            else:
+                # Fallback to database estimate if API data is incomplete
+                total_tracks = max(played_count, 10)
+    except Exception as e:
+        logger.error(f"Error getting album track count from Spotify: {e}")
+        total_tracks = max(played_count, 10)  # Conservative fallback
+
+    # Avoid division by zero
+    if total_tracks == 0:
+        total_tracks = played_count or 1
+
+    percentage = (played_count / total_tracks * 100) if total_tracks > 0 else 0
+
+    return {
+        "played_count": played_count,
+        "total_count": total_tracks,
+        "percentage": percentage,
+    }

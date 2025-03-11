@@ -365,6 +365,7 @@ audio::-moz-range-track {
     border-radius: 30px;
     display: inline-flex;
     gap: 0.25rem;
+    margin-bottom: 1rem;
 }
 
 .mb-4 form {

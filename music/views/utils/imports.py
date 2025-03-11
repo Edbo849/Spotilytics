@@ -52,7 +52,6 @@ from music.utils.db_utils import (
     get_listening_stats,
     get_radar_chart_data,
     get_recently_played,
-    get_replay_gaps,
     get_stats_boxes_data,
     get_streaming_trend_data,
     get_time_period_distribution,

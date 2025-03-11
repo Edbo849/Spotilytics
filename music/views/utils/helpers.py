@@ -1,5 +1,21 @@
 # Helper functions for Views
-from typing import Set
+from music.services.graphs import (
+    generate_gauge_chart,
+    generate_horizontal_bar_chart,
+    generate_listening_context_chart,
+    generate_progress_chart,
+)
+from music.utils.db_utils import (
+    get_album_track_plays,
+    get_album_tracks_coverage,
+    get_artist_discography_coverage,
+    get_artist_genre_distribution,
+    get_artist_tracks_coverage,
+    get_item_stats_util,
+    get_listening_context_data,
+    get_replay_gaps,
+    get_track_duration_comparison,
+)
 
 from .imports import *
 
@@ -156,20 +172,6 @@ async def get_similar_albums(
 
 
 ## Album helpers
-
-
-async def get_album_details(client, album_id: str) -> Dict[str, Any]:
-    """Get album details with caching."""
-    cache_key = client.sanitize_cache_key(f"album_details_{album_id}")
-    album = cache.get(cache_key)
-
-    if album is None:
-        album = await client.get_album(album_id)
-        if album:
-            cache.set(cache_key, album, timeout=client.CACHE_TIMEOUT)
-        else:
-            raise ValueError("Album not found")
-    return album
 
 
 async def get_artist_details(client, artist_id: str) -> Dict[str, Any]:
@@ -394,85 +396,6 @@ async def get_artist_page_data(client, artist_id: str) -> Dict[str, Any]:
             "compilations": [],
             "top_tracks": [],
         }
-
-
-async def get_artist_all_songs_data(client, artist_id: str) -> Dict[str, Any]:
-    """Get all songs data for an artist."""
-    try:
-        artist = await client.get_artist(artist_id)
-
-        # Get all albums
-        cache_key = client.sanitize_cache_key(f"artist_albums_{artist_id}")
-        albums = cache.get(cache_key)
-        if albums is None:
-            albums = await client.get_artist_albums(
-                artist_id, include_groups=["album", "single", "compilation"]
-            )
-
-        # Get all track IDs from albums
-        track_ids_set: set[str] = set()
-        for album in albums:
-            album_data = await get_album_details(client, album["id"])
-            album_tracks = album_data.get("tracks", {}).get("items", [])
-            track_ids_set.update(
-                track["id"] for track in album_tracks if track.get("id")
-            )
-
-        # Fetch track details in batches
-        track_details_dict = await get_tracks_batch(client, list(track_ids_set))
-
-        # Compile tracks list
-        tracks = []
-        for album in albums:
-            album_data = await get_album_details(client, album["id"])
-            album_tracks = album_data.get("tracks", {}).get("items", [])
-
-            for track in album_tracks:
-                track_id = track.get("id")
-                if track_id and track_id in track_details_dict:
-                    track_detail = track_details_dict[track_id]
-                    track_info = {
-                        "id": track_id,
-                        "name": track_detail.get("name"),
-                        "album": {
-                            "id": album["id"],
-                            "name": album["name"],
-                            "images": album["images"],
-                            "release_date": album.get("release_date"),
-                        },
-                        "duration": SpotifyClient.get_duration_ms(
-                            track_detail.get("duration_ms")
-                        ),
-                        "popularity": track_detail.get("popularity", "N/A"),
-                    }
-                    tracks.append(track_info)
-
-        return {"artist": artist, "tracks": tracks}
-    except Exception as e:
-        logger.error(f"Error fetching artist data from Spotify: {e}")
-        return {"artist": None, "tracks": []}
-
-
-async def get_tracks_batch(
-    client, track_ids: List[str], batch_size: int = 50
-) -> Dict[str, Any]:
-    """Get track details in batches."""
-    track_details_dict = {}
-
-    async def fetch_track_batch(batch_ids):
-        response = await client.get_multiple_track_details(batch_ids)
-        tracks = response.get("tracks", [])
-        for track in tracks:
-            if track and track.get("id"):
-                track_details_dict[track["id"]] = track
-
-    tasks = [
-        asyncio.create_task(fetch_track_batch(track_ids[i : i + batch_size]))
-        for i in range(0, len(track_ids), batch_size)
-    ]
-
-    await asyncio.gather(*tasks)
-    return track_details_dict
 
 
 ## Chat helpers
@@ -1228,3 +1151,173 @@ async def get_preview_urls_batch(client, track_ids: List[str]) -> Dict[str, str]
             )
 
     return preview_urls
+
+
+## Stats Section Helpers
+
+
+async def get_item_stats(
+    user, item: Dict[str, str], item_type: str, time_range: str
+) -> Dict[str, Any]:
+    """Get stats data for an item (artist, album, or track)."""
+    try:
+        since, until = await get_date_range(time_range)
+
+        formatted_item = {
+            "artist_name": item["name"] if item_type == "artist" else None,
+            "album_name": item["name"] if item_type == "album" else None,
+            "track_name": item["name"] if item_type == "track" else None,
+            "artist_id": item.get("artist_id", ""),
+            "album_id": item.get("album_id", ""),
+            "track_id": item.get("track_id", ""),
+        }
+
+        # Get main stats for the item
+        item_id = formatted_item[f"{item_type}_id"]
+
+        if not item_id:
+            # Handle the case where the ID is missing
+            logger.warning(f"Missing {item_type}_id for {item}")
+            return {
+                "stats": {
+                    "total_plays": 0,
+                    "total_minutes": 0,
+                    "avg_gap": 0,
+                    "peak_position": 0,
+                    "longest_streak": 0,
+                    "peak_day_plays": 0,
+                    "prime_time": "N/A",
+                    "repeat_rate": 0,
+                },
+                "time_range": time_range,
+            }
+
+        item_stats = await get_item_stats_util(user, item_id, item_type, since, until)
+
+        if not item_stats or "total_plays" not in item_stats:
+            item_stats = {
+                "total_plays": 0,
+                "total_minutes": 0,
+                "avg_gap": 0,
+                "peak_position": 0,
+                "longest_streak": 0,
+                "peak_day_plays": 0,
+                "prime_time": "N/A",
+                "repeat_rate": 0,
+            }
+
+        return {
+            "stats": item_stats,
+            "time_range": time_range,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting {item_type} stats: {e}")
+        return {"stats": None, "time_range": time_range}
+
+
+async def get_item_stats_graphs(
+    user, item: Dict[str, str], item_type: str, time_range: str
+) -> Dict[str, Any]:
+    """Get visualization data for an item's stats page."""
+    try:
+        since, until = await get_date_range(time_range)
+
+        # Format item information consistently
+        formatted_item = {
+            "artist_name": item.get(
+                "artist_name", item["name"] if item_type == "artist" else None
+            ),
+            "album_name": item.get(
+                "album_name", item["name"] if item_type == "album" else None
+            ),
+            "track_name": item.get(
+                "track_name", item["name"] if item_type == "track" else None
+            ),
+            "artist_id": item.get("artist_id"),
+            "album_id": item.get("album_id"),
+            "track_id": item.get("track_id"),
+        }
+
+        # Initialize results dictionary
+        graphs = {}
+
+        # Shared graphs for all item types
+
+        # Line graph showing listening over time
+        dates, trends = await get_streaming_trend_data(
+            user, since, until, [formatted_item], item_type
+        )
+        graphs["listening_trend_chart"] = generate_chartjs_line_graph(
+            dates, trends, "Date"
+        )
+
+        # Bar chart showing listening patterns
+        listening_context_data = await get_listening_context_data(
+            user, formatted_item, item_type, since, until
+        )
+        graphs["listening_context_chart"] = generate_listening_context_chart(
+            listening_context_data
+        )
+
+        # Polar area chart showing times of day listening
+        hourly_data = await get_hourly_listening_data(
+            user, since, until, item_type, formatted_item
+        )
+        graphs["hourly_distribution_chart"] = generate_chartjs_polar_area_chart(
+            hourly_data
+        )
+
+        # Item-specific graphs
+        if item_type == "artist":
+            # Artist-specific graphs
+            genre_data = await get_artist_genre_distribution(
+                user, since, until, formatted_item
+            )
+            graphs["genre_distribution_chart"] = generate_chartjs_pie_chart(
+                genre_data["labels"], genre_data["values"]
+            )
+
+            discography_data = await get_artist_discography_coverage(
+                user, formatted_item["artist_id"]
+            )
+            graphs["discography_coverage_chart"] = generate_gauge_chart(
+                discography_data, "Discography Played"
+            )
+
+        elif item_type == "track":
+            # Track-specific graphs
+            duration_data = await get_track_duration_comparison(
+                user, since, until, formatted_item
+            )
+            graphs["duration_comparison_chart"] = generate_progress_chart(duration_data)
+
+            if formatted_item.get("artist_id"):
+                artist_tracks_data = await get_artist_tracks_coverage(
+                    user, formatted_item["artist_id"]
+                )
+                graphs["artist_tracks_chart"] = generate_gauge_chart(
+                    artist_tracks_data, "Artist's Tracks Played"
+                )
+
+        elif item_type == "album":
+            # Album-specific graphs
+            album_tracks_data = await get_album_track_plays(
+                user, since, until, formatted_item
+            )
+            graphs["album_tracks_chart"] = generate_horizontal_bar_chart(
+                album_tracks_data
+            )
+
+            album_coverage_data = await get_album_tracks_coverage(
+                user, formatted_item["album_id"]
+            )
+            graphs["album_coverage_chart"] = generate_gauge_chart(
+                album_coverage_data, "Album Tracks Played"
+            )
+
+        return graphs
+
+    except Exception as e:
+        logger.error(f"Error getting {item_type} stats graphs: {e}")
+        return {}

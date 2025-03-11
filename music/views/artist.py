@@ -1,4 +1,9 @@
-from music.views.utils.helpers import get_artist_all_songs_data, get_artist_page_data
+from music.services.spotify_data_helpers import get_artist_all_songs_data
+from music.views.utils.helpers import (
+    get_artist_page_data,
+    get_item_stats,
+    get_item_stats_graphs,
+)
 
 from .utils.imports import *
 
@@ -12,8 +17,33 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
     ):
         return redirect("spotify-auth")
 
+    time_range = request.GET.get("time_range", "last_4_weeks")
+
     async with SpotifyClient(spotify_user_id) as client:
+        # Get artist data
         data = await get_artist_page_data(client, artist_id)
+
+        # Get user for stats
+        user = await sync_to_async(SpotifyUser.objects.get)(
+            spotify_user_id=spotify_user_id
+        )
+
+        # Create item dict with artist data
+        item = {
+            "name": data["artist"]["name"],
+            "artist_name": data["artist"]["name"],
+            "artist_id": artist_id,
+        }
+
+        # Get stats data with the artist info
+        stats_data = await get_item_stats(user, item, "artist", time_range)
+
+        # Get graph data for the stats section
+        graph_data = await get_item_stats_graphs(user, item, "artist", time_range)
+
+        # Combine all data
+        data.update(stats_data)
+        data.update(graph_data)
 
     return await sync_to_async(render)(request, "music/pages/artist.html", data)
 
