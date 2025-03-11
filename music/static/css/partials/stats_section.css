@@ -62,6 +62,18 @@
   margin: 0;
 }
 
+.spotify-green-link {
+  color: #1DB954 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: color 0.3s ease !important;
+}
+
+.spotify-green-link:hover {
+  color: #25d362 !important; 
+  text-decoration: none !important;
+}
+
 /* Time Range Selector Styling */
 .text-center.mb-4 {
   margin-bottom: 1rem;

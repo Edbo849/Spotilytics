@@ -1,4 +1,5 @@
 from music.services.spotify_data_helpers import get_artist_all_songs_data
+from music.utils.db_utils import get_user_played_tracks
 from music.views.utils.helpers import (
     get_artist_page_data,
     get_item_stats,
@@ -60,6 +61,15 @@ async def artist_all_songs(request: HttpRequest, artist_id: str) -> HttpResponse
 
     async with SpotifyClient(spotify_user_id) as client:
         data = await get_artist_all_songs_data(client, artist_id)
+
+    # Get user's played tracks
+    user = await sync_to_async(SpotifyUser.objects.get)(spotify_user_id=spotify_user_id)
+    track_ids = [track["id"] for track in data.get("tracks", [])]
+    played_tracks = await get_user_played_tracks(user, track_ids=track_ids)
+
+    # Add listened flag to each track
+    for track in data.get("tracks", []):
+        track["listened"] = track["id"] in played_tracks
 
     return await sync_to_async(render)(request, "music/pages/artist_tracks.html", data)
 

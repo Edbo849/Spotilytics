@@ -1,4 +1,5 @@
 from music.services.spotify_data_helpers import get_album_details
+from music.utils.db_utils import get_user_played_tracks
 from music.views.utils.helpers import (
     enrich_track_details,
     get_artist_details,
@@ -36,6 +37,13 @@ async def album(request: HttpRequest, album_id: str) -> HttpResponse:
             user = await sync_to_async(SpotifyUser.objects.get)(
                 spotify_user_id=spotify_user_id
             )
+
+            track_ids = [track["id"] for track in tracks]
+            played_tracks = await get_user_played_tracks(user, track_ids=track_ids)
+
+            # Add listened flag to each track
+            for track in tracks:
+                track["listened"] = track["id"] in played_tracks
 
             # Create item dict with album data
             item = {

@@ -42,6 +42,7 @@
               <th scope="col">Preview</th>
               <th scope="col" data-sort="number">Length</th>
               <th scope="col" data-sort="number">Popularity</th>
+              <th scope="col">Listened</th>
             </tr>
           </thead>
           <tbody>
@@ -61,6 +62,11 @@
                 </td>
                 <td>{{ track.duration }}</td>
                 <td>{{ track.popularity }} / 100</td>
+                <td>
+                  {% if track.listened %}
+                    <i class="tim-icons icon-check-2 text-success"></i>
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>

@@ -1867,3 +1867,23 @@ async def get_album_tracks_coverage(user, album_id):
         "total_count": total_tracks,
         "percentage": percentage,
     }
+
+
+async def get_user_played_tracks(user, track_ids=None, artist_id=None, album_id=None):
+    """Get a set of track_ids that the user has listened to.
+    Filter by specific tracks, artist, or album if provided."""
+
+    @sync_to_async
+    def get_data():
+        query = PlayedTrack.objects.filter(user=user)
+
+        if track_ids:
+            query = query.filter(track_id__in=track_ids)
+        if artist_id:
+            query = query.filter(artist_id=artist_id)
+        if album_id:
+            query = query.filter(album_id=album_id)
+
+        return set(query.values_list("track_id", flat=True).distinct())
+
+    return await get_data()

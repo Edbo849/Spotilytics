@@ -230,8 +230,9 @@
       <!-- Artist tracks coverage chart for track view -->
       <div class="col-lg-6 col-md-12">
         <div class="card card-chart">
-          <div class="card-header">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-warning"></i> Artist's Tracks Coverage</h3>
+            <a href="{% url 'music:artist_all_songs' track.artists.0.id %}" class="spotify-green-link">See All Songs <i class="tim-icons icon-minimal-right"></i></a>
           </div>
           <div class="card-body">
             <div class="chart-area" style="height: 300px;">
@@ -264,8 +265,9 @@
       <!-- Artist-specific chart -->
       <div class="col-lg-6 col-md-12">
         <div class="card card-chart">
-          <div class="card-header">
+          <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title"><i class="tim-icons icon-chart-pie-36 text-warning"></i> Discography Coverage</h3>
+            <a href="{% url 'music:artist_all_songs' artist.id %}" style="color: #1DB954; font-weight: 500;">See All Songs <i class="tim-icons icon-minimal-right"></i></a>
           </div>
           <div class="card-body">
             <div class="chart-area" style="height: 300px;">
