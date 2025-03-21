@@ -229,4 +229,227 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+  const toggleViewBtn = document.querySelector(".toggle-view");
+
+  if (toggleViewBtn) {
+    const podiumView = document.querySelector(".podium-view");
+    const listView = document.querySelector(".list-view");
+    const spinner = listView.querySelector(".loading-spinner");
+    const table = listView.querySelector("table");
+
+    // Track if data has been loaded
+    let dataLoaded = false;
+
+    // Find the toggleViewBtn click handler in your stats_template.js file
+    toggleViewBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const currentView = this.getAttribute("data-view");
+      let itemType = this.getAttribute("data-type");
+
+      // Get time range from active button
+      const activeTimeButton = document.querySelector(
+        '.btn-simple[name="time_range"].active'
+      );
+      const timeRange = activeTimeButton
+        ? activeTimeButton.value
+        : "last_4_weeks";
+
+      // Determine item type from URL if not set
+      if (!itemType) {
+        const path = window.location.pathname;
+        if (path.includes("artist-stats")) {
+          itemType = "artists";
+        } else if (path.includes("album-stats")) {
+          itemType = "albums";
+        } else if (path.includes("track-stats")) {
+          itemType = "tracks";
+        } else if (path.includes("genre-stats")) {
+          itemType = "genres";
+        }
+      }
+
+      console.log("Toggle button data:", {
+        view: this.getAttribute("data-view"),
+        type: itemType,
+        timeRange: timeRange,
+      });
+
+      if (currentView === "podium") {
+        // Switch to list view
+        podiumView.style.display = "none";
+        listView.style.display = "block";
+        this.setAttribute("data-view", "list");
+        this.innerHTML =
+          'Show Podium <i class="tim-icons icon-minimal-right"></i>';
+
+        // Only fetch data if not already loaded
+        if (!dataLoaded) {
+          if (spinner) spinner.style.display = "block";
+
+          // Make sure we have an itemType
+          if (!itemType) {
+            console.error("Item type is not defined");
+            if (spinner) {
+              spinner.innerHTML =
+                '<p class="text-danger">Error: Could not determine item type</p>';
+            }
+            return;
+          }
+
+          // Use absolute URL path with leading slash
+          fetch(`/api/top-items/?type=${itemType}&time_range=${timeRange}`)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  `Server responded with ${response.status}: ${response.statusText}`
+                );
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (!data || !data.items) {
+                throw new Error("Invalid data returned from server");
+              }
+
+              // Get the list element
+              const listGroup = listView.querySelector(".card-list-group");
+              if (!listGroup) {
+                throw new Error("List group element not found");
+              }
+
+              listGroup.innerHTML = "";
+
+              data.items.forEach((item, index) => {
+                // Create list item
+                const listItem = document.createElement("li");
+                listItem.className = "list-group-item";
+
+                // Determine URL and name based on item type
+                let url = "#";
+                let name = "";
+                let imageUrl = null;
+                let artistId = null;
+                let artistName = null;
+                let innerHtml = "";
+
+                if (itemType === "artists") {
+                  url = `/artist/${item.artist_id}`;
+                  name = item.artist_name;
+                  imageUrl = item.image?.[0]?.url;
+
+                  innerHtml = `
+                    <div class="d-flex align-items-center">
+                      <span class="mr-2 text-muted">${index + 1}.</span>
+                      ${
+                        imageUrl
+                          ? `<img src="${imageUrl}" alt="${name}" class="album-cover">`
+                          : ""
+                      }
+                      <div class="item-details">
+                        <a href="${url}" class="item-title">${name}</a>
+                      </div>
+                    </div>
+                    <span class="item-minutes">${Math.round(
+                      item.total_minutes
+                    ).toLocaleString()} min</span>
+                  `;
+                } else if (itemType === "tracks") {
+                  url = `/track/${item.track_id}`;
+                  name = item.track_name;
+                  imageUrl = item.album_image;
+                  artistName = item.artist_name;
+                  artistId = item.artist_id;
+
+                  innerHtml = `
+                    <div class="d-flex align-items-center">
+                      <span class="mr-2 text-muted">${index + 1}.</span>
+                      ${
+                        imageUrl
+                          ? `<img src="${imageUrl}" alt="${name}" class="album-cover">`
+                          : ""
+                      }
+                      <div class="item-details">
+                        <a href="${url}" class="item-title">${name}</a>
+                        ${
+                          artistName && artistId
+                            ? `<a href="/artist/${artistId}" class="item-artist">${artistName}</a>`
+                            : ""
+                        }
+                      </div>
+                    </div>
+                    <span class="item-minutes">${Math.round(
+                      item.total_minutes
+                    ).toLocaleString()} min</span>
+                  `;
+                } else if (itemType === "albums") {
+                  url = `/album/${item.album_id}`;
+                  name = item.album_name;
+                  imageUrl = item.image?.[0]?.url;
+                  artistName = item.artist_name;
+                  artistId = item.artist_id;
+
+                  innerHtml = `
+                    <div class="d-flex align-items-center">
+                      <span class="mr-2 text-muted">${index + 1}.</span>
+                      ${
+                        imageUrl
+                          ? `<img src="${imageUrl}" alt="${name}" class="album-cover">`
+                          : ""
+                      }
+                      <div class="item-details">
+                        <a href="${url}" class="item-title">${name}</a>
+                        ${
+                          artistName && artistId
+                            ? `<a href="/artist/${artistId}" class="item-artist">${artistName}</a>`
+                            : ""
+                        }
+                      </div>
+                    </div>
+                    <span class="item-minutes">${Math.round(
+                      item.total_minutes
+                    ).toLocaleString()} min</span>
+                  `;
+                } else if (itemType === "genres") {
+                  url = `/genre/${encodeURIComponent(item.genre)}`;
+                  name = item.genre;
+
+                  innerHtml = `
+                    <div class="d-flex align-items-center">
+                      <span class="mr-2 text-muted">${index + 1}.</span>
+                      <div class="item-details">
+                        <a href="${url}" class="item-title">${name}</a>
+                      </div>
+                    </div>
+                    <span class="item-minutes">${Math.round(
+                      item.total_minutes
+                    ).toLocaleString()} min</span>
+                  `;
+                }
+
+                listItem.innerHTML = innerHtml;
+                listGroup.appendChild(listItem);
+              });
+
+              // Hide spinner, show list
+              if (spinner) spinner.style.display = "none";
+              if (listGroup) listGroup.style.display = "block";
+              dataLoaded = true;
+            })
+            .catch((error) => {
+              console.error("Error loading data:", error);
+              if (spinner) {
+                spinner.innerHTML = `<p class="text-danger">Error loading data: ${error.message}</p>`;
+              }
+            });
+        }
+      } else {
+        // Switch to podium view
+        podiumView.style.display = "block";
+        listView.style.display = "none";
+        this.setAttribute("data-view", "podium");
+        this.innerHTML =
+          'Show All <i class="tim-icons icon-minimal-right"></i>';
+      }
+    });
+  }
 });

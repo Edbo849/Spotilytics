@@ -57,13 +57,23 @@
           <!-- Podium Card -->
           <div class="col-lg-6">
             <div class="card mb-4">
-              <div class="card-header">
+              <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title"><i class="tim-icons icon-tag text-info"></i> Your Top {{ stats_title }}</h3>
+                <a href="#" class="spotify-green-link toggle-view" data-view="podium" data-type="{{ stats_title|lower }}">Show All <i class="tim-icons icon-minimal-right"></i></a>
               </div>
               <div class="card-body">
-                {% block podium_content %}
+                <div class="podium-view">
+                  {% block podium_content %}
 
-                {% endblock %}
+                  {% endblock %}
+                </div>
+                <div class="list-view" style="display: none; max-height: 400px; overflow-y: auto;">
+                  <div class="loading-spinner text-center p-5">
+                    <i class="tim-icons icon-refresh-02 fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading...</p>
+                  </div>
+                  <ul class="card-list-group"></ul>
+                </div>
               </div>
             </div>
           </div>

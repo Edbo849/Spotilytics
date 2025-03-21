@@ -4,6 +4,7 @@ from music.views import (
     ChatAPI,
     album,
     album_stats,
+    api,
     artist,
     artist_all_songs,
     artist_stats,
@@ -59,4 +60,5 @@ urlpatterns = [
         get_item_stats,
         name="get_item_stats",
     ),
+    path("api/top-items/", api.get_top_items, name="api_top_items"),
 ]

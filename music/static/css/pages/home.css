@@ -242,6 +242,81 @@
   }
 }
 
+/* View list for stats pages */
+.list-view .card-list-group {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list-view .card-list-group li {
+  background-color: rgba(34, 42, 66, 0.1);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1rem;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.list-view .card-list-group li:hover {
+  background-color: rgba(88, 95, 117, 0.1);
+}
+
+/* Styling for the album/artist image */
+.list-view .album-cover {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+/* Improved item details structure */
+.list-view .item-details {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.5rem;
+}
+
+.list-view .item-title {
+  color: #1DB954;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  margin-bottom: 0.25rem;
+}
+
+.list-view .item-title:hover {
+  color: #1ed760;
+  text-decoration: none;
+}
+
+/* Artist name styling */
+.list-view .item-artist {
+  color: #b3b3b3;
+  font-size: 0.875rem;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.list-view .item-artist:hover {
+  color: #1DB954;
+  text-decoration: none;
+}
+
+.spotify-green-link {
+  color: #1DB954 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: color 0.3s ease !important;
+}
+
+.spotify-green-link:hover {
+  color: #1ed760 !important; 
+  text-decoration: none !important;
+}
+
 /* DateRangePicker Dark Theme Styling */
 .daterangepicker {
     background-color: #1e1e2f !important;

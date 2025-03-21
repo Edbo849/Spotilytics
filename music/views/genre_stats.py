@@ -3,8 +3,8 @@ from music.views.utils.helpers import get_genre_visualizations, get_similar_genr
 from .utils.imports import *
 
 
-@vary_on_cookie
-@cache_page(60 * 60 * 24)
+# @vary_on_cookie
+# @cache_page(60 * 60 * 24)
 async def genre_stats(request: HttpRequest) -> HttpResponse:
     spotify_user_id = await sync_to_async(request.session.get)("spotify_user_id")
     if not spotify_user_id or not await sync_to_async(is_spotify_authenticated)(
