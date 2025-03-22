@@ -303,16 +303,38 @@ def generate_all_periods(since, until, truncate_func):
 def populate_dates_and_counts(all_periods, count_dict, truncate_func):
     dates = []
     counts = []
+
+    # Determine the date format used in count_dict
+    date_format = "%Y-%m-%d"  # Default format
+    if count_dict:
+        sample_key = next(iter(count_dict))
+        # Check for format like "Feb 2025"
+        if " " in sample_key and len(sample_key) >= 8:
+            date_format = "%b %Y"
+        # Check for format like "Feb 26" or "Mar 1"
+        elif " " in sample_key and len(sample_key) < 8:
+            date_format = "%b %d"
+        # Check for format like "03-16"
+        elif "-" in sample_key and len(sample_key) <= 5:
+            date_format = "%m-%d"
+
     for period in all_periods:
         if not isinstance(truncate_func, TruncHour):
             period = period.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Format for display in chart
         if isinstance(truncate_func, TruncHour):
-            date_str = period.strftime("%Y-%m-%d %H:%M")
+            display_str = period.strftime("%Y-%m-%d %H:%M")
         else:
-            date_str = period.strftime("%Y-%m-%d")
-        count = count_dict.get(period, 0)
-        dates.append(date_str)
+            display_str = period.strftime("%Y-%m-%d")
+
+        # Format for lookup matching count_dict keys
+        lookup_str = period.strftime(date_format)
+        count = count_dict.get(lookup_str, 0)
+
+        dates.append(display_str)
         counts.append(count)
+
     return dates, counts
 
 

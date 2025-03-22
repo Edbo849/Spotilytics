@@ -11,6 +11,7 @@ from django.db.models.functions import (
     ExtractHour,
     TruncDate,
     TruncDay,
+    TruncHour,
     TruncMonth,
     TruncWeek,
 )
@@ -413,23 +414,28 @@ async def get_top_albums(user, since=None, until=None, limit=10):
 
 async def get_streaming_trend_data(user, since, until, items, item_type, limit=5):
     """Get streaming trend data for top items."""
-    trends = []
+    from music.utils.utils.helpers import (
+        generate_all_periods,
+        populate_dates_and_counts,
+    )
+
     colors = ["#1DB954", "#FF6B6B", "#4A90E2", "#F7B731", "#A463F2"]
 
     total_duration = (until - since).days if since and until else None
-
     truncate_func, date_format, chart_format = determine_truncate_func_and_formats(
         total_duration
     )
 
-    all_dates = set()
-    trend_data = []
+    # Generate all periods in the time range
+    all_periods = generate_all_periods(since, until, truncate_func)
 
     if not isinstance(items, list):
         items = [items]
 
+    trend_data = []
     for idx, item in enumerate(items[:limit]):
-        dates, counts, raw_dates, label = await get_trend_data(
+        # Get the raw data with only dates that have plays
+        raw_dates, raw_counts, _, label = await get_trend_data(
             user,
             item,
             item_type,
@@ -439,42 +445,41 @@ async def get_streaming_trend_data(user, since, until, items, item_type, limit=5
             date_format,
             chart_format,
         )
-        all_dates.update(zip(dates, raw_dates))
+
+        # Convert to a dictionary for quick lookup
+        count_dict = {
+            entry[0]: entry[2]
+            for entry in zip(raw_dates, [0] * len(raw_dates), raw_counts)
+        }
+        print(f"Count dict: {count_dict}")
+
+        # Ensure all dates in the range are included with zeros for no plays
+        display_dates, normalized_counts = populate_dates_and_counts(
+            all_periods, count_dict, truncate_func
+        )
+        print(f"normalized counts: {normalized_counts}")
+
         trend_data.append(
             {
                 "label": label
                 or item.get("genre")
                 or item.get("track_name")
                 or item.get("album_name"),
-                "data": counts,
-                "dates": dates,
-                "raw_dates": raw_dates,
-                "color": colors[idx],
-            }
-        )
-
-    sorted_date_pairs = sorted(all_dates, key=lambda x: x[1])
-    display_dates, raw_dates = (
-        zip(*sorted_date_pairs) if sorted_date_pairs else ([], [])
-    )
-
-    trends = []
-    for trend in trend_data:
-        normalized_counts = []
-        date_to_count = dict(zip(trend["dates"], trend["data"]))
-
-        for display_date in display_dates:
-            normalized_counts.append(date_to_count.get(display_date, 0))
-
-        trends.append(
-            {
-                "label": trend["label"],
                 "data": normalized_counts,
-                "color": trend["color"],
+                "color": colors[idx % len(colors)],
             }
         )
 
-    return display_dates, trends
+    # Get common date labels for all trends
+    display_dates = []
+    for period in all_periods:
+        if isinstance(truncate_func, TruncHour):
+            date_str = period.strftime("%Y-%m-%d %H:%M")
+        else:
+            date_str = period.strftime("%Y-%m-%d")
+        display_dates.append(date_str)
+
+    return display_dates, trend_data
 
 
 def format_day_suffix(day):
@@ -1320,55 +1325,6 @@ async def get_item_stats_util(
 
 
 ## Stats Section
-
-
-async def get_listening_history_data(user, item, item_type, since, until):
-    """Get line graph data showing listening over time."""
-
-    @sync_to_async
-    def get_data():
-        base_query = PlayedTrack.objects.filter(user=user)
-        if since:
-            base_query = base_query.filter(played_at__gte=since)
-        if until:
-            base_query = base_query.filter(played_at__lte=until)
-
-        # Filter based on item type
-        if item_type == "artist":
-            query = base_query.filter(artist_id=item["artist_id"])
-        elif item_type == "album":
-            query = base_query.filter(album_id=item["album_id"])
-        elif item_type == "track":
-            query = base_query.filter(track_id=item["track_id"])
-
-        # Group plays by day
-        plays_by_date = {}
-        for track in query:
-            date_key = track.played_at.date().isoformat()
-            plays_by_date[date_key] = plays_by_date.get(date_key, 0) + 1
-
-        # Generate full date range including days with zero plays
-        dates = []
-        plays = []
-
-        if query.exists():
-            current_date = (
-                since.date() if since else query.earliest("played_at").played_at.date()
-            )
-            end_date = (
-                until.date() if until else query.latest("played_at").played_at.date()
-            )
-
-            while current_date <= end_date:
-                date_str = current_date.isoformat()
-                dates.append(date_str)
-                plays.append(plays_by_date.get(date_str, 0))
-                current_date += timedelta(days=1)
-
-        return {"labels": dates, "values": plays}
-
-    result = await get_data()
-    return result
 
 
 async def get_listening_context_data(user, item, item_type, since, until):

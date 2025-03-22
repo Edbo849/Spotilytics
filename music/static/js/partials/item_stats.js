@@ -122,8 +122,10 @@ document.addEventListener("DOMContentLoaded", function () {
               ticks: { color: "#9e9e9e" },
             },
             y: {
+              beginAtZero: true, // Add this line to start Y-axis at 0
               grid: { color: "rgba(255,255,255,0.1)" },
               ticks: { color: "#9e9e9e" },
+              min: 0, // Add this to ensure y never goes below 0
             },
           },
           plugins: {
