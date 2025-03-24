@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
   const customRangeBtn = document.getElementById("customRangeBtn");
-  const customDateInputs = document.querySelector(".custom-date-inputs");
+  const customDateInputs =
+    document.querySelector(".custom-date-inputs") ||
+    document.querySelector('[class*="custom-date-inputs"]');
 
   if (customRangeBtn && customDateInputs) {
     customRangeBtn.addEventListener("click", function () {
@@ -10,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const timeRangeButtons = document.querySelectorAll(
-    ".time-range-row.main-row .btn:not(#customRangeBtn)"
+    ".btn-simple[name='time_range'], .time-range-row .btn:not(#customRangeBtn)"
   );
   timeRangeButtons.forEach((button) => {
     button.addEventListener("click", function () {

@@ -19,6 +19,8 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
         return redirect("spotify-auth")
 
     time_range = request.GET.get("time_range", "last_4_weeks")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
 
     async with SpotifyClient(spotify_user_id) as client:
         # Get artist data
@@ -37,14 +39,29 @@ async def artist(request: HttpRequest, artist_id: str) -> HttpResponse:
         }
 
         # Get stats data with the artist info
-        stats_data = await get_item_stats(user, item, "artist", time_range)
+        if start_date and end_date:
+            stats_data = await get_item_stats(
+                user, item, "artist", time_range, start_date, end_date
+            )
+            graph_data = await get_item_stats_graphs(
+                user, item, "artist", time_range, start_date, end_date
+            )
 
-        # Get graph data for the stats section
-        graph_data = await get_item_stats_graphs(user, item, "artist", time_range)
+        else:
+            stats_data = await get_item_stats(user, item, "artist", time_range)
+            graph_data = await get_item_stats_graphs(user, item, "artist", time_range)
 
         # Combine all data
         data.update(stats_data)
         data.update(graph_data)
+        data.update(
+            {
+                "segment": "artist",
+                "time_range": time_range,
+                "start_date": start_date,
+                "end_date": end_date,
+            }
+        )
 
     return await sync_to_async(render)(request, "music/pages/artist.html", data)
 

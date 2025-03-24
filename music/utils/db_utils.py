@@ -451,13 +451,11 @@ async def get_streaming_trend_data(user, since, until, items, item_type, limit=5
             entry[0]: entry[2]
             for entry in zip(raw_dates, [0] * len(raw_dates), raw_counts)
         }
-        print(f"Count dict: {count_dict}")
 
         # Ensure all dates in the range are included with zeros for no plays
         display_dates, normalized_counts = populate_dates_and_counts(
             all_periods, count_dict, truncate_func
         )
-        print(f"normalized counts: {normalized_counts}")
 
         trend_data.append(
             {

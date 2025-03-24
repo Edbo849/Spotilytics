@@ -1,4 +1,6 @@
 # Helper functions for Views
+from typing import Optional
+
 from music.services.graphs import (
     generate_gauge_chart,
     generate_horizontal_bar_chart,
@@ -742,7 +744,6 @@ async def get_home_visualizations(
             if listening_counts
             else []
         )
-
         chart_data = (
             generate_chartjs_line_graph(listening_dates, datasets, x_label)
             if listening_dates
@@ -1157,11 +1158,19 @@ async def get_preview_urls_batch(client, track_ids: List[str]) -> Dict[str, str]
 
 
 async def get_item_stats(
-    user, item: Dict[str, str], item_type: str, time_range: str
+    user,
+    item: Dict[str, str],
+    item_type: str,
+    time_range: str,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> Dict[str, Any]:
     """Get stats data for an item (artist, album, or track)."""
     try:
-        since, until = await get_date_range(time_range)
+        if start_date and end_date:
+            since, until = await get_date_range(time_range, start_date, end_date)
+        else:
+            since, until = await get_date_range(time_range)
 
         formatted_item = {
             "artist_name": item["name"] if item_type == "artist" else None,
@@ -1217,11 +1226,19 @@ async def get_item_stats(
 
 
 async def get_item_stats_graphs(
-    user, item: Dict[str, str], item_type: str, time_range: str
+    user,
+    item: Dict[str, str],
+    item_type: str,
+    time_range: str,
+    start_date: str | None = None,
+    end_date: str | None = None,
 ) -> Dict[str, Any]:
     """Get visualization data for an item's stats page."""
     try:
-        since, until = await get_date_range(time_range)
+        if start_date and end_date:
+            since, until = await get_date_range(time_range, start_date, end_date)
+        else:
+            since, until = await get_date_range(time_range)
 
         # Format item information consistently
         formatted_item = {

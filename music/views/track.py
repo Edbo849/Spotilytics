@@ -18,6 +18,8 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
         return redirect("spotify-auth")
 
     time_range = request.GET.get("time_range", "last_4_weeks")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
 
     try:
         async with SpotifyClient(spotify_user_id) as client:
@@ -46,14 +48,30 @@ async def track(request: HttpRequest, track_id: str) -> HttpResponse:
             }
 
             # Get stats data with the track info
-            stats_data = await get_item_stats(user, item, "track", time_range)
-
-            # Get graph data for the stats section
-            graph_data = await get_item_stats_graphs(user, item, "track", time_range)
+            if start_date and end_date:
+                stats_data = await get_item_stats(
+                    user, item, "track", time_range, start_date, end_date
+                )
+                graph_data = await get_item_stats_graphs(
+                    user, item, "track", time_range, start_date, end_date
+                )
+            else:
+                stats_data = await get_item_stats(user, item, "track", time_range)
+                graph_data = await get_item_stats_graphs(
+                    user, item, "track", time_range
+                )
 
             # Combine all data
             data.update(stats_data)
             data.update(graph_data)
+
+            data.update(
+                {
+                    "time_range": time_range,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                }
+            )
 
         return await sync_to_async(render)(request, "music/pages/track.html", data)
     except Exception as e:

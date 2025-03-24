@@ -188,6 +188,7 @@ def set_time_range_parameters(time_range, start_date=None, end_date=None):
         until = None
         truncate_func = TruncMonth("played_at")
         x_label = "Month"
+
     return since, until, truncate_func, x_label
 
 
@@ -304,31 +305,68 @@ def populate_dates_and_counts(all_periods, count_dict, truncate_func):
     dates = []
     counts = []
 
-    # Determine the date format used in count_dict
+    if not count_dict:
+        return dates, counts
+
+    sample_key = next(iter(count_dict))
+
+    # Handle datetime objects as dictionary keys
+    if isinstance(sample_key, datetime):
+        # Format date based on truncate function
+        if isinstance(truncate_func, TruncHour):
+            date_format = "%Y-%m-%d %H:%M"
+        elif isinstance(truncate_func, TruncDay):
+            date_format = "%b %d"
+        elif isinstance(truncate_func, TruncWeek):
+            date_format = "%b %d"
+        elif isinstance(truncate_func, TruncMonth):
+            date_format = "%b %Y"
+        else:
+            date_format = "%Y-%m-%d"
+
+        # Process all periods with datetime keys
+        for period in all_periods:
+            formatted_date = period.strftime(date_format)
+            dates.append(formatted_date)
+
+            # Find matching date in count_dict by comparing year, month, day, hour (if applicable)
+            found = False
+            for dt, count in count_dict.items():
+                if period.date() == dt.date():
+                    # For hour truncation, also check the hour
+                    if isinstance(truncate_func, TruncHour) and period.hour != dt.hour:
+                        continue
+                    counts.append(count)
+                    found = True
+                    break
+
+            if not found:
+                counts.append(0)
+
+        return dates, counts
+
+    # Original string-based key handling
     date_format = "%Y-%m-%d"  # Default format
-    if count_dict:
-        sample_key = next(iter(count_dict))
-        # Check for format like "Feb 2025"
+
+    # Check for various string formats
+    if isinstance(sample_key, str):
         if " " in sample_key and len(sample_key) >= 8:
             date_format = "%b %Y"
-        # Check for format like "Feb 26" or "Mar 1"
         elif " " in sample_key and len(sample_key) < 8:
             date_format = "%b %d"
-        # Check for format like "03-16"
         elif "-" in sample_key and len(sample_key) <= 5:
             date_format = "%m-%d"
 
+    # Process periods for string-based keys
     for period in all_periods:
         if not isinstance(truncate_func, TruncHour):
             period = period.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Format for display in chart
-        if isinstance(truncate_func, TruncHour):
-            display_str = period.strftime("%Y-%m-%d %H:%M")
-        else:
-            display_str = period.strftime("%Y-%m-%d")
-
-        # Format for lookup matching count_dict keys
+        display_str = (
+            period.strftime("%Y-%m-%d %H:%M")
+            if isinstance(truncate_func, TruncHour)
+            else period.strftime("%Y-%m-%d")
+        )
         lookup_str = period.strftime(date_format)
         count = count_dict.get(lookup_str, 0)
 

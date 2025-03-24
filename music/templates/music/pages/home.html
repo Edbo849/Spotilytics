@@ -39,7 +39,7 @@
                 <span class="d-none d-sm-block d-md-block d-lg-block d-xl-block">All Time</span>
                 <span class="d-block d-sm-none"><i class="tim-icons icon-calendar-60"></i></span>
               </button>
-              <button type="button" class="btn btn-sm btn-primary btn-simple" id="customRangeBtn">Custom</button>
+              <button type="button" class="btn btn-sm btn-primary btn-simple {% if time_range == 'custom' %}active{% endif %}" id="customRangeBtn">Custom</button>
             </div>
 
             <!-- Custom Date Range Inputs -->
