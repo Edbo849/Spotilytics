@@ -5,10 +5,10 @@ pkill -f "celery -A Spotilytics beat"
 sleep 2
 
 echo "Starting Celery worker..."
-celery -A Spotilytics worker --loglevel=ERROR &
+poetry run celery -A Spotilytics worker --loglevel=ERROR &
 
 echo "Starting Celery beat..."
-celery -A Spotilytics beat --loglevel=ERROR &
+poetry run celery -A Spotilytics beat --loglevel=ERROR &
 
 echo "Starting Django server..."
-python3 manage.py runserver
+poetry run python3 manage.py runserver
