@@ -35,6 +35,9 @@ isort = "^5.13.2"
 ruff = "^0.2.1"
 pre-commit = "*"
 
+[tool.isort]
+profile = "black"
+
 [tool.ruff]
 ignore = ["F403", "F405", "F401"] 
 

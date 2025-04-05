@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, List
 
 import openai
 from asgiref.sync import sync_to_async
@@ -12,41 +13,69 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIService:
+    """Service for interacting with OpenAI API based on user's listening data."""
+
     def __init__(self):
         self.api_key = settings.OPENAI_API_KEY
 
     @sync_to_async(thread_sensitive=False)
     def get_listening_data(self, spotify_user_id: str) -> str:
+        """
+        Retrieve user's top artists, tracks, and albums as a formatted string.
+
+        Args:
+            spotify_user_id: The Spotify user ID to retrieve data for
+
+        Returns:
+            Formatted string with top listening data
+        """
         close_old_connections()
 
-        top_artists = (
-            PlayedTrack.objects.filter(user_id=spotify_user_id)
-            .values("artist_name")
-            .annotate(count=Count("artist_name"))
-            .order_by("-count")[:15]
-        )
-        top_tracks = (
-            PlayedTrack.objects.filter(user_id=spotify_user_id)
-            .values("track_name")
-            .annotate(count=Count("track_name"))
-            .order_by("-count")[:15]
-        )
-        top_albums = (
-            PlayedTrack.objects.filter(user_id=spotify_user_id)
-            .values("album_name")
-            .annotate(count=Count("album_name"))
-            .order_by("-count")[:15]
-        )
+        # Use a common query builder function to reduce code duplication
+        top_artists = self._get_top_items(spotify_user_id, "artist_name")
+        top_tracks = self._get_top_items(spotify_user_id, "track_name")
+        top_albums = self._get_top_items(spotify_user_id, "album_name")
 
-        artists = ", ".join([artist["artist_name"] for artist in top_artists])
-        tracks = ", ".join([track["track_name"] for track in top_tracks])
-        albums = ", ".join([album["album_name"] for album in top_albums])
+        # Convert query results to comma-separated strings
+        artists = ", ".join(item["artist_name"] for item in top_artists)
+        tracks = ", ".join(item["track_name"] for item in top_tracks)
+        albums = ", ".join(item["album_name"] for item in top_albums)
 
         return f"Top artists: {artists}. Top tracks: {tracks}. Top albums: {albums}."
 
+    def _get_top_items(
+        self, user_id: str, field_name: str, limit: int = 15
+    ) -> list[dict]:
+        """
+        Helper method to retrieve top items for a given field.
+
+        Args:
+            user_id: Spotify user ID
+            field_name: Database field to query (artist_name, track_name, etc.)
+            limit: Maximum number of items to return
+
+        Returns:
+            List of dictionaries with the field_name and count
+        """
+        return (
+            PlayedTrack.objects.filter(user_id=user_id)
+            .values(field_name)
+            .annotate(count=Count(field_name))
+            .order_by("-count")[:limit]
+        )
+
     @sync_to_async(thread_sensitive=False)
     def create_prompt(self, user_message: str, listening_data: str) -> str:
-        """Create prompt for OpenAI API"""
+        """
+        Create a formatted prompt for OpenAI API combining user data and question.
+
+        Args:
+            user_message: The user's question or message
+            listening_data: The user's listening history data
+
+        Returns:
+            Formatted prompt string
+        """
         return (
             f"User's listening data: {listening_data}\n"
             f"User's question: {user_message}\n"
@@ -55,7 +84,15 @@ class OpenAIService:
 
     @sync_to_async(thread_sensitive=False)
     def get_ai_response(self, prompt: str) -> str:
-        """Get response from OpenAI API"""
+        """
+        Send prompt to OpenAI API and get the response.
+
+        Args:
+            prompt: The formatted prompt string
+
+        Returns:
+            AI response text or error message
+        """
         try:
             openai.api_key = self.api_key
             response = openai.ChatCompletion.create(
