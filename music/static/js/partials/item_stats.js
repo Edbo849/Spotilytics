@@ -90,11 +90,92 @@ document.addEventListener("DOMContentLoaded", () => {
   const customDateInputs = document.querySelector(".custom-date-inputs");
 
   if (customRangeBtn && customDateInputs) {
+    // Check if custom is the active time range and show/hide the inputs accordingly
+    if (customRangeBtn.classList.contains("active")) {
+      customDateInputs.style.display = "block";
+    } else {
+      customDateInputs.style.display = "none";
+    }
+
+    // Toggle visibility when clicking on the custom button
     customRangeBtn.addEventListener("click", () => {
-      // Toggle visibility of custom date inputs
       customDateInputs.style.display =
-        customDateInputs.style.display === "none" ? "block" : "none";
+        customDateInputs.style.display === "none" ||
+        customDateInputs.style.display === ""
+          ? "block"
+          : "none";
     });
+
+    // Add event handler for the custom date form submission with validation
+    const customDateForm = customDateInputs.closest("form");
+    if (customDateForm) {
+      customDateForm.addEventListener("submit", (e) => {
+        const startDateInput = customDateForm.querySelector("#start_date");
+        const endDateInput = customDateForm.querySelector("#end_date");
+        const errorContainer = document.createElement("div");
+        errorContainer.className = "alert alert-danger mt-2";
+        errorContainer.style.display = "none";
+
+        // Remove any existing error messages
+        const existingError = customDateInputs.querySelector(".alert-danger");
+        if (existingError) existingError.remove();
+
+        customDateInputs.appendChild(errorContainer);
+
+        // Validation checks
+        if (!startDateInput.value || !endDateInput.value) {
+          e.preventDefault();
+          errorContainer.textContent =
+            "Both start date and end date are required.";
+          errorContainer.style.display = "block";
+          return;
+        }
+
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        const today = new Date();
+
+        // Check for valid dates
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          e.preventDefault();
+          errorContainer.textContent =
+            "Please enter valid dates in YYYY-MM-DD format.";
+          errorContainer.style.display = "block";
+          return;
+        }
+
+        // Check for future dates
+        if (startDate > today || endDate > today) {
+          e.preventDefault();
+          errorContainer.textContent = "Dates cannot be in the future.";
+          errorContainer.style.display = "block";
+          return;
+        }
+
+        // Check start date is before end date
+        if (startDate > endDate) {
+          e.preventDefault();
+          errorContainer.textContent = "Start date must be before end date.";
+          errorContainer.style.display = "block";
+          return;
+        }
+
+        // If all validation passes, save the scroll position
+        sessionStorage.setItem("scrollPosition", window.scrollY.toString());
+      });
+    }
+
+    // Add event handler for the Apply button specifically
+    const applyButton = customDateInputs.querySelector('button[type="submit"]');
+    if (applyButton) {
+      applyButton.addEventListener("click", (e) => {
+        // The submit event handler above will handle validation
+        // This is just a backup for the scroll position
+        if (customDateForm.checkValidity()) {
+          sessionStorage.setItem("scrollPosition", window.scrollY.toString());
+        }
+      });
+    }
   }
 
   // =========================================================
