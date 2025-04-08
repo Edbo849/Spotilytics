@@ -1,7 +1,13 @@
+/**
+ * Item Statistics Component
+ * Manages chart rendering, stats loading, and time range selection
+ * for different item types (artists, albums, tracks)
+ */
+
 // Store chart references globally so we can destroy them when needed
 const chartInstances = {};
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   // =========================================================
   // Stats loading functionality
   // =========================================================
@@ -12,7 +18,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const itemId = statsSection.dataset.itemId;
     const itemType = statsSection.dataset.itemType;
 
-    async function loadStats(timeRange) {
+    /**
+     * Load stats for a specific time range via AJAX
+     * @param {string} timeRange - Time range identifier (e.g., "last_4_weeks")
+     */
+    const loadStats = async (timeRange) => {
       try {
         if (!itemType || !itemId) {
           console.error("Missing itemType or itemId");
@@ -23,9 +33,14 @@ document.addEventListener("DOMContentLoaded", function () {
           `/item-stats/${itemType}/${itemId}?time_range=${timeRange}`,
           { credentials: "include" }
         );
+
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        // Update stats
+        // Update stats in the DOM
         document.getElementById("total-plays").textContent = data.total_plays;
         document.getElementById("total-minutes").textContent = Math.round(
           data.total_minutes
@@ -48,13 +63,17 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (error) {
         console.error("Error loading stats:", error);
       }
-    }
+    };
 
+    // Add event listeners to time range buttons
     if (timeRangeBtns.length) {
       timeRangeBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
+          // Update active state
           timeRangeBtns.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
+
+          // Load stats for selected time range
           loadStats(btn.dataset.range);
         });
       });
@@ -71,7 +90,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const customDateInputs = document.querySelector(".custom-date-inputs");
 
   if (customRangeBtn && customDateInputs) {
-    customRangeBtn.addEventListener("click", function () {
+    customRangeBtn.addEventListener("click", () => {
+      // Toggle visibility of custom date inputs
       customDateInputs.style.display =
         customDateInputs.style.display === "none" ? "block" : "none";
     });
@@ -80,7 +100,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // =========================================================
   // Helper function to create or update charts
   // =========================================================
-  function createOrUpdateChart(canvasId, dataId, chartCreator) {
+  /**
+   * Creates or updates a chart on a specific canvas element
+   * @param {string} canvasId - ID of the canvas element
+   * @param {string} dataId - ID of the element containing chart data
+   * @param {Function} chartCreator - Function to create the chart instance
+   */
+  const createOrUpdateChart = (canvasId, dataId, chartCreator) => {
     const ctx = document.getElementById(canvasId);
     if (!ctx) return;
 
@@ -99,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (error) {
       console.error(`Error creating ${canvasId} chart:`, error);
     }
-  }
+  };
 
   // =========================================================
   // Initialize all charts
@@ -122,10 +148,10 @@ document.addEventListener("DOMContentLoaded", function () {
               ticks: { color: "#9e9e9e" },
             },
             y: {
-              beginAtZero: true, // Add this line to start Y-axis at 0
+              beginAtZero: true,
               grid: { color: "rgba(255,255,255,0.1)" },
               ticks: { color: "#9e9e9e" },
-              min: 0, // Add this to ensure y never goes below 0
+              min: 0,
             },
           },
           plugins: {
@@ -141,29 +167,27 @@ document.addEventListener("DOMContentLoaded", function () {
     "listeningContextChart",
     "context_data",
     (ctx, chartData) => {
-      // Process tooltip callback functions
+      // Process tooltip callback functions from string to function
       if (chartData.options?.plugins?.tooltip?.callbacks) {
+        const { afterLabel } = chartData.options.plugins.tooltip.callbacks;
+
         if (
-          typeof chartData.options.plugins.tooltip.callbacks.afterLabel ===
-            "string" &&
-          chartData.options.plugins.tooltip.callbacks.afterLabel.startsWith(
-            "function"
-          )
+          typeof afterLabel === "string" &&
+          afterLabel.startsWith("function")
         ) {
           chartData.options.plugins.tooltip.callbacks.afterLabel = Function(
-            "return " + chartData.options.plugins.tooltip.callbacks.afterLabel
+            "return " + afterLabel
           )();
         }
       }
 
-      // Process datalabels formatter
-      if (chartData.options?.plugins?.datalabels) {
-        if (
-          typeof chartData.options.plugins.datalabels.formatter === "string" &&
-          chartData.options.plugins.datalabels.formatter.startsWith("function")
-        ) {
+      // Process datalabels formatter from string to function
+      if (chartData.options?.plugins?.datalabels?.formatter) {
+        const { formatter } = chartData.options.plugins.datalabels;
+
+        if (typeof formatter === "string" && formatter.startsWith("function")) {
           chartData.options.plugins.datalabels.formatter = Function(
-            "return " + chartData.options.plugins.datalabels.formatter
+            "return " + formatter
           )();
         }
       }
@@ -172,35 +196,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   );
 
-  // Hourly Distribution Chart
-  createOrUpdateChart(
-    "hourlyDistributionChart",
-    "hourly_distribution_chart",
-    (ctx, chartData) => new Chart(ctx, chartData)
-  );
+  // Initialize various chart types
+  const standardCharts = [
+    ["hourlyDistributionChart", "hourly_distribution_chart"],
+    ["durationComparisonChart", "duration_comparison_chart"],
+    ["artistTracksChart", "artist_tracks_chart"],
+    ["genreDistributionChart", "genre_distribution_chart"],
+    ["albumTracksChart", "album_tracks_chart"],
+    ["albumCoverageChart", "album_coverage_chart"],
+  ];
 
-  // Duration Comparison Chart
-  createOrUpdateChart(
-    "durationComparisonChart",
-    "duration_comparison_chart",
-    (ctx, chartData) => new Chart(ctx, chartData)
-  );
+  // Create all standard charts with default renderer
+  standardCharts.forEach(([canvasId, dataId]) => {
+    createOrUpdateChart(
+      canvasId,
+      dataId,
+      (ctx, chartData) => new Chart(ctx, chartData)
+    );
+  });
 
-  // Artist Tracks Chart
-  createOrUpdateChart(
-    "artistTracksChart",
-    "artist_tracks_chart",
-    (ctx, chartData) => new Chart(ctx, chartData)
-  );
-
-  // Genre Distribution Chart
-  createOrUpdateChart(
-    "genreDistributionChart",
-    "genre_distribution_chart",
-    (ctx, chartData) => new Chart(ctx, chartData)
-  );
-
-  // Discography Coverage Chart
+  // Discography Coverage Chart (special case with gauge plugin)
   createOrUpdateChart(
     "discographyCoverageChart",
     "discography_coverage_chart",
@@ -209,7 +224,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (window.ChartGauge || Chart.registry.controllers.gauge) {
         return new Chart(ctx, chartData);
       } else {
-        // Simply log the error and use the chartData directly - let the backend handle fallback
+        // Use fallback from backend
         console.log(
           "Gauge chart type not available, using fallback from backend."
         );
@@ -218,19 +233,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   );
 
-  // Album Tracks Chart
-  createOrUpdateChart(
-    "albumTracksChart",
-    "album_tracks_chart",
-    (ctx, chartData) => new Chart(ctx, chartData)
-  );
-
-  // Album Coverage Chart
-  createOrUpdateChart(
-    "albumCoverageChart",
-    "album_coverage_chart",
-    (ctx, chartData) => new Chart(ctx, chartData)
-  );
   // =========================================================
   // Item stats time range change handler
   // =========================================================
@@ -243,22 +245,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const itemId = statsSection.dataset.itemId;
 
     if (itemType && itemId) {
+      // Add click handlers to time range buttons
       timeRangeButtons.forEach((button) => {
-        button.addEventListener("click", function (e) {
+        button.addEventListener("click", (e) => {
           e.preventDefault();
 
           // Save current scroll position to sessionStorage
           sessionStorage.setItem("scrollPosition", window.scrollY);
 
-          // Navigate to the new URL
-          const timeRange = this.value;
+          // Navigate to the new URL with selected time range
+          const timeRange = button.value;
           window.location.href = `/${itemType}/${itemId}?time_range=${timeRange}`;
         });
       });
 
       // Restore scroll position after page load if it exists
-      if (sessionStorage.getItem("scrollPosition")) {
-        window.scrollTo(0, parseInt(sessionStorage.getItem("scrollPosition")));
+      const savedPosition = sessionStorage.getItem("scrollPosition");
+      if (savedPosition) {
+        window.scrollTo(0, parseInt(savedPosition));
         sessionStorage.removeItem("scrollPosition"); // Clean up
       }
     }
