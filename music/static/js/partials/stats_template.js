@@ -175,7 +175,7 @@ const initializeDoughnutChart = () => {
         plugins: {
           ...chartData.options?.plugins,
           datalabels: {
-            color: "#ffffff",
+            color: "rgba(248, 246, 246, 0.8)",
             font: { size: 9, weight: "bold" },
             formatter: (value, ctx) => {
               const label = ctx.chart.data.labels[ctx.dataIndex];

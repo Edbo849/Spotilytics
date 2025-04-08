@@ -93,7 +93,7 @@ def generate_chartjs_pie_chart(labels, values):
                 "r": {
                     "ticks": {
                         "display": True,
-                        "color": "#ffffff",
+                        "color": "rgba(255, 255, 255, 0.6)",
                         "backdropColor": "rgba(0, 0, 0, 0)",
                         "callback": "function(value) { return value.toFixed(3); }",
                     },
@@ -107,7 +107,7 @@ def generate_chartjs_pie_chart(labels, values):
                         "display": True,
                         "centerPointLabels": True,
                         "font": {"size": 10, "family": "Arial"},
-                        "color": "white",
+                        "color": "rgba(255, 255, 255, 0.6)",
                     },
                 }
             },
@@ -176,7 +176,7 @@ def generate_chartjs_radar_chart(labels, radar_data, metrics_keys=None):
                     "pointLabels": {"color": "#9e9e9e"},
                     "ticks": {
                         "beginAtZero": True,
-                        "color": "#ffffff",
+                        "color": "rgba(255, 255, 255, 0.6)",
                         "backdropColor": "rgba(0, 0, 0, 0)",
                         "min": 0,
                     },
@@ -212,10 +212,16 @@ def generate_chartjs_doughnut_chart(labels, data, background_colors):
             "responsive": True,
             "maintainAspectRatio": False,
             "plugins": {
-                "legend": {"display": False},
+                "legend": {
+                    "display": True,
+                    "labels": {
+                        "color": "rgba(255, 255, 255, 0.6)",
+                        "font": {"size": 12},
+                    },
+                },
                 "datalabels": {
                     "display": True,
-                    "color": "#ffffff",
+                    "color": "rgba(255, 255, 255, 0.6)",
                     "font": {"size": 9, "weight": "bold"},
                     "textAlign": "center",
                     "rotation": 0,
@@ -590,7 +596,7 @@ def generate_listening_context_chart(data):
                     "display": True,
                     "align": "end",
                     "anchor": "end",
-                    "color": "#ffffff",
+                    "color": "rgba(255, 255, 255, 0.6)",
                     "font": {"size": 14, "weight": "bold"},
                     "formatter": f"function(value, context) {{ "
                     f"return [{', '.join(percentage_strings)}][context.dataIndex] + '%'; }}",
@@ -663,6 +669,7 @@ def generate_gauge_chart(data, title="Coverage"):
                     "text": title,
                     "padding": 20,
                     "font": {"size": 16},
+                    "color": "rgba(255, 255, 255, 0.6)",
                 },
                 "subtitle": {
                     "display": True,
@@ -725,15 +732,27 @@ def generate_progress_chart(data):
             "scales": {
                 "x": {
                     "beginAtZero": True,
-                    "title": {"display": True, "text": "Duration (seconds)"},
-                }
+                    "title": {
+                        "display": True,
+                        "text": "Duration (seconds)",
+                        "color": "rgba(255, 255, 255, 0.6)",
+                    },
+                    "ticks": {"color": "rgba(255, 255, 255, 0.6)"},
+                },
+                "y": {"ticks": {"color": "rgba(255, 255, 255, 0.6)"}},
             },
             "plugins": {
-                "title": {"display": True, "text": "Average Listening Duration"},
+                "title": {
+                    "display": True,
+                    "text": "Average Listening Duration",
+                    "color": "rgba(255, 255, 255, 0.6)",
+                },
                 "subtitle": {
                     "display": True,
                     "text": f"{percentage_formatted}% of track typically played",
+                    "color": "rgba(255, 255, 255, 0.6)",
                 },
+                "legend": {"labels": {"color": "rgba(255, 255, 255, 0.6)"}},
             },
         },
     }
@@ -766,15 +785,27 @@ def generate_horizontal_bar_chart(data):
         "options": {
             "indexAxis": "y",
             "scales": {
-                "x": {"beginAtZero": True, "ticks": {"precision": 0}},
+                "x": {
+                    "beginAtZero": True,
+                    "ticks": {"precision": 0, "color": "rgba(255, 255, 255, 0.6)"},
+                    "title": {
+                        "display": True,
+                        "text": "Plays",
+                        "color": "rgba(255, 255, 255, 0.6)",
+                    },
+                    "grid": {"color": "rgba(255, 255, 255, 0.1)"},
+                },
                 "y": {
                     "ticks": {
                         "font": {"size": 9},
                         "maxRotation": 0,
                         "minRotation": 0,
-                    }
+                        "color": "rgba(255, 255, 255, 0.6)",
+                    },
+                    "grid": {"color": "rgba(255, 255, 255, 0.1)"},
                 },
             },
             "maintainAspectRatio": False,
+            "plugins": {"legend": {"labels": {"color": "rgba(255, 255, 255, 0.6)"}}},
         },
     }
