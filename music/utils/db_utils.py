@@ -2289,7 +2289,7 @@ async def get_track_duration_comparison(
         min(result["average_duration"] / track_duration, 1.0)
         if track_duration > 0 and result["count"] > 0
         else 0
-    ) * 100  # Convert to percentage
+    )  # Gets *100 when displayed
 
     return {
         "average_duration": result["average_duration"],
