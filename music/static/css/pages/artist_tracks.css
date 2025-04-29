@@ -1,109 +1,131 @@
-.container {
-    background-color: #27293d;
-    padding: 2rem;
-    margin-top: 75px;
-    margin-left: 270px;
-    border-radius: 8px;
-    margin-bottom: 15px;
+:root {
+  /* Color variables */
+  --spotify-green: #1DB954;
+  --spotify-green-hover: #1ed760;
+  --bg-primary: #27293d;
+  --bg-table: rgba(255, 255, 255, 0.03);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --text-primary: #fff;
+  
+  /* Common dimensions */
+  --border-radius-sm: 8px;
+  --border-radius-lg: 12px;
+  
+  /* Spacing */
+  --spacing-md: 1rem;
+  --spacing-lg: 1.2rem;
+  --spacing-xl: 2rem;
 }
+
+/* Layout - Container */
+.container {
+  background-color: var(--bg-primary);
+  padding: var(--spacing-xl);
+  margin: 75px 0 15px 270px;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Typography & Links */
 h1 a {
-    color: #1DB954;
-    text-decoration: none;
-    transition: color 0.2s ease;
+  color: var(--spotify-green);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 h1 a:hover {
-    color: #1ed760;
-    text-decoration: none;
+  color: var(--spotify-green-hover);
+  text-decoration: none;
 }
 
 /* Table styling */
 .table {
-    margin-top: 2rem;
-    background-color: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    border-collapse: separate;
-    border-spacing: 0;
-    overflow: hidden;
+  margin-top: var(--spacing-xl);
+  background-color: var(--bg-table);
+  border-radius: var(--border-radius-lg);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
 }
 
 /* Table header */
 .table thead th {
-    background-color: rgba(29, 185, 84, 0.1);
-    color: #1DB954;
-    font-weight: 500;
-    padding: 1.2rem 1rem;
-    border: none;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  background-color: rgba(29, 185, 84, 0.1);
+  color: var(--spotify-green);
+  font-weight: 500;
+  padding: var(--spacing-lg) var(--spacing-md);
+  border: none;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Table body */
 .table tbody tr {
-    transition: background-color 0.3s ease;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s ease;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .table tbody tr:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-hover);
 }
 
 /* Table cells */
-.table td, .table th {
-    padding: 1rem;
-    vertical-align: middle;
-    border: none;
-    color: #fff;
+.table td, 
+.table th {
+  padding: var(--spacing-md);
+  vertical-align: middle;
+  border: none;
+  color: var(--text-primary);
 }
 
 /* Album cover image */
 .album-cover {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-    margin-right: 1rem;
-    transition: transform 0.2s ease;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--border-radius-sm);
+  margin-right: var(--spacing-md);
+  transition: transform 0.2s ease;
 }
 
 .album-cover:hover {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 /* Track title and links */
 .table a {
-    color: #fff;
-    text-decoration: none;
-    transition: color 0.2s ease;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .table a:hover {
-    color: #1ed760 !important;
+  color: var(--spotify-green-hover) !important;
 }
 
 /* Popularity column */
 .table td:last-child {
-    color: #1DB954;
-    font-weight: 500;
+  color: var(--spotify-green);
+  font-weight: 500;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .container {
-        margin-left: 0;
-        padding: 1rem;
-    }
-    
-    .table td {
-        padding: 0.75rem;
-    }
-    
-    .album-cover {
-        width: 45px;
-        height: 45px;
-    }
+  .container {
+    margin-left: 0;
+    padding: var(--spacing-md);
+  }
+  
+  .table td {
+    padding: 0.75rem;
+  }
+  
+  .album-cover {
+    width: 45px;
+    height: 45px;
+  }
 }
