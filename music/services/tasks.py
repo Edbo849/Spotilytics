@@ -1,6 +1,5 @@
 import datetime
 import logging
-from typing import List, Optional
 
 from asgiref.sync import async_to_sync, sync_to_async
 from django.db import IntegrityError

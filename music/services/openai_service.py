@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List
 
 import openai
 from asgiref.sync import sync_to_async
