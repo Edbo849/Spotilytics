@@ -1,7 +1,7 @@
 import logging
 from collections import Counter
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from asgiref.sync import sync_to_async
 from django.core.cache import cache
