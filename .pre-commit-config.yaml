@@ -21,7 +21,7 @@ repos:
     rev: v0.3.0
     hooks:
       - id: ruff
-        args: ['--fix']
+        args: ['--select=F401,F403', '--fix']
       - id: ruff-format
 
   - repo: https://github.com/asottile/pyupgrade

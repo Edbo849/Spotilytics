@@ -1,52 +1,81 @@
+:root {
+  /* Color variables */
+  --spotify-green: #1DB954;
+  --spotify-green-hover: #1ed760;
+  --bg-dark: #121212;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  
+  /* Spacing */
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-xxl: 3rem;
+  
+  /* Common dimensions */
+  --border-radius-sm: 10px;
+  --border-radius-pill: 50px;
+  
+  /* Shadow */
+  --shadow-inset: inset 0 0 20px 10px var(--bg-dark);
+  
+  /* Typography */
+  --font-size-normal: 1.1rem;
+  --font-size-medium: 1.2rem;
+  --font-size-large: 3rem;
+}
+
 body {
-  background: linear-gradient(135deg, #121212 0%, #1DB954 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--spotify-green) 100%);
+  color: var(--text-primary);
   font-family: 'Arial', sans-serif;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0;
 }
-        
+
 .welcome-container {
   text-align: center;
-  padding: 2rem;
+  padding: var(--spacing-lg);
   max-width: 600px;
 }
-        
+
 .logo {
   width: 150px;
-  margin-bottom: 2rem;
-  border-radius: 10px;
-  box-shadow: inset 0 0 20px 10px #121212;
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-inset);
 }
-        
+
 h1 {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
-  color: #1DB954;
+  font-size: var(--font-size-large);
+  margin-bottom: var(--spacing-lg);
+  color: var(--spotify-green);
 }
-        
+
 p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  color: #b3b3b3;
+  font-size: var(--font-size-medium);
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-secondary);
 }
-        
+
 .login-btn {
-  background-color: #1DB954;
-  color: white;
-  padding: 1rem 3rem;
-  border-radius: 50px;
+  background-color: var(--spotify-green);
+  color: var(--text-primary);
+  padding: var(--spacing-md) var(--spacing-xxl);
+  border-radius: var(--border-radius-pill);
   text-decoration: none;
   font-weight: bold;
   transition: all 0.3s ease;
   border: none;
-  font-size: 1.1rem;
+  font-size: var(--font-size-normal);
+  display: inline-block;
 }
-        
+
 .login-btn:hover {
-  background-color: #1ed760;
+  background-color: var(--spotify-green-hover);
   transform: scale(1.05);
-  color: white;
+  color: var(--text-primary);
 }

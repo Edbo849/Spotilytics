@@ -1,124 +1,160 @@
+:root {
+  /* Color variables */
+  --spotify-green: #1DB954;
+  --spotify-green-hover: #25d362;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-hover-green: rgba(29, 185, 84, 0.1);
+  --bg-date-picker: #2b2b3c;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  
+  /* Shadows */
+  --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-btn: 0 4px 20px rgba(29, 185, 84, 0.3);
+  
+  /* Common dimensions */
+  --border-radius-sm: 10px;
+  --border-radius-md: 20px;
+  --border-radius-lg: 30px;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.6rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.2rem;
+  --spacing-xxl: 2rem;
+  
+  /* Typography */
+  --font-size-sm: 0.8rem;
+  --font-size-md: 0.9rem;
+  --font-size-lg: 1.5rem;
+  
+  /* Component sizes */
+  --input-height: 38px;
+  
+  /* Transitions */
+  --transition-standard: 0.3s ease;
+}
+
 /* Stats Section Styling */
 .stats-section {
-  margin-top: 2rem;
-  padding-top: 1rem;
+  margin-top: var(--spacing-xxl);
+  padding-top: var(--spacing-lg);
 }
 
 .card-stats {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  margin-bottom: 1rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease; 
-  margin-top: 1rem;
+  background-color: var(--bg-hover);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-card);
+  margin: var(--spacing-lg) 0 var(--spacing-lg);
+  transition: transform var(--transition-standard), 
+              box-shadow var(--transition-standard);
   border: none;
 }
 
 .card-stats:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  
+  box-shadow: var(--shadow-card);
 }
 
 /* Card chart styling */
 .stats-section .card-chart {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  
-  margin-bottom: 20px;
+  background-color: var(--bg-hover);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-card);
+  margin: var(--spacing-lg) 0 var(--spacing-lg);
   border: none;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;  margin-top: 1rem;
+  transition: transform var(--transition-standard), 
+              box-shadow var(--transition-standard);
 }
 
 .stats-section .card-chart:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  
+  box-shadow: var(--shadow-card);
 }
 
 /* Card header styling */
 .stats-section .card-header {
-  background-color: #1DB954;
-  color: #fff;
+  background-color: var(--spotify-green);
+  color: var(--text-primary);
   font-weight: bold;
-  padding: 10px 15px;
+  padding: var(--spacing-sm) var(--spacing-lg);
   border-bottom: none;
-  border-radius: 10px 10px 0 0;
+  border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
 }
 
 .card-stats .numbers {
-  padding: 1rem;
+  padding: var(--spacing-lg);
   text-align: center;
 }
 
 .card-stats .card-title {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 .card-stats .card-category {
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   margin: 0;
 }
 
 .spotify-green-link {
-  color: #1DB954 !important;
+  color: var(--spotify-green) !important;
   font-weight: 500 !important;
   text-decoration: none !important;
-  transition: color 0.3s ease !important;
+  transition: color var(--transition-standard) !important;
 }
 
 .spotify-green-link:hover {
-  color: #25d362 !important; 
+  color: var(--spotify-green-hover) !important;
   text-decoration: none !important;
 }
 
 /* Time Range Selector Styling */
 .text-center.mb-4 {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .btn-group {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.25rem;
-  border-radius: 30px;
+  background: var(--bg-hover);
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-lg);
   display: inline-flex;
-  gap: 0.25rem;
+  gap: var(--spacing-xs);
 }
 
 .btn-group .btn-simple {
   border: none !important;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-md);
   font-weight: 500;
-  border-radius: 20px !important;
+  border-radius: var(--border-radius-md) !important;
   color: var(--text-secondary);
-  transition: all 0.3s ease;
   background: transparent;
+  transition: background-color var(--transition-standard), 
+              color var(--transition-standard), 
+              box-shadow var(--transition-standard);
+  outline: none !important;
 }
 
 .btn-group .btn-simple:hover {
-  color: #fff;
-  background: rgba(29, 185, 84, 0.1);
+  color: var(--text-primary);
+  background: var(--bg-hover-green);
 }
 
 .btn-group .btn-simple.active {
-  background: #1DB954 !important;
-  color: #fff !important;
-  box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3);
+  background: var(--spotify-green) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-btn);
 }
 
 .btn-group .btn-simple span {
   position: relative;
   z-index: 1;
-}
-
-/* Ensure transitions are smooth both ways */
-.btn-group .btn-simple {
-  /* Keep existing styles */
-  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-  outline: none !important; /* Prevent default focus outline */
 }
 
 /* Add this to ensure no purple flash */
@@ -132,7 +168,7 @@
 /* Time range button styling */
 .custom-date-inputs {
   display: none;
-  margin-top: 1rem;
+  margin-top: var(--spacing-lg);
 }
 
 .custom-date-inputs .input-group {
@@ -141,34 +177,34 @@
 }
 
 .custom-date-inputs .input-group-text {
-  background-color: #1DB954;
-  color: white;
+  background-color: var(--spotify-green);
+  color: var(--text-primary);
   border: none;
-  height: 38px;
+  height: var(--input-height);
   display: flex;
   align-items: center;
-  border-radius: 20px 0 0 20px;
+  border-radius: var(--border-radius-md) 0 0 var(--border-radius-md);
 }
 
 .custom-date-inputs .form-control {
-  background-color: #2b2b3c;
-  border: 1px solid #2b2b3c;
-  color: white;
-  height: 38px;
+  background-color: var(--bg-date-picker);
+  border: 1px solid var(--bg-date-picker);
+  color: var(--text-primary);
+  height: var(--input-height);
   border-radius: 0;
 }
 
 .custom-date-inputs .btn-outline-success {
-  color: #1DB954;
-  border: 1px solid #1DB954;
-  height: 38px;
-  border-radius: 0 20px 20px 0;
+  color: var(--spotify-green);
+  border: 1px solid var(--spotify-green);
+  height: var(--input-height);
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
 }
 
 /* Only show green highlight when actively selected */
 .btn-group .btn-simple:active:not(.active) {
-  background: rgba(29, 185, 84, 0.1) !important;
-  color: #fff !important;
+  background: var(--bg-hover-green) !important;
+  color: var(--text-primary) !important;
 }
 
 @media (max-width: 768px) {
@@ -178,7 +214,7 @@
   }
   
   .time-range-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-sm);
   }
 }

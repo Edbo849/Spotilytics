@@ -24,10 +24,10 @@ class RateLimiter:
     def __init__(self, rate_limit: int, time_window: float):
         self.rate_limit = rate_limit
         self.time_window = time_window
-        self.tokens = rate_limit
+        self.tokens = float(rate_limit)
         self.last_update = time.time()
 
-    async def acquire(self):
+    async def acquire(self) -> bool:
         """Acquire a token, waiting if necessary"""
         while self.tokens <= 0:
             now = time.time()
@@ -46,13 +46,20 @@ class RateLimiter:
 
 
 class SpotifyClient:
+    """Client for interacting with Spotify API."""
+
     SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
     LASTFM_API_BASE_URL = "https://ws.audioscrobbler.com/2.0"
     LASTFM_TOKEN = config("LASTFM_TOKEN")
-    DEEZER_PREVIEW_CACHE_TIMEOUT = 60 * 60 * 24 * 7
-    CACHE_TIMEOUT = 60 * 60 * 24 * 30
+    DEEZER_PREVIEW_CACHE_TIMEOUT = 60 * 60 * 24 * 7  # 7 days
+    CACHE_TIMEOUT = 60 * 60 * 24 * 30  # 30 days
 
     def __init__(self, spotify_user_id: str):
+        """Initialize a SpotifyClient for a specific user.
+
+        Args:
+            spotify_user_id: The Spotify user ID to authenticate as
+        """
         self.spotify_user_id = spotify_user_id
         self._session: aiohttp.ClientSession | None = None
         self.ssl_context = self._create_ssl_context()
@@ -69,16 +76,18 @@ class SpotifyClient:
         """Async context manager exit."""
         await self.close()
 
-    def _create_ssl_context(self):
-        context = ssl.create_default_context(cafile=certifi.where())
-        return context
+    def _create_ssl_context(self) -> ssl.SSLContext:
+        """Create SSL context for secure connections."""
+        return ssl.create_default_context(cafile=certifi.where())
 
     async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the aiohttp session."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession()
         return self._session
 
-    async def close(self):
+    async def close(self) -> None:
+        """Close the aiohttp session if it exists."""
         if self._session and not self._session.closed:
             await self._session.close()
             self._session = None
@@ -86,23 +95,30 @@ class SpotifyClient:
     async def get_access_token(self) -> str:
         """
         Retrieve the access token for a Spotify user asynchronously.
+
+        Returns:
+            The access token string or empty string if not available
         """
         if self.access_token:
             return self.access_token
+
         try:
             user = await sync_to_async(SpotifyUser.objects.get)(
                 spotify_user_id=self.spotify_user_id
             )
             is_expired = await sync_to_async(lambda: user.is_token_expired)()
+
             if is_expired:
                 await sync_to_async(refresh_spotify_token)(self.spotify_user_id)
                 user = await sync_to_async(SpotifyUser.objects.get)(
                     spotify_user_id=self.spotify_user_id
                 )
+
             self.access_token = (
                 await sync_to_async(lambda: user.spotifytoken.access_token)() or ""
             )
             return self.access_token
+
         except SpotifyUser.DoesNotExist:
             logger.error(f"SpotifyUser with ID {self.spotify_user_id} does not exist.")
         except Exception as e:
@@ -120,12 +136,20 @@ class SpotifyClient:
         retry_delay: float = 1.0,
     ) -> Any:
         """
-        Perform an asynchronous GET request with rate limiting and retries
+        Perform an asynchronous GET request with rate limiting and retries.
+
+        Args:
+            url: The URL to fetch
+            headers: Optional HTTP headers
+            params: Optional query parameters
+            max_retries: Maximum number of retry attempts
+            retry_delay: Base delay between retries in seconds
+
+        Returns:
+            JSON response data or empty dict on failure
         """
-        if "/player/" in url:
-            limiter = self.player_limiter
-        else:
-            limiter = self.general_limiter
+        # Select the appropriate rate limiter based on the endpoint
+        limiter = self.player_limiter if "/player/" in url else self.general_limiter
 
         for attempt in range(max_retries):
             try:
@@ -149,7 +173,8 @@ class SpotifyClient:
                     if attempt < max_retries - 1:
                         wait_time = retry_delay * (attempt + 1)
                         logger.warning(
-                            f"Connection reset, retrying in {wait_time} seconds. Attempt {attempt + 1}/{max_retries}"
+                            f"Connection reset, retrying in {wait_time} seconds. "
+                            f"Attempt {attempt + 1}/{max_retries}"
                         )
                         await asyncio.sleep(wait_time)
                         continue
@@ -166,7 +191,8 @@ class SpotifyClient:
                 if attempt < max_retries - 1:
                     wait_time = retry_delay * (attempt + 1)
                     logger.warning(
-                        f"Retrying in {wait_time} seconds. Attempt {attempt + 1}/{max_retries}"
+                        f"Retrying in {wait_time} seconds. "
+                        f"Attempt {attempt + 1}/{max_retries}"
                     )
                     await asyncio.sleep(wait_time)
                     continue
@@ -178,6 +204,13 @@ class SpotifyClient:
     ) -> dict[str, Any]:
         """
         Make an asynchronous request to the Spotify API using the user's access token.
+
+        Args:
+            endpoint: The Spotify API endpoint to request
+            params: Optional query parameters
+
+        Returns:
+            JSON response data or empty dict on failure
         """
         access_token = await self.get_access_token()
         if not access_token:
@@ -192,35 +225,61 @@ class SpotifyClient:
     async def get_spotify_track_id(
         self, song_name: str, artist_name: str
     ) -> str | None:
+        """
+        Get Spotify track ID from track name and artist name.
+
+        Args:
+            song_name: Name of the song
+            artist_name: Name of the artist
+
+        Returns:
+            Spotify track ID or None if not found
+        """
         query = f"track:{song_name} artist:{artist_name}"
         params = {"q": query, "type": "track", "limit": 1}
         response = await self.make_spotify_request("search", params=params)
         tracks = response.get("tracks", {}).get("items", [])
-        if tracks:
-            return tracks[0].get("id")
-        return None
+        return tracks[0].get("id") if tracks else None
 
     def sanitize_cache_key(self, key: str) -> str:
-        """Sanitize cache key to be safe for memcached"""
-        # Convert the key to base64 to make it safe
+        """
+        Sanitize cache key to be safe for memcached.
+
+        Args:
+            key: The raw cache key
+
+        Returns:
+            A base64-encoded safe key
+        """
         return base64.b64encode(key.encode()).decode()
 
     async def get_track_details(
         self, track_id: str, preview: bool = True
     ) -> dict[str, Any]:
+        """
+        Get detailed information about a Spotify track.
+
+        Args:
+            track_id: Spotify track ID
+            preview: Whether to fetch preview URL if missing
+
+        Returns:
+            Track details dictionary
+        """
         track = await self.make_spotify_request(f"tracks/{track_id}")
-        if not track.get("preview_url"):
+
+        # Add preview URL from Deezer if missing and requested
+        if track and not track.get("preview_url") and preview:
             song_name = track.get("name")
-            if song_name and preview:
+            if song_name and track.get("artists"):
+                artist_name = track["artists"][0]["name"]
                 cache_key = self.sanitize_cache_key(
-                    f"deezer_preview_{song_name}_{track['artists'][0]['name']}"
+                    f"deezer_preview_{song_name}_{artist_name}"
                 )
                 preview_url = cache.get(cache_key)
 
                 if preview_url is None:
-                    preview_url = await self.get_deezer_preview(
-                        song_name, track["artists"][0]["name"]
-                    )
+                    preview_url = await self.get_deezer_preview(song_name, artist_name)
                     if preview_url:
                         cache.set(
                             cache_key,
@@ -228,7 +287,9 @@ class SpotifyClient:
                             timeout=self.DEEZER_PREVIEW_CACHE_TIMEOUT,
                         )
 
-                track["preview_url"] = preview_url
+                if preview_url:
+                    track["preview_url"] = preview_url
+
         return track
 
     async def get_multiple_track_details(
@@ -237,9 +298,12 @@ class SpotifyClient:
         """
         Fetch details for multiple tracks, optionally including preview URLs.
 
-        :param track_ids: A list of Spotify track IDs.
-        :param include_preview: Whether to fetch preview URLs from Deezer Music.
-        :return: A dictionary containing track details.
+        Args:
+            track_ids: A list of Spotify track IDs
+            include_preview: Whether to fetch preview URLs from Deezer Music
+
+        Returns:
+            A dictionary containing track details
         """
         headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
         ids_param = ",".join(track_ids)
@@ -248,29 +312,49 @@ class SpotifyClient:
         response = await self.fetch(url, headers=headers, params=params)
         tracks = response.get("tracks", [])
 
-        if include_preview:
+        if include_preview and tracks:
             preview_tasks = []
             for track in tracks:
-                if not track.get("preview_url"):
+                if not track.get("preview_url") and track.get("artists"):
                     song_name = track.get("name")
                     artist_name = (
                         track["artists"][0]["name"] if track.get("artists") else ""
                     )
-                    task = asyncio.create_task(
-                        self.get_deezer_preview(song_name, artist_name)
-                    )
-                    preview_tasks.append((track, task))
+                    if song_name and artist_name:
+                        task = asyncio.create_task(
+                            self.get_deezer_preview(song_name, artist_name)
+                        )
+                        preview_tasks.append((track, task))
 
             for track, task in preview_tasks:
                 preview_url = await task
-                track["preview_url"] = preview_url
+                if preview_url:
+                    track["preview_url"] = preview_url
 
         return {"tracks": tracks}
 
     async def get_artist(self, artist_id: str) -> dict[str, Any]:
+        """
+        Get artist details from Spotify.
+
+        Args:
+            artist_id: Spotify artist ID
+
+        Returns:
+            Artist details dictionary
+        """
         return await self.make_spotify_request(f"artists/{artist_id}")
 
     async def get_multiple_artists(self, artist_ids: list[str]) -> dict[str, Any]:
+        """
+        Get details for multiple artists at once.
+
+        Args:
+            artist_ids: List of Spotify artist IDs
+
+        Returns:
+            Dictionary with artists array
+        """
         headers = {"Authorization": f"Bearer {await self.get_access_token()}"}
         ids_param = ",".join(artist_ids)
         params = {"ids": ids_param}
@@ -282,8 +366,11 @@ class SpotifyClient:
         """
         Search for an artist on Spotify by their name asynchronously.
 
-        :param artist_name: The name of the artist to search for.
-        :return: A dictionary representing the artist details.
+        Args:
+            artist_name: The name of the artist to search for
+
+        Returns:
+            A dictionary representing the artist details or empty dict if not found
         """
         access_token = await self.get_access_token()
         if not access_token:
@@ -309,11 +396,13 @@ class SpotifyClient:
         album_name: str,
     ) -> dict[str, Any]:
         """
-        Search for an artist on Spotify by their name asynchronously.
+        Search for an album on Spotify by its name.
 
-        :param artist_name: The name of the artist to search for.
-        :param session: The aiohttp ClientSession.
-        :return: A dictionary representing the artist details.
+        Args:
+            album_name: The name of the album to search for
+
+        Returns:
+            A dictionary representing the album details or empty dict if not found
         """
         access_token = await self.get_access_token()
         if not access_token:
@@ -331,15 +420,18 @@ class SpotifyClient:
             if albums:
                 return albums[0]
         except Exception as e:
-            logger.error(f"Error searching for artist {album_name} on Spotify: {e}")
+            logger.error(f"Error searching for album {album_name} on Spotify: {e}")
         return {}
 
     async def search_spotify(self, query: str) -> dict[str, Any]:
         """
         Search Spotify for tracks, artists, albums, and playlists based on a query.
 
-        :param query: The search query string.
-        :return: The JSON response from Spotify.
+        Args:
+            query: The search query string
+
+        Returns:
+            The JSON response from Spotify
         """
         params = {"q": query, "type": "track,artist,album,playlist", "limit": 25}
         return await self.make_spotify_request("search", params)
@@ -348,16 +440,30 @@ class SpotifyClient:
         """
         Retrieve the user's recently played tracks.
 
-        :param num: Number of recently played tracks to retrieve.
-        :return: A list of recently played track dictionaries.
+        Args:
+            num: Number of recently played tracks to retrieve
+
+        Returns:
+            A list of recently played track dictionaries
         """
         endpoint = "me/player/recently-played"
         params = {"limit": num}
         response = await self.make_spotify_request(endpoint, params)
         return response.get("items", [])
 
-    async def get_new_releases(self, country: str = "US", limit: int = 50) -> dict:
-        """Get new releases from Spotify"""
+    async def get_new_releases(
+        self, country: str = "US", limit: int = 50
+    ) -> dict[str, Any]:
+        """
+        Get new releases from Spotify.
+
+        Args:
+            country: Country code for market filtering
+            limit: Number of releases to fetch
+
+        Returns:
+            Dictionary with new release albums
+        """
         try:
             params = {"country": country, "limit": limit}
             response = await self.make_spotify_request("browse/new-releases", params)
@@ -369,7 +475,16 @@ class SpotifyClient:
     async def get_artist_albums(
         self, artist_id: str, include_groups: list[str] | None = None
     ) -> list[dict[str, Any]]:
-        """Get artist albums with optional filtering by release type."""
+        """
+        Get artist albums with optional filtering by release type.
+
+        Args:
+            artist_id: Spotify artist ID
+            include_groups: List of album types to include
+
+        Returns:
+            List of album dictionaries
+        """
         params: dict[str, Any] = {
             "limit": 50,
         }
@@ -391,8 +506,8 @@ class SpotifyClient:
                 f"artists/{artist_id}/albums", params
             )
             return response.get("items", [])
-        except Exception:
-            logger.error
+        except Exception as e:
+            logger.error(f"Error fetching artist albums: {e}")
             return []
 
     async def get_artist_top_tracks(
@@ -403,9 +518,12 @@ class SpotifyClient:
         """
         Fetch the top tracks of a given artist.
 
-        :param num: Number of top tracks to retrieve.
-        :param artist_id: The Spotify artist ID.
-        :return: A list of top track dictionaries.
+        Args:
+            num: Number of top tracks to retrieve
+            artist_id: The Spotify artist ID
+
+        Returns:
+            A list of top track dictionaries
         """
         endpoint = f"artists/{artist_id}/top-tracks"
         params = {"market": "UK"}
@@ -420,8 +538,12 @@ class SpotifyClient:
         """
         Retrieve the details of a given album.
 
-        :param album_id: The Spotify album ID.
-        :return: A dictionary containing album details.
+        Args:
+            album_id: The Spotify album ID
+            include_tracks: Whether to include track details
+
+        Returns:
+            A dictionary containing album details
         """
         endpoint = f"albums/{album_id}"
         params = None
@@ -435,12 +557,16 @@ class SpotifyClient:
         """
         Retrieve similar artists to a given artist using the Last.fm API and fetch their details from Spotify.
 
-        :param artist_name: The name of the artist to find similar artists for.
-        :param limit: Number of similar artists to retrieve.
-        :return: A list of dictionaries representing similar artists with Spotify details.
+        Args:
+            artist_name: The name of the artist to find similar artists for
+            limit: Number of similar artists to retrieve
+
+        Returns:
+            A list of dictionaries representing similar artists with Spotify details
         """
         similar_artists_spotify = []
         seen_artist_ids = set()
+
         try:
             lastfm_params = {
                 "method": "artist.getsimilar",
@@ -455,12 +581,14 @@ class SpotifyClient:
                 "artist", []
             )
 
+            # Create tasks for parallel execution
             tasks = [
                 self.search_artist_on_spotify(similar_artist["name"])
                 for similar_artist in similar_artists
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
+            # Process results and keep only valid, unique artists
             for result in results:
                 if isinstance(result, dict) and result:
                     artist_id = result.get("id")
@@ -472,12 +600,24 @@ class SpotifyClient:
             logger.error(
                 f"Error getting similar artists for {artist_name} from Last.fm: {e}"
             )
+
         return similar_artists_spotify
 
     async def get_similar_tracks(
         self, track_id: str, get_preview: bool = True, limit: int = 5
     ) -> list[dict[str, Any]]:
-        """Get similar tracks based on a seed track using artist similarity and track popularity."""
+        """
+        Get similar tracks based on a seed track using artist similarity and track popularity.
+
+        Args:
+            track_id: Spotify track ID to find similar tracks for
+            get_preview: Whether to include preview URLs
+            limit: Maximum number of similar tracks to return
+
+        Returns:
+            List of similar track details
+        """
+        # Get track details from cache or API
         cache_key = self.sanitize_cache_key(f"track_details_{track_id}")
         track = cache.get(cache_key)
 
@@ -486,29 +626,42 @@ class SpotifyClient:
             if track:
                 cache.set(cache_key, track, timeout=self.CACHE_TIMEOUT)
 
-        if not track:
+        if not track or not track.get("artists"):
             return []
 
+        # Get similar artists from cache or API
         artist_name = track["artists"][0]["name"]
-        similar_artists_key = f"similar_artists_10_{artist_name}"
+        similar_artists_key = self.sanitize_cache_key(
+            f"similar_artists_10_{artist_name}"
+        )
         similar_artists = cache.get(similar_artists_key)
 
         if similar_artists is None:
             similar_artists = await self.get_similar_artists(artist_name, limit=10)
             if similar_artists:
-                cache.set(similar_artists_key, similar_artists, timeout=2592000)
+                cache.set(
+                    similar_artists_key, similar_artists, timeout=self.CACHE_TIMEOUT
+                )
 
+        if not similar_artists:
+            return []
+
+        # Get top tracks from each similar artist
         similar_tracks = []
-
         for artist in similar_artists:
-            top_tracks_key = f"artist_top_tracks_1_{artist['id']}"
+            top_tracks_key = self.sanitize_cache_key(
+                f"artist_top_tracks_1_{artist['id']}"
+            )
             artist_top_tracks = cache.get(top_tracks_key)
 
             if artist_top_tracks is None:
                 artist_top_tracks = await self.get_artist_top_tracks(1, artist["id"])
                 if artist_top_tracks:
-                    cache.set(top_tracks_key, artist_top_tracks, timeout=604800)
+                    cache.set(
+                        top_tracks_key, artist_top_tracks, timeout=604800
+                    )  # 1 week
 
+            # Process each top track
             for artist_track in artist_top_tracks:
                 details_key = self.sanitize_cache_key(
                     f"track_details_{artist_track['id']}"
@@ -525,7 +678,12 @@ class SpotifyClient:
                         )
 
                 if track_details:
-                    if get_preview:
+                    # Add preview URL if requested
+                    if (
+                        get_preview
+                        and not track_details.get("preview_url")
+                        and track_details.get("artists")
+                    ):
                         preview_key = self.sanitize_cache_key(
                             f"preview_url_{artist_track['id']}"
                         )
@@ -548,37 +706,46 @@ class SpotifyClient:
 
                     similar_tracks.append(track_details)
 
+        # Sort by popularity and limit results
         similar_tracks = sorted(
-            similar_tracks, key=lambda x: x["popularity"], reverse=True
+            similar_tracks, key=lambda x: x.get("popularity", 0), reverse=True
         )[:limit]
 
         return similar_tracks
 
     async def get_recently_played_full(self) -> list[dict[str, Any]]:
         """
-        Fetch the user's recently played tracks.
+        Fetch the user's complete recently played tracks history.
 
-        :return: A list of recently played track dictionaries.
+        Returns:
+            A list of recently played track dictionaries (up to 350 tracks)
         """
         access_token = await self.get_access_token()
+        if not access_token:
+            return []
+
         headers = {"Authorization": f"Bearer {access_token}"}
-        params = {"limit": 50}
+        params: dict[str, int] | None = {"limit": 50}
         url = f"{self.SPOTIFY_API_BASE_URL}/me/player/recently-played"
 
-        recently_played = []
+        recently_played: list[dict[str, Any]] = []
 
-        while url:
-            response = await self.fetch(url, headers=headers, params=params)
-            response.raise_for_status()
-            data = response.json()
-            items = data.get("items", [])
-            recently_played.extend(items)
+        while url and len(recently_played) < 350:
+            try:
+                response = await self.fetch(url, headers=headers, params=params)
+                items = response.get("items", [])
+                recently_played.extend(items)
 
-            if len(recently_played) >= 350:
-                break
+                # Get next page URL if available
+                url = response.get("next")
+                if not url:
+                    break
 
-            url = data.get("next")
-            if not url:
+                # Clear params since next URL already includes them
+                params = None
+
+            except Exception as e:
+                logger.error(f"Error fetching recently played tracks: {e}")
                 break
 
         return recently_played
@@ -589,34 +756,44 @@ class SpotifyClient:
         """
         Retrieve the top albums for a given artist.
 
-        :param artist_id: The Spotify artist ID.
-        :param market: The market code.
-        :param limit: Number of top albums to retrieve.
-        :return: A list of top album dictionaries.
+        Args:
+            artist_id: The Spotify artist ID
+            market: The market code
+            limit: Number of top albums to retrieve
+
+        Returns:
+            A list of top album dictionaries
         """
         endpoint = f"artists/{artist_id}/albums"
         params = {
             "include_groups": "album",
             "market": market,
-            "limit": limit,
+            "limit": 50,  # Get more to find unique albums
             "album_type": "album",
         }
         response = await self.make_spotify_request(endpoint, params)
         albums = response.get("items", [])
-        unique_albums: dict[str, dict[str, Any]] = {}
 
+        # De-duplicate albums by name
+        unique_albums: dict[str, dict[str, Any]] = {}
         for album in albums:
-            unique_albums.setdefault(album["name"], album)
+            album_name = album.get("name", "")
+            if album_name:
+                unique_albums.setdefault(album_name, album)
+
         return list(unique_albums.values())[:limit]
 
     async def get_items_by_genre(
         self, genre_name: str
-    ) -> tuple[list[dict], list[dict]]:
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
         Search for artists and tracks by genre on Spotify.
 
-        :param genre_name: The name of the genre to search for.
-        :return: A tuple of lists containing artist and track dictionaries
+        Args:
+            genre_name: The name of the genre to search for
+
+        Returns:
+            A tuple of lists containing artist and track dictionaries
         """
         params = {
             "q": f'genre:"{genre_name}"',
@@ -633,11 +810,16 @@ class SpotifyClient:
         """
         Remove anything after the '-' symbol and content within parentheses or brackets from the song name.
 
-        :param song_name: The original song name.
-        :return: The sanitized song name.
+        Args:
+            song_name: The original song name
+
+        Returns:
+            The sanitized song name
         """
+        # Get part before any dash
         sanitized_name = song_name.split("-", 1)[0].strip()
 
+        # Remove content in parentheses or brackets
         sanitized_name = re.sub(r"\(.*?\)|\[.*?\]", "", sanitized_name).strip()
 
         return sanitized_name
@@ -645,21 +827,24 @@ class SpotifyClient:
     async def get_deezer_preview(self, song_name: str, artist_name: str) -> str | None:
         """
         Fetches the 30-second preview URL from Deezer based on song and artist name.
-        :param song_name: The name of the song.
-        :param artist_name: The name of the artist.
-        :return: The preview URL if available, otherwise None.
+
+        Args:
+            song_name: The name of the song
+            artist_name: The name of the artist
+
+        Returns:
+            The preview URL if available, otherwise None
         """
         song_name = self.sanitise_song_name(song_name)
-
         search_query = f'track:"{song_name}" artist:"{artist_name}"'
 
         try:
             response = await self.fetch(
                 "https://api.deezer.com/search", params={"q": search_query, "limit": 1}
             )
-            if response.get("data"):
-                preview_url = response["data"][0].get("preview")
-                return preview_url
+            data = response.get("data", [])
+            if data:
+                return data[0].get("preview")
         except aiohttp.ClientError as e:
             logger.error(
                 f"Error fetching preview from Deezer for song '{song_name}' by '{artist_name}': {e}"
@@ -673,6 +858,17 @@ class SpotifyClient:
     async def get_lastfm_similar_tracks(
         self, artist_name: str, track_name: str, limit: int = 20
     ) -> list[dict[str, Any]]:
+        """
+        Get similar tracks from Last.fm based on artist and track name.
+
+        Args:
+            artist_name: Artist name
+            track_name: Track name
+            limit: Maximum number of similar tracks to return
+
+        Returns:
+            List of similar track information
+        """
         params = {
             "method": "track.getsimilar",
             "artist": artist_name,
@@ -685,19 +881,20 @@ class SpotifyClient:
         try:
             response = await self.fetch(self.LASTFM_API_BASE_URL, params=params)
             similar_tracks_data = response.get("similartracks", {}).get("track", [])
-            formatted_tracks = []
-            for track in similar_tracks_data:
-                formatted_tracks.append(
-                    {
-                        "name": track.get("name"),
-                        "artist": {
-                            "name": track.get("artist", {}).get("name"),
-                            "mbid": track.get("artist", {}).get("mbid"),
-                        },
-                        "url": track.get("url"),
-                    }
-                )
-            return formatted_tracks
+
+            # Format the track data into a consistent structure
+            return [
+                {
+                    "name": track.get("name", ""),
+                    "artist": {
+                        "name": track.get("artist", {}).get("name", ""),
+                        "mbid": track.get("artist", {}).get("mbid", ""),
+                    },
+                    "url": track.get("url", ""),
+                }
+                for track in similar_tracks_data
+            ]
+
         except aiohttp.ClientError as e:
             logger.error(
                 f"Error fetching similar tracks from Last.fm for '{artist_name} - {track_name}': {e}"
@@ -714,8 +911,11 @@ class SpotifyClient:
         """
         Fetches recently played tracks since a specific timestamp.
 
-        :param after_timestamp: The timestamp to fetch tracks since.
-        :return: A list of recently played track dictionaries.
+        Args:
+            after_timestamp: The timestamp to fetch tracks since
+
+        Returns:
+            A list of recently played track dictionaries
         """
         access_token = await self.get_access_token()
         if not access_token:
@@ -726,12 +926,9 @@ class SpotifyClient:
         params = {"limit": 50, "after": after_timestamp}
         url = f"{self.SPOTIFY_API_BASE_URL}/me/player/recently-played"
 
-        recently_played = []
-
         try:
             response = await self.fetch(url, headers=headers, params=params)
-            if response.get("items"):
-                recently_played.extend(response["items"])
+            return response.get("items", [])
         except aiohttp.ClientResponseError as e:
             if e.status == 429:
                 retry_after = int(e.headers.get("Retry-After", 1))
@@ -743,15 +940,18 @@ class SpotifyClient:
         except Exception as e:
             logger.error(f"Unexpected error while fetching recently played tracks: {e}")
 
-        return recently_played
+        return []
 
     @staticmethod
     def get_duration_ms(duration_ms: int) -> str:
         """
         Convert duration from milliseconds to a string format of minutes and seconds.
 
-        :param duration_ms: Duration in milliseconds.
-        :return: Formatted duration string.
+        Args:
+            duration_ms: Duration in milliseconds
+
+        Returns:
+            Formatted duration string (e.g. "3:45")
         """
         minutes, seconds = divmod(duration_ms / 1000, 60)
         return f"{int(minutes)}:{int(seconds):02d}"
