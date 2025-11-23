@@ -124,13 +124,17 @@ Spotilytics is a full-stack web application that connects to your Spotify accoun
 
 ## 📸 Screenshots
 
-### 🎛️ Dashboard Overview
+<details>
+<summary><h3>🎛️ Dashboard Overview</h3></summary>
 
 ![Dashboard Screenshot 1](screenshots/dashboard-1.png)
 ![Dashboard Screenshot 2](screenshots/dashboard-2.png)
 ![Dashboard Screenshot 3](screenshots/dashboard-3.png)
 
-### 🎤 Artist Page
+</details>
+
+<details>
+<summary><h3>🎤 Artist Page</h3></summary>
 
 ![Artist Screenshot 1](screenshots/artist-1.png)
 ![Artist Screenshot 2](screenshots/artist-2.png)
@@ -138,39 +142,59 @@ Spotilytics is a full-stack web application that connects to your Spotify accoun
 ![Artist Screenshot 4](screenshots/artist-4.png)
 ![Artist Screenshot 5](screenshots/artist-5.png)
 
-### 🎵 Track Page
+</details>
+
+<details>
+<summary><h3>🎵 Track Page</h3></summary>
 
 ![Track Screenshot 1](screenshots/song-1.png)
 ![Track Screenshot 2](screenshots/song-2.png)
 ![Track Screenshot 3](screenshots/song-3.png)
 
-### 🎼 Album Page
+</details>
+
+<details>
+<summary><h3>🎼 Album Page</h3></summary>
 
 ![Album Screenshot 1](screenshots/album-1.png)
 ![Album Screenshot 2](screenshots/album-2.png)
 ![Album Screenshot 3](screenshots/album-3.png)
 
-### 💬 AI Chat Assistant
+</details>
+
+<details>
+<summary><h3>💬 AI Chat Assistant</h3></summary>
 
 ![AI Screenshot 1](screenshots/chat-bot.png)
 
-### 🎤 Artist, Album, Track, Genre Stats Page
+</details>
+
+<details>
+<summary><h3>🎤 Artist, Album, Track, Genre Stats Page</h3></summary>
 
 ![Stats Screenshot 1](screenshots/artist-stats-1.png)
 ![Stats Screenshot 2](screenshots/artist-stats-2.png)
 ![Stats Screenshot 3](screenshots/artist-stats-3.png)
 ![Stats Screenshot 4](screenshots/artist-stats-4.png)
 
-### 🔍 Music Search & Discovery
+</details>
+
+<details>
+<summary><h3>🔍 Music Search & Discovery</h3></summary>
 
 ![Search Screenshot 1](screenshots/search-1.png)
 ![Search Screenshot 2](screenshots/search-2.png)
 ![Search Screenshot 3](screenshots/search-3.png)
 ![Search Screenshot 4](screenshots/search-4.png)
 
-### 🆕 New Releases Hub
+</details>
+
+<details>
+<summary><h3>🆕 New Releases Hub</h3></summary>
 
 ![New Releases Screenshot 1](screenshots/new-releases.png)
+
+</details>
 
 ---
 
